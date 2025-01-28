@@ -1,0 +1,40 @@
+{
+	"schemaVersion": 1,
+	"id": "rl-agents",
+	"version": "${version}",
+	"name": "RL Agents",
+	"description": "Reinforcement Learning in Minecraft!",
+	"authors": [
+		"skycatminepokie"
+	],
+	"contact": {
+		"sources": "https://github.com/FabricMC/rl-agents"
+	},
+	"license": "MIT",
+	"icon": "assets/rl-agents/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.skycatdev.rlagents.RLAgents"
+		],
+		"client": [
+			"com.skycatdev.rlagents.RLAgentsClient"
+		],
+		"fabric-datagen": [
+			"com.skycatdev.rlagents.RLAgentsDataGenerator"
+		]
+	},
+	"mixins": [
+		"rl-agents.mixins.json",
+		{
+			"config": "rl-agents.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.16.10",
+		"minecraft": "~1.21.1",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}
