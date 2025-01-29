@@ -1,6 +1,7 @@
 plugins {
 	id 'fabric-loom' version '1.9-SNAPSHOT'
 	id 'maven-publish'
+	id 'com.gradleup.shadow' version '8.3.0'
 }
 
 version = project.mod_version
@@ -31,6 +32,20 @@ loom {
 
 }
 
+shadowJar {
+	from sourceSets.main.output
+	from sourceSets.client.output
+	configurations = [project.configurations.shadow]
+	//exclude("META-INF")
+	minimize()
+}
+
+remapJar {
+	dependsOn(shadowJar)
+	mustRunAfter(shadowJar)
+	inputFile = file(shadowJar.archivePath)
+}
+
 fabricApi {
 	configureDataGeneration {
 		client = true
@@ -46,6 +61,7 @@ dependencies {
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 	modImplementation "com.github.gnembon:fabric-carpet:${project.carpet_version}"
+	shadow(implementation group: 'net.sf.py4j', name: 'py4j', version: "${project.py4j_version}")
 }
 
 processResources {
