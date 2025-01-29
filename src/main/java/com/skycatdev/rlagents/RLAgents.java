@@ -1,12 +1,10 @@
+/* Licensed MIT 2025 */
 package com.skycatdev.rlagents;
 
 import net.fabricmc.api.ModInitializer;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import py4j.GatewayServer;
-
-import java.util.concurrent.Future;
 
 public class RLAgents implements ModInitializer {
 	public static final String MOD_ID = "rl-agents";

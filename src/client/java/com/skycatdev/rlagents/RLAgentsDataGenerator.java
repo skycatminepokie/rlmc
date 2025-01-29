@@ -1,3 +1,4 @@
+/* Licensed MIT 2025 */
 package com.skycatdev.rlagents;
 
 import net.fabricmc.fabric.api.datagen.v1.DataGeneratorEntrypoint;

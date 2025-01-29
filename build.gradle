@@ -2,6 +2,7 @@ plugins {
 	id 'fabric-loom' version '1.9-SNAPSHOT'
 	id 'maven-publish'
 	id 'com.gradleup.shadow' version '8.3.0'
+	id 'com.diffplug.spotless' version '7.0.2'
 }
 
 version = project.mod_version
@@ -18,6 +19,23 @@ repositories {
 	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
 	// for more information about repositories.
 	maven { url 'https://jitpack.io' }
+}
+
+spotless {
+	format 'misc', {
+		target '*.gradle', '.gitattributes', '.gitignore'
+
+		trimTrailingWhitespace()
+		leadingSpacesToTabs()
+		endWithNewline()
+	}
+
+	java {
+		importOrder()
+		removeUnusedImports()
+		formatAnnotations()
+		licenseHeader '/* Licensed MIT $YEAR */'
+	}
 }
 
 loom {
