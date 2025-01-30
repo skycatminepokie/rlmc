@@ -3,8 +3,8 @@ RLMC uses a lot of dependencies and tools to work.
 ## For Users
 You need:
 - Minecraft 1.21.1
-- Fabric API
 - Fabric Loader
+- Fabric API
 - Carpet
 
 ## For Everyone Else
