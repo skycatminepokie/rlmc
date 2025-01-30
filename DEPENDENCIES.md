@@ -21,6 +21,7 @@ You need:
 - [Fabric API](https://github.com/FabricMC/fabric) ([Apache 2.0](https://github.com/FabricMC/fabric/blob/1.21.1/LICENSE)) for a lot of needed Minecraft hooks
 - [Carpet](https://github.com/gnembon/fabric-carpet) ([MIT](https://github.com/gnembon/fabric-carpet/blob/master/LICENSE)) for controlling players
 - [Minecraft](https://www.minecraft.net/en-us) (ARR) for Minecraft itself
+- [Docker](https://www.docker.com/) (IDK man) for reliable testing
 
 ### References
 - [checkerframework-gradle-plugin](https://github.com/kelloggm/checkerframework-gradle-plugin) for info on adding Checker Framework dependency
