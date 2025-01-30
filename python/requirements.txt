@@ -1,0 +1,3 @@
+py4j~=0.10.9.9
+stable-baselines3~=2.5.0
+gymnasium~=1.0.0
