@@ -1,4 +1,4 @@
-RL Agents uses a lot of dependencies and tools to work.
+RLMC uses a lot of dependencies and tools to work.
 
 ## For Users
 You need:

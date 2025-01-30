@@ -1,5 +1,5 @@
 /* Licensed MIT 2025 */
-package com.skycatdev.rlagents.environment;
+package com.skycatdev.rlmc.environment;
 
 /**
  * A Java implementation of a <a href="https://github.com/Farama-Foundation/Gymnasium">Farama Foundation Gymnasium</a>

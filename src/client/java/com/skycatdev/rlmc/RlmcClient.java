@@ -1,9 +1,9 @@
 /* Licensed MIT 2025 */
-package com.skycatdev.rlagents;
+package com.skycatdev.rlmc;
 
 import net.fabricmc.api.ClientModInitializer;
 
-public class RLAgentsClient implements ClientModInitializer {
+public class RlmcClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
 

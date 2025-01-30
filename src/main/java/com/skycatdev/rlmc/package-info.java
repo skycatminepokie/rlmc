@@ -1,5 +1,5 @@
 @DefaultQualifier(NonNull.class)
-package com.skycatdev.rlagents;
+package com.skycatdev.rlmc;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.framework.qual.DefaultQualifier;

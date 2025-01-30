@@ -1,33 +1,33 @@
 {
 	"schemaVersion": 1,
-	"id": "rl-agents",
+	"id": "rlmc",
 	"version": "${version}",
-	"name": "RL Agents",
+	"name": "RLMC",
 	"description": "Reinforcement Learning in Minecraft!",
 	"authors": [
 		"skycatminepokie"
 	],
 	"contact": {
-		"sources": "https://github.com/FabricMC/rl-agents"
+		"sources": "https://github.com/skycatminepokie/rlmc"
 	},
 	"license": "MIT",
-	"icon": "assets/rl-agents/icon.png",
+	"icon": "assets/rlmc/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"com.skycatdev.rlagents.RLAgents"
+			"com.skycatdev.rlmc.Rlmc"
 		],
 		"client": [
-			"com.skycatdev.rlagents.RLAgentsClient"
+			"com.skycatdev.rlmc.RLAgentsClient"
 		],
 		"fabric-datagen": [
-			"com.skycatdev.rlagents.RLAgentsDataGenerator"
+			"com.skycatdev.rlmc.RLAgentsDataGenerator"
 		]
 	},
 	"mixins": [
-		"rl-agents.mixins.json",
+		"rlmc.mixins.json",
 		{
-			"config": "rl-agents.client.mixins.json",
+			"config": "rlmc.client.mixins.json",
 			"environment": "client"
 		}
 	],

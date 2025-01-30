@@ -1,8 +1,8 @@
 {
 	"required": true,
-	"package": "com.skycatdev.rlagents.mixin.client",
+	"package": "com.skycatdev.rlmc.mixin",
 	"compatibilityLevel": "JAVA_21",
-	"client": [
+	"mixins": [
 	],
 	"injectors": {
 		"defaultRequire": 1
