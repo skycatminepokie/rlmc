@@ -11,3 +11,6 @@
 
 ### Docker
 I've got a Dockerfile! It should work. Make an [issue](https://github.com/skycatminepokie/rlmc/issues/new) if it doesn't.
+1. Checkout the repository
+2. Navigate into the root project folder
+3. Run the Dockerfile
