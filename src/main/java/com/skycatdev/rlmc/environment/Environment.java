@@ -19,9 +19,23 @@ import java.util.List;
  * environment ({@code Env} in Python).
  */
 public class Environment { // TODO: Generalize
+	protected ServerPlayerEntity player;
+	protected List<Observation> history;
+	protected int targetHistoryLength;
+
+	public Environment(ServerPlayerEntity player, int targetHistoryLength) {
+		this.player = player;
+		this.history = new ArrayList<>();
+		this.targetHistoryLength = targetHistoryLength;
+	}
+
 	public Observation getObservation(){
-		// TODO
-		return null;
+		Observation observation = Observation.fromPlayer(player, 100, 100, 180, history);
+		history.add(observation);
+		if (history.size() > targetHistoryLength) {
+			history.removeFirst();
+		}
+		return observation;
 	};
 	public StepTuple step(EntityPlayerActionPack action){
 		// TODO
