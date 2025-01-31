@@ -49,10 +49,10 @@ public class Environment { // TODO: Generalize
 		}
 	}
 
-	public record Observation(List<BlockHitResult> blocks, List<EntityHitResult> entities, ServerPlayerEntity self, List<Observation> history) {
+	public record Observation(List<BlockHitResult> blocks, List<@Nullable EntityHitResult> entities, ServerPlayerEntity self, List<Observation> history) {
 		public static Observation fromPlayer(ServerPlayerEntity player, int raycasts, double maxDistance, double fov, List<Observation> history) { // TODO: Test
 			List<BlockHitResult> blocks = new ArrayList<>();
-			List<EntityHitResult> entities = new ArrayList<>();
+			List<@Nullable EntityHitResult> entities = new ArrayList<>();
 			double sqrtRaycasts = Math.sqrt(raycasts);
 			double deltaAngle = fov / raycasts;
 			for (double i = -sqrtRaycasts/2; i < sqrtRaycasts/2; i++) {
@@ -68,9 +68,7 @@ public class Environment { // TODO: Generalize
 					Box box = player.getBoundingBox().stretch(rot.multiply(maxDistance)).expand(1,1,1);
 
 					@Nullable EntityHitResult entityHitResult = ProjectileUtil.raycast(player, pos, max, box, entity -> !entity.isInvisibleTo(player), Math.pow(maxDistance,2));
-					if (entityHitResult != null) {
-						entities.add(entityHitResult);
-					}
+					entities.add(entityHitResult);
 				}
 			}
 			return new Observation(blocks, entities, player, history);
