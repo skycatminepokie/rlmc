@@ -13,7 +13,7 @@ public class Rlmc implements ModInitializer {
 	public static final String MOD_ID = "rl-agents";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 	public static final GatewayServer GATEWAY_SERVER = new GatewayServer();
-	public static final List<Environment<?, ?, ?, ?>> ENVIRONMENTS = new ArrayList<>();
+	public static final List<Environment> ENVIRONMENTS = new ArrayList<>();
 
 	static {
 		GATEWAY_SERVER.start();
@@ -21,6 +21,10 @@ public class Rlmc implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
+
+	}
+
+	public static Environment createEnvironment() {
 
 	}
 }

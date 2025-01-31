@@ -36,6 +36,7 @@ spotless {
 		formatAnnotations()
 		licenseHeader '/* Licensed MIT $YEAR */'
 	}
+	// TODO: Python formatting
 }
 
 loom {
