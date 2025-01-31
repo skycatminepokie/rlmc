@@ -1,9 +1,8 @@
 /* Licensed MIT 2025 */
 package com.skycatdev.rlmc.environment;
 
-import org.jetbrains.annotations.Nullable;
-
 import java.util.Map;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * A Java implementation of a <a href="https://github.com/Farama-Foundation/Gymnasium">Farama Foundation Gymnasium</a>
