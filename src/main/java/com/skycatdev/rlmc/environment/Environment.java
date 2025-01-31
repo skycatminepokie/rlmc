@@ -1,6 +1,7 @@
 /* Licensed MIT 2025 */
 package com.skycatdev.rlmc.environment;
 
+import carpet.fakes.ServerPlayerInterface;
 import carpet.helpers.EntityPlayerActionPack;
 import net.minecraft.entity.projectile.ProjectileUtil;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -29,7 +30,7 @@ public class Environment { // TODO: Generalize
 		this.targetHistoryLength = targetHistoryLength;
 	}
 
-	public Observation getObservation(){
+	public Observation makeObservation(){
 		Observation observation = Observation.fromPlayer(player, 100, 100, 180, history);
 		history.add(observation);
 		if (history.size() > targetHistoryLength) {
@@ -38,13 +39,20 @@ public class Environment { // TODO: Generalize
 		return observation;
 	};
 	public StepTuple step(EntityPlayerActionPack action){
-		// TODO
-		return null;
+		((ServerPlayerInterface)player).getActionPack().copyFrom(action);
+		Observation obs = makeObservation();
+		StepTuple.Info info = new StepTuple.Info();
+		double reward = getReward(obs, info, action);
+		return new StepTuple(obs, reward, false, false, info);
 	};
 	public ResetTuple reset(int seed){
 		// TODO
 		return null;
 	};
+	protected double getReward(Observation observation, StepTuple.Info info, EntityPlayerActionPack action) {
+		// TODO
+		return observation.self().getX();
+	}
 
 	/**
 	 * Information returned from {@link Environment#step}
@@ -58,7 +66,7 @@ public class Environment { // TODO: Generalize
 	/**
 	 * Information returned from {@link Environment#step}.
 	 */
-	public record StepTuple(Observation observation, float reward, Info info) {
+	public record StepTuple(Observation observation, double reward, boolean terminated, boolean truncated, Info info) {
 		public record Info() {
 		}
 	}
