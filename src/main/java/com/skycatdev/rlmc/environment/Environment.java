@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * A Java implementation of a <a href="https://github.com/Farama-Foundation/Gymnasium">Farama Foundation Gymnasium</a>
- * environment ({@code Env} in Python).
+ * environment ({@code Env} in Python). See java_environment_wrapper.py
  * @param <A> Action type
  * @param <O> Observation type
  */
