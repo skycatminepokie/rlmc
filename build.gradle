@@ -36,7 +36,7 @@ spotless {
 		formatAnnotations()
 		licenseHeader '/* Licensed MIT $YEAR */'
 	}
-	python {
+	python { // TODO: Why don't this work?
 		target "python"
 		black().pathToExe(projectDir.toString() + "/.venv/Scripts/black.exe")
 	}

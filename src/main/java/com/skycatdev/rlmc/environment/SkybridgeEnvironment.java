@@ -1,5 +1,10 @@
+/* Licensed MIT 2025 */
 package com.skycatdev.rlmc.environment;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.projectile.ProjectileUtil;
 import net.minecraft.item.ItemStack;
@@ -13,11 +18,6 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class SkybridgeEnvironment extends Environment<FutureActionPack, SkybridgeEnvironment.Observation> {
 	protected ServerPlayerEntity agent;
@@ -36,19 +36,8 @@ public class SkybridgeEnvironment extends Environment<FutureActionPack, Skybridg
 		history = new ArrayList<>();
 	}
 
-	@Override
-	public StepTuple<Observation> step(FutureActionPack action) {
-		Observation observation = Observation.fromPlayer(agent, 100, 10, 180, history);
-		history.add(action);
-		if (history.size() > historyLength) {
-			history.removeFirst();
-		}
-
-		int reward = startPos.getX() - agent.getBlockX();
-		boolean terminated = startPos.getX() - agent.getBlockX() >= distance;
-		boolean truncated = agent.getServerWorld() != world || agent.isDead() || agent.getBlockY() < startPos.getY() + 1;
-
-		return new StepTuple<>(observation, reward, terminated, truncated, new HashMap<>());
+	public ServerPlayerEntity getAgent() {
+		return agent;
 	}
 
 	@Override
@@ -68,33 +57,45 @@ public class SkybridgeEnvironment extends Environment<FutureActionPack, Skybridg
 		return new ResetTuple<>(observation, new HashMap<>());
 	}
 
-	public record Observation(List<BlockHitResult> blocks, List<@Nullable EntityHitResult> entities, ServerPlayerEntity self, List<FutureActionPack> history) {
+	@Override
+	public StepTuple<Observation> step(FutureActionPack action) {
+		Observation observation = Observation.fromPlayer(agent, 100, 10, 180, history);
+		history.add(action);
+		if (history.size() > historyLength) {
+			history.removeFirst();
+		}
+
+		int reward = startPos.getX() - agent.getBlockX();
+		boolean terminated = startPos.getX() - agent.getBlockX() >= distance;
+		boolean truncated = agent.getServerWorld() != world || agent.isDead() || agent.getBlockY() < startPos.getY() + 1;
+
+		return new StepTuple<>(observation, reward, terminated, truncated, new HashMap<>());
+	}
+
+	public record Observation(List<BlockHitResult> blocks, List<@Nullable EntityHitResult> entities,
+							  ServerPlayerEntity self, List<FutureActionPack> history) {
 		public static Observation fromPlayer(ServerPlayerEntity player, int raycasts, double maxDistance, double fov, List<FutureActionPack> history) { // TODO: Test
 			List<BlockHitResult> blocks = new ArrayList<>();
 			List<@Nullable EntityHitResult> entities = new ArrayList<>();
 			double sqrtRaycasts = Math.sqrt(raycasts);
 			double deltaAngle = fov / raycasts;
-			for (double i = -sqrtRaycasts/2; i < sqrtRaycasts/2; i++) {
-				for (double j = -sqrtRaycasts/2; j < sqrtRaycasts/2; j++) {
+			for (double i = -sqrtRaycasts / 2; i < sqrtRaycasts / 2; i++) {
+				for (double j = -sqrtRaycasts / 2; j < sqrtRaycasts / 2; j++) {
 					Vec3d pos = player.getCameraPosVec(1);
-					Vec3d rot = player.getRotationVec(1).add(i * deltaAngle, j * deltaAngle,0);
+					Vec3d rot = player.getRotationVec(1).add(i * deltaAngle, j * deltaAngle, 0);
 					Vec3d max = pos.add(rot.x * maxDistance, rot.y * maxDistance, rot.x * maxDistance);
 					// Blocks (see Entity#raycast)
 					BlockHitResult blockHitResult = player.getServerWorld().raycast(new RaycastContext(pos, max, RaycastContext.ShapeType.VISUAL, RaycastContext.FluidHandling.ANY, player));
 					blocks.add(blockHitResult);
 
 					// Entities (see GameRenderer#findCrosshairTarget)
-					Box box = player.getBoundingBox().stretch(rot.multiply(maxDistance)).expand(1,1,1);
+					Box box = player.getBoundingBox().stretch(rot.multiply(maxDistance)).expand(1, 1, 1);
 
-					@Nullable EntityHitResult entityHitResult = ProjectileUtil.raycast(player, pos, max, box, entity -> !entity.isInvisibleTo(player), Math.pow(maxDistance,2));
+					@Nullable EntityHitResult entityHitResult = ProjectileUtil.raycast(player, pos, max, box, entity -> !entity.isInvisibleTo(player), Math.pow(maxDistance, 2));
 					entities.add(entityHitResult);
 				}
 			}
 			return new Observation(blocks, entities, player, history);
 		}
-	}
-
-	public ServerPlayerEntity getAgent() {
-		return agent;
 	}
 }

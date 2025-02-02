@@ -1,8 +1,9 @@
+/* Licensed MIT 2025 */
 package com.skycatdev.rlmc.environment;
 
 import carpet.helpers.EntityPlayerActionPack;
-
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Consumer;
 
 public class FutureActionPack {
@@ -11,32 +12,12 @@ public class FutureActionPack {
 	protected float pitch;
 	protected int hotbar;
 
-	public Set<ActionType> getActions() {
-		return actions;
-	}
-
-	public float getYaw() {
-		return yaw;
-	}
-
-	public float getPitch() {
-		return pitch;
-	}
-
-	public int getHotbar() {
-		return hotbar;
-	}
-
 	public FutureActionPack() {
 		this.actions = new HashSet<>();
 	}
 
 	public void add(ActionType actionType) {
 		actions.add(actionType);
-	}
-
-	public void remove(ActionType type) {
-		actions.remove(type);
 	}
 
 	public void copyTo(EntityPlayerActionPack pack) {
@@ -48,16 +29,36 @@ public class FutureActionPack {
 		pack.setSlot(hotbar);
 	}
 
-	public void setYaw(float yaw) {
-		this.yaw = yaw;
+	public Set<ActionType> getActions() {
+		return actions;
+	}
+
+	public int getHotbar() {
+		return hotbar;
+	}
+
+	public void setHotbar(int hotbar) {
+		this.hotbar = hotbar;
+	}
+
+	public float getPitch() {
+		return pitch;
 	}
 
 	public void setPitch(float pitch) {
 		this.pitch = pitch;
 	}
 
-	public void setHotbar(int hotbar) {
-		this.hotbar = hotbar;
+	public float getYaw() {
+		return yaw;
+	}
+
+	public void setYaw(float yaw) {
+		this.yaw = yaw;
+	}
+
+	public void remove(ActionType type) {
+		actions.remove(type);
 	}
 
 	public enum ActionType {
@@ -68,10 +69,10 @@ public class FutureActionPack {
 		BACKWARD(pack -> pack.setForward(-1)),
 		RIGHT(pack -> pack.setStrafing(-1)),
 		SPRINT(pack -> pack.setSprinting(true)),
-		SNEAK(pack -> pack.setSneaking(true))
-		;
+		SNEAK(pack -> pack.setSneaking(true));
 
 		private final Consumer<EntityPlayerActionPack> packModifier;
+
 		ActionType(Consumer<EntityPlayerActionPack> packModifier) {
 			this.packModifier = packModifier;
 		}

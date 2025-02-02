@@ -56,8 +56,10 @@ def java_map_to_dict(java_map: JavaMap) -> dict:
         dictionary[key] = java_map.get(key)
     return dictionary
 
+
 def java_list_to_array(java_list: JavaList) -> ndarray:
     return array([e for e in java_list])
+
 
 class WrappedBlockHitResult(object):
     def __init__(self, block_hit_result: JavaObject):
@@ -75,8 +77,9 @@ class WrappedBlockHitResult(object):
             "block": world.getBlockState(self.block_pos),
             "x": self.block_pos.getX(),
             "y": self.block_pos.getY(),
-            "z": self.block_pos.getZ()
+            "z": self.block_pos.getZ(),
         }
+
 
 class WrappedItemStack(object):
     def __init__(self, item_stack: JavaObject):
@@ -85,5 +88,5 @@ class WrappedItemStack(object):
     def to_dict(self) -> dict[str, Any]:
         return {
             "id": self.item_stack.getItem().getIdAsString(),
-            "count": self.item_stack.getCount()
+            "count": self.item_stack.getCount(),
         }
