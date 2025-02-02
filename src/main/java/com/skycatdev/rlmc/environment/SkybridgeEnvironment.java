@@ -5,6 +5,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import carpet.fakes.ServerPlayerInterface;
+import carpet.patches.EntityPlayerMPFake;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.projectile.ProjectileUtil;
 import net.minecraft.item.ItemStack;
@@ -59,6 +62,7 @@ public class SkybridgeEnvironment extends Environment<FutureActionPack, Skybridg
 
 	@Override
 	public StepTuple<Observation> step(FutureActionPack action) {
+		action.copyTo(((ServerPlayerInterface)agent).getActionPack());
 		Observation observation = Observation.fromPlayer(agent, 100, 10, 180, history);
 		history.add(action);
 		if (history.size() > historyLength) {
