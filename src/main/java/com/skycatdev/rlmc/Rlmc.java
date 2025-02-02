@@ -24,7 +24,4 @@ public class Rlmc implements ModInitializer {
 
 	}
 
-	public static Environment createEnvironment() {
-
-	}
 }
