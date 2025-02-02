@@ -1,6 +1,5 @@
 package com.skycatdev.rlmc.environment;
 
-import carpet.helpers.EntityPlayerActionPack;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.projectile.ProjectileUtil;
 import net.minecraft.item.ItemStack;
@@ -20,12 +19,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class SkybridgeEnvironment extends Environment<EntityPlayerActionPack, SkybridgeEnvironment.Observation> {
+public class SkybridgeEnvironment extends Environment<FutureActionPack, SkybridgeEnvironment.Observation> {
 	protected ServerPlayerEntity agent;
 	protected BlockPos startPos;
 	protected ServerWorld world;
 	protected int distance;
-	protected List<Observation> history;
+	protected List<FutureActionPack> history;
 	protected int historyLength;
 
 	public SkybridgeEnvironment(ServerPlayerEntity agent, BlockPos startPos, int distance, int historyLength) {
@@ -38,9 +37,9 @@ public class SkybridgeEnvironment extends Environment<EntityPlayerActionPack, Sk
 	}
 
 	@Override
-	public StepTuple<Observation> step(EntityPlayerActionPack action) {
+	public StepTuple<Observation> step(FutureActionPack action) {
 		Observation observation = Observation.fromPlayer(agent, 100, 10, 180, history);
-		history.add(observation);
+		history.add(action);
 		if (history.size() > historyLength) {
 			history.removeFirst();
 		}
@@ -65,13 +64,12 @@ public class SkybridgeEnvironment extends Environment<EntityPlayerActionPack, Sk
 		history.clear();
 
 		Observation observation = Observation.fromPlayer(agent, 100, 10, 180, history);
-		history.add(observation);
 
 		return new ResetTuple<>(observation, new HashMap<>());
 	}
 
-	public record Observation(List<BlockHitResult> blocks, List<@Nullable EntityHitResult> entities, ServerPlayerEntity self, List<Observation> history) {
-		public static Observation fromPlayer(ServerPlayerEntity player, int raycasts, double maxDistance, double fov, List<Observation> history) { // TODO: Test
+	public record Observation(List<BlockHitResult> blocks, List<@Nullable EntityHitResult> entities, ServerPlayerEntity self, List<FutureActionPack> history) {
+		public static Observation fromPlayer(ServerPlayerEntity player, int raycasts, double maxDistance, double fov, List<FutureActionPack> history) { // TODO: Test
 			List<BlockHitResult> blocks = new ArrayList<>();
 			List<@Nullable EntityHitResult> entities = new ArrayList<>();
 			double sqrtRaycasts = Math.sqrt(raycasts);
@@ -96,4 +94,7 @@ public class SkybridgeEnvironment extends Environment<EntityPlayerActionPack, Sk
 		}
 	}
 
+	public ServerPlayerEntity getAgent() {
+		return agent;
+	}
 }
