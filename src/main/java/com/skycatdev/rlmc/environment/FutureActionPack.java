@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
 
+@SuppressWarnings("unused") // Python uses it
 public class FutureActionPack {
 	protected Set<ActionType> actions;
 	protected float yaw;
@@ -61,6 +62,7 @@ public class FutureActionPack {
 		actions.remove(type);
 	}
 
+	@SuppressWarnings("unused") // Python uses it
 	public enum ActionType {
 		ATTACK(pack -> pack.start(EntityPlayerActionPack.ActionType.ATTACK, EntityPlayerActionPack.Action.continuous())),
 		USE(pack -> pack.start(EntityPlayerActionPack.ActionType.USE, EntityPlayerActionPack.Action.continuous())),
