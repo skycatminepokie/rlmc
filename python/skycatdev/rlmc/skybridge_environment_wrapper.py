@@ -48,8 +48,8 @@ class WrappedSkybridgeEnvironment(WrappedJavaEnv):
             "x" : Discrete(MAX_BLOCK_DISTANCE, start=-MAX_BLOCK_DISTANCE),
             "y" : Discrete(MAX_BLOCK_DISTANCE, start=-MAX_BLOCK_DISTANCE),
             "z" : Discrete(MAX_BLOCK_DISTANCE, start=-MAX_BLOCK_DISTANCE),
-            "yaw" : Box(-180, 180),
-            "pitch" : Box(-180, 180),
+            "yaw" : Box(0, 360),
+            "pitch" : Box(-90, 90),
             "hotbar" : Discrete(9),
             "inventory" : Dict[
                 "main" : Sequence(item_space),

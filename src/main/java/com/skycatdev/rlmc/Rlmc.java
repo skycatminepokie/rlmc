@@ -1,10 +1,12 @@
 /* Licensed MIT 2025 */
 package com.skycatdev.rlmc;
 
+import com.skycatdev.rlmc.command.CommandManager;
 import com.skycatdev.rlmc.environment.Environment;
 import java.util.ArrayList;
 import java.util.List;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import py4j.GatewayServer;
@@ -21,7 +23,11 @@ public class Rlmc implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
+		CommandRegistrationCallback.EVENT.register(new CommandManager());
+	}
 
+	public static PythonEntrypoint getPythonEntrypoint() {
+		return (PythonEntrypoint) GATEWAY_SERVER.getPythonServerEntryPoint(new Class[]{PythonEntrypoint.class});
 	}
 
 }

@@ -18,10 +18,10 @@
 			"com.skycatdev.rlmc.Rlmc"
 		],
 		"client": [
-			"com.skycatdev.rlmc.RLAgentsClient"
+			"com.skycatdev.rlmc.RlmcClient"
 		],
 		"fabric-datagen": [
-			"com.skycatdev.rlmc.RLAgentsDataGenerator"
+			"com.skycatdev.rlmc.RlmcDataGenerator"
 		]
 	},
 	"mixins": [
