@@ -1,7 +1,7 @@
 import string, logging
 
 from gymnasium.utils.env_checker import check_env
-from gymnasium.wrappers import TimeLimit
+from gymnasium.wrappers import TimeLimit, FlattenObservation
 from stable_baselines3 import A2C
 from py4j.java_gateway import JavaGateway, JavaObject
 
@@ -9,13 +9,16 @@ from skycatdev.rlmc.skybridge_environment_wrapper import WrappedSkybridgeEnviron
 
 
 class Entrypoint(object):
+    envs = {}
+
     # noinspection PyPep8Naming
     def connectEnvironment(self, environment: string, java_environment: JavaObject):
         if environment == "skybridge":
-            env = TimeLimit(WrappedSkybridgeEnvironment(java_environment, get_gateway()), max_episode_steps=400)
-            check_env(env)
-            agent = A2C("MlpPolicy", env)
-            agent.learn(100)
+            env = FlattenObservation(TimeLimit(WrappedSkybridgeEnvironment(java_environment, get_gateway()), max_episode_steps=400))
+            self.envs[java_environment] = env
+    def train(self, environment: JavaObject):
+        agent = A2C("MultiInputPolicy", self.envs[environment])
+        agent.learn(100)
 
     class Java:
         implements = ["com.skycatdev.rlmc.PythonEntrypoint"]

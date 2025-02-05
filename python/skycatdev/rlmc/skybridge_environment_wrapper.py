@@ -11,9 +11,9 @@ from skycatdev.rlmc.java_environment_wrapper import (
 
 MAX_ID_LENGTH = 32767
 
-MAX_BLOCK_DISTANCE = 30_000_554
+MAX_BLOCK_DISTANCE = 100    # 30_000_554
 
-POS_INTEGERS = 2_147_483_648
+MAX_STACK_SIZE = 999
 
 
 class WrappedSkybridgeEnvironment(WrappedJavaEnv):
@@ -21,7 +21,7 @@ class WrappedSkybridgeEnvironment(WrappedJavaEnv):
         super().__init__(java_env, java_gateway)
         java_import(self.java_view, "com.skycatdev.rlmc.environment.FutureActionPack")
         java_import(self.java_view, "carpet.helpers.EntityPlayerActionPack")
-        item_space = Dict({"id" : Text(MAX_ID_LENGTH), "count" : Discrete(POS_INTEGERS)})
+        item_space = Dict({"id" : Text(MAX_ID_LENGTH), "count" : Discrete(MAX_STACK_SIZE)})
         self.action_space = Dict({
             "attack" : Discrete(2),
             "use" : Discrete(2),

@@ -5,6 +5,8 @@ import carpet.fakes.ServerPlayerInterface;
 
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiConsumer;
 
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.projectile.ProjectileUtil;
@@ -25,11 +27,20 @@ public class SkybridgeEnvironment extends Environment<FutureActionPack, Skybridg
 	protected BlockPos startPos;
 	protected ServerWorld world;
 	protected int distance;
-	protected List<FutureActionPack> history;
+	protected List<FutureActionPack> history = new ArrayList<>();
 	protected int historyLength;
 	protected SynchronousQueue<Runnable> preStepQueue = new SynchronousQueue<>();
-	protected SynchronousQueue<FutureTask<ResetTuple<Observation>>> resetQueue = new SynchronousQueue<>();
 	protected SynchronousQueue<FutureTask<StepTuple<Observation>>> postStepQueue = new SynchronousQueue<>();
+	/**
+	 * True when {@link SkybridgeEnvironment#reset(Integer, Map)} has been called at least once. Synchronize on {@link SkybridgeEnvironment#initializedLock} first.
+	 */
+	protected boolean initialized;
+	protected final Object[] initializedLock = new Object[] {};
+	/**
+	 * A future representing a function call to {@link SkybridgeEnvironment#reset(Integer, Map)}. Always synchronize on {@link SkybridgeEnvironment#resetTaskLock} first.
+	 */
+	protected @Nullable FutureTask<ResetTuple<Observation>> resetTask;
+	protected final Object[] resetTaskLock = new Object[]{};
 
 	public SkybridgeEnvironment(ServerPlayerEntity agent, BlockPos startPos, int distance, int historyLength) {
 		this.agent = agent;
@@ -37,7 +48,6 @@ public class SkybridgeEnvironment extends Environment<FutureActionPack, Skybridg
 		this.distance = distance;
 		this.historyLength = historyLength;
 		world = agent.getServerWorld();
-		history = new ArrayList<>();
 	}
 
 	public ServerPlayerEntity getAgent() {
@@ -61,8 +71,10 @@ public class SkybridgeEnvironment extends Environment<FutureActionPack, Skybridg
 
 			return new ResetTuple<>(observation, new HashMap<>());
 		});
+		synchronized (resetTaskLock) {
+			resetTask = postTick;
+		}
         try {
-            resetQueue.put(postTick);
 			return postTick.get();
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
@@ -97,13 +109,32 @@ public class SkybridgeEnvironment extends Environment<FutureActionPack, Skybridg
 
 	@Override
 	public void preTick() {
-		Objects.requireNonNull(preStepQueue.poll()).run();
+		boolean shouldRun;
+		synchronized (initializedLock) {
+			shouldRun = initialized;
+		}
+		if (shouldRun) {
+			Objects.requireNonNull(preStepQueue.poll()).run();
+		}
 	}
 
 	@Override
 	public void postTick() {
-		Objects.requireNonNull(postStepQueue.poll()).run();
-		Objects.requireNonNull(resetQueue.poll()).run();
+		boolean shouldRun;
+		synchronized (initializedLock) {
+			shouldRun = initialized;
+		}
+		if (shouldRun) {
+			Objects.requireNonNull(postStepQueue.poll()).run();
+		}
+		synchronized (resetTaskLock) {
+			if (resetTask != null) {
+				resetTask.run();
+				synchronized (initializedLock) {
+					initialized = true;
+				}
+			}
+		}
 	}
 
 	public record Observation(List<BlockHitResult> blocks, List<@Nullable EntityHitResult> entities,
