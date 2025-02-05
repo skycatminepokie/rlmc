@@ -2,10 +2,10 @@
 package com.skycatdev.rlmc.environment;
 
 import carpet.fakes.ServerPlayerInterface;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+
+import java.util.*;
+import java.util.concurrent.*;
+
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.projectile.ProjectileUtil;
 import net.minecraft.item.ItemStack;
@@ -27,6 +27,9 @@ public class SkybridgeEnvironment extends Environment<FutureActionPack, Skybridg
 	protected int distance;
 	protected List<FutureActionPack> history;
 	protected int historyLength;
+	protected SynchronousQueue<Runnable> preStepQueue = new SynchronousQueue<>();
+	protected SynchronousQueue<FutureTask<ResetTuple<Observation>>> resetQueue = new SynchronousQueue<>();
+	protected SynchronousQueue<FutureTask<StepTuple<Observation>>> postStepQueue = new SynchronousQueue<>();
 
 	public SkybridgeEnvironment(ServerPlayerEntity agent, BlockPos startPos, int distance, int historyLength) {
 		this.agent = agent;
@@ -43,35 +46,64 @@ public class SkybridgeEnvironment extends Environment<FutureActionPack, Skybridg
 
 	@Override
 	public ResetTuple<Observation> reset(@Nullable Integer seed, @Nullable Map<String, Object> options) {
-		agent.getInventory().clear();
-		for (BlockPos pos : BlockPos.iterateOutwards(startPos, 100, 10, 100)) {
-			world.setBlockState(pos, Blocks.AIR.getDefaultState());
-		}
-		world.setBlockState(startPos.down(), Blocks.STONE.getDefaultState());
-		for (int i = 0; i < 36; i++) {
-			agent.getInventory().insertStack(new ItemStack(Items.STONE, 64));
-		}
-		history.clear();
+		FutureTask<ResetTuple<Observation>> postTick = new FutureTask<>(() -> {
+			agent.getInventory().clear();
+			for (BlockPos pos : BlockPos.iterateOutwards(startPos, 100, 10, 100)) {
+				world.setBlockState(pos, Blocks.AIR.getDefaultState());
+			}
+			world.setBlockState(startPos.down(), Blocks.STONE.getDefaultState());
+			for (int i = 0; i < 36; i++) {
+				agent.getInventory().insertStack(new ItemStack(Items.STONE, 64));
+			}
+			history.clear();
 
-		Observation observation = Observation.fromPlayer(agent, 100, 10, 180, history);
+			Observation observation = Observation.fromPlayer(agent, 100, 10, 180, history);
 
-		return new ResetTuple<>(observation, new HashMap<>());
-	}
+			return new ResetTuple<>(observation, new HashMap<>());
+		});
+        try {
+            resetQueue.put(postTick);
+			return postTick.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 	@Override
 	public StepTuple<Observation> step(FutureActionPack action) {
-		action.copyTo(((ServerPlayerInterface)agent).getActionPack());
-		Observation observation = Observation.fromPlayer(agent, 100, 10, 180, history);
-		history.add(action);
-		if (history.size() > historyLength) {
-			history.removeFirst();
-		}
+		FutureTask<StepTuple<Observation>> postTick = new FutureTask<>(() -> {
+			Observation observation = Observation.fromPlayer(agent, 100, 10, 180, history);
 
-		int reward = startPos.getX() - agent.getBlockX();
-		boolean terminated = startPos.getX() - agent.getBlockX() >= distance;
-		boolean truncated = agent.getServerWorld() != world || agent.isDead() || agent.getBlockY() < startPos.getY() + 1;
+			int reward = startPos.getX() - agent.getBlockX();
+			boolean terminated = startPos.getX() - agent.getBlockX() >= distance;
+			boolean truncated = agent.getServerWorld() != world || agent.isDead() || agent.getBlockY() < startPos.getY() + 1;
 
-		return new StepTuple<>(observation, reward, terminated, truncated, new HashMap<>());
+			return new StepTuple<>(observation, reward, terminated, truncated, new HashMap<>());
+		});
+        try {
+			preStepQueue.put(() -> {
+				action.copyTo(((ServerPlayerInterface)agent).getActionPack());
+				history.add(action);
+				if (history.size() > historyLength) {
+					history.removeFirst();
+				}
+			});
+			postStepQueue.put(postTick);
+            return postTick.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+	@Override
+	public void preTick() {
+		Objects.requireNonNull(preStepQueue.poll()).run();
+	}
+
+	@Override
+	public void postTick() {
+		Objects.requireNonNull(postStepQueue.poll()).run();
+		Objects.requireNonNull(resetQueue.poll()).run();
 	}
 
 	public record Observation(List<BlockHitResult> blocks, List<@Nullable EntityHitResult> entities,

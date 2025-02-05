@@ -2,6 +2,7 @@
 package com.skycatdev.rlmc.environment;
 
 import java.util.Map;
+
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -15,5 +16,6 @@ public abstract class Environment<A, O> {
 	public abstract StepTuple<O> step(A action);
 	@SuppressWarnings("unused") // Used by java_environment_wrapper.py
 	public abstract ResetTuple<O> reset(@Nullable Integer seed, @Nullable Map<String, Object> options);
-
+	public abstract void preTick();
+	public abstract void postTick();
 }
