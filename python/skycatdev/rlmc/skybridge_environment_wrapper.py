@@ -21,8 +21,8 @@ class WrappedSkybridgeEnvironment(WrappedJavaEnv):
         super().__init__(java_env, java_gateway)
         java_import(self.java_view, "com.skycatdev.rlmc.environment.FutureActionPack")
         java_import(self.java_view, "carpet.helpers.EntityPlayerActionPack")
-        item_space = Dict["id" : Text(MAX_ID_LENGTH), "count" : Discrete(POS_INTEGERS)]
-        self.action_space = Dict[
+        item_space = Dict({"id" : Text(MAX_ID_LENGTH), "count" : Discrete(POS_INTEGERS)})
+        self.action_space = Dict({
             "attack" : Discrete(2),
             "use" : Discrete(2),
             "forward" : Discrete(2),
@@ -32,32 +32,32 @@ class WrappedSkybridgeEnvironment(WrappedJavaEnv):
             "sprint" : Discrete(2),
             "sneak" : Discrete(2),
             "jump" : Discrete(2),
-            "yaw" : Box(0, 360),
-            "pitch" : Box(-90, 90),
-            "hotbar" : Discrete(9),
-        ]
-        self.obs_space = Dict[
+            "yaw" : Box(0, 360), # TODO: Normalize
+            "pitch" : Box(-90, 90), # TODO: Normalize
+            "hotbar" : Discrete(9)
+        })
+        self.observation_space = Dict({
             "blocks" : Sequence(
-                Dict[
+                Dict({
                     "block" : Text(MAX_ID_LENGTH),
                     "x" : Discrete(MAX_BLOCK_DISTANCE, start=-MAX_BLOCK_DISTANCE),
                     "y" : Discrete(MAX_BLOCK_DISTANCE, start=-MAX_BLOCK_DISTANCE),
                     "z" : Discrete(MAX_BLOCK_DISTANCE, start=-MAX_BLOCK_DISTANCE),
-                ]
+                })
             ),
             "x" : Discrete(MAX_BLOCK_DISTANCE, start=-MAX_BLOCK_DISTANCE),
             "y" : Discrete(MAX_BLOCK_DISTANCE, start=-MAX_BLOCK_DISTANCE),
             "z" : Discrete(MAX_BLOCK_DISTANCE, start=-MAX_BLOCK_DISTANCE),
-            "yaw" : Box(0, 360),
-            "pitch" : Box(-90, 90),
+            "yaw" : Box(0, 360), # TODO: Normalize
+            "pitch" : Box(-90, 90), # TODO: Normalize
             "hotbar" : Discrete(9),
-            "inventory" : Dict[
+            "inventory" : Dict({
                 "main" : Sequence(item_space),
                 "armor" : Sequence(item_space),
                 "offhand":item_space,
-            ],
-            "history" : self.action_space,
-        ]
+            }),
+            "history" : self.action_space
+        })
 
     def obs_to_python(self, java_obs: JavaObject) -> ObsType:
         assert isinstance(

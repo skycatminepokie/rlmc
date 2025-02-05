@@ -1,24 +1,29 @@
 import string, logging
 
+from gymnasium.utils.env_checker import check_env
+from gymnasium.wrappers import TimeLimit
+from stable_baselines3 import A2C
 from py4j.java_gateway import JavaGateway, JavaObject
 
 from skycatdev.rlmc.skybridge_environment_wrapper import WrappedSkybridgeEnvironment
 
 
 class Entrypoint(object):
-    def __init__(self, java_gateway: JavaGateway):
-        self.java_gateway = java_gateway
-
     # noinspection PyPep8Naming
     def connectEnvironment(self, environment: string, java_environment: JavaObject):
         if environment == "skybridge":
-            WrappedSkybridgeEnvironment(java_environment, self.java_gateway)
+            env = TimeLimit(WrappedSkybridgeEnvironment(java_environment, get_gateway()), max_episode_steps=400)
+            check_env(env)
+            agent = A2C("MlpPolicy", env)
+            agent.learn(100)
 
     class Java:
         implements = ["com.skycatdev.rlmc.PythonEntrypoint"]
 
 logging.basicConfig(level=logging.DEBUG)
 
-gateway = JavaGateway(start_callback_server=True)
-gateway.python_server_entry_point = Entrypoint(gateway)
+gateway = JavaGateway(start_callback_server=True, python_server_entry_point=Entrypoint())
 print("Gateway started")
+
+def get_gateway():
+    return gateway

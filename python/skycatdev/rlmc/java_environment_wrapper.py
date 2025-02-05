@@ -21,7 +21,7 @@ class WrappedJavaEnv(ABC, gym.Env):
     def reset(
         self, seed: int | None = None, options: dict[str, Any] | None = None
     ) -> tuple[ObsType, dict[str, Any]]:
-        return self.unwrap_reset(self.java_env.reset())
+        return self.unwrap_reset(self.java_env.reset(seed, options))
 
     @abstractmethod
     def obs_to_python(self, java_obs: JavaObject) -> ObsType:
