@@ -1,5 +1,5 @@
 py4j~=0.10.9.9
 stable-baselines3~=2.5.0
 gymnasium~=1.0.0
-
 numpy~=2.2.2
+black~=25.1.0

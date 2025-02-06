@@ -5,7 +5,7 @@ from gymnasium.wrappers import TimeLimit, FlattenObservation
 from stable_baselines3 import A2C
 from py4j.java_gateway import JavaGateway, JavaObject
 
-from skycatdev.rlmc.skybridge_environment_wrapper import WrappedSkybridgeEnvironment
+from skybridge_environment_wrapper import WrappedSkybridgeEnvironment
 
 
 class Entrypoint(object):

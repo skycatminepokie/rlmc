@@ -1,0 +1,6 @@
+.venv
+build
+out
+run
+.github
+.idea
