@@ -16,12 +16,13 @@ class WrappedJavaEnv(ABC, gym.Env):
     def step(
         self, action: ActType
     ) -> tuple[ObsType, SupportsFloat, bool, bool, dict[str, Any]]:
-        return self.unwrap_step(self.java_env.step())
+        return self.unwrap_step(self.java_env.step(self.action_to_java(action)))
 
     def reset(
         self, seed: int | None = None, options: dict[str, Any] | None = None
     ) -> tuple[ObsType, dict[str, Any]]:
-        return self.unwrap_reset(self.java_env.reset(seed, options))
+        unwrapped = self.unwrap_reset(self.java_env.reset(seed, options))
+        return unwrapped
 
     @abstractmethod
     def obs_to_python(self, java_obs: JavaObject) -> ObsType:
@@ -43,11 +44,11 @@ class WrappedJavaEnv(ABC, gym.Env):
             step_tuple.reward(),
             step_tuple.terminated(),
             step_tuple.truncated(),
-            step_tuple.info(),
+            java_map_to_dict(step_tuple.info()),
         )
 
     def unwrap_reset(self, reset_tuple: JavaObject) -> tuple[ObsType, dict[str, Any]]:
-        return self.obs_to_python(reset_tuple.observation()), reset_tuple.info()
+        return self.obs_to_python(reset_tuple.observation()), java_map_to_dict(reset_tuple.info())
 
 
 def java_map_to_dict(java_map: JavaMap) -> dict:

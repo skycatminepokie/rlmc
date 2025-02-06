@@ -5,8 +5,6 @@ import carpet.fakes.ServerPlayerInterface;
 
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.BiConsumer;
 
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.projectile.ProjectileUtil;
@@ -29,18 +27,13 @@ public class SkybridgeEnvironment extends Environment<FutureActionPack, Skybridg
 	protected int distance;
 	protected List<FutureActionPack> history = new ArrayList<>();
 	protected int historyLength;
-	protected SynchronousQueue<Runnable> preStepQueue = new SynchronousQueue<>();
-	protected SynchronousQueue<FutureTask<StepTuple<Observation>>> postStepQueue = new SynchronousQueue<>();
+	protected SynchronousQueue<Runnable> preTickQueue = new SynchronousQueue<>();
+	protected SynchronousQueue<FutureTask<?>> postTickQueue = new SynchronousQueue<>();
 	/**
 	 * True when {@link SkybridgeEnvironment#reset(Integer, Map)} has been called at least once. Synchronize on {@link SkybridgeEnvironment#initializedLock} first.
 	 */
 	protected boolean initialized;
 	protected final Object[] initializedLock = new Object[] {};
-	/**
-	 * A future representing a function call to {@link SkybridgeEnvironment#reset(Integer, Map)}. Always synchronize on {@link SkybridgeEnvironment#resetTaskLock} first.
-	 */
-	protected @Nullable FutureTask<ResetTuple<Observation>> resetTask;
-	protected final Object[] resetTaskLock = new Object[]{};
 
 	public SkybridgeEnvironment(ServerPlayerEntity agent, BlockPos startPos, int distance, int historyLength) {
 		this.agent = agent;
@@ -63,18 +56,21 @@ public class SkybridgeEnvironment extends Environment<FutureActionPack, Skybridg
 			}
 			world.setBlockState(startPos.down(), Blocks.STONE.getDefaultState());
 			for (int i = 0; i < 36; i++) {
-				agent.getInventory().insertStack(new ItemStack(Items.STONE, 64));
+				agent.getInventory().offer(new ItemStack(Items.STONE, 64), true);
 			}
 			history.clear();
+			agent.teleport(world, startPos.getX(), startPos.getY(), startPos.getZ(), Set.of(), 0, 0);
 
 			Observation observation = Observation.fromPlayer(agent, 100, 10, 180, history);
 
 			return new ResetTuple<>(observation, new HashMap<>());
 		});
-		synchronized (resetTaskLock) {
-			resetTask = postTick;
-		}
         try {
+			synchronized (initializedLock) {
+				initialized = true;
+			}
+			preTickQueue.put(()->{});
+			postTickQueue.put(postTick);
 			return postTick.get();
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
@@ -93,14 +89,14 @@ public class SkybridgeEnvironment extends Environment<FutureActionPack, Skybridg
 			return new StepTuple<>(observation, reward, terminated, truncated, new HashMap<>());
 		});
         try {
-			preStepQueue.put(() -> {
+			preTickQueue.put(() -> {
 				action.copyTo(((ServerPlayerInterface)agent).getActionPack());
 				history.add(action);
 				if (history.size() > historyLength) {
 					history.removeFirst();
 				}
 			});
-			postStepQueue.put(postTick);
+			postTickQueue.put(postTick);
             return postTick.get();
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
@@ -111,11 +107,16 @@ public class SkybridgeEnvironment extends Environment<FutureActionPack, Skybridg
 	public void preTick() {
 		boolean shouldRun;
 		synchronized (initializedLock) {
-			shouldRun = initialized;
+			shouldRun = this.initialized;
 		}
 		if (shouldRun) {
-			Objects.requireNonNull(preStepQueue.poll()).run();
-		}
+            try {
+				Runnable runnable = Objects.requireNonNull(preTickQueue.poll(10, TimeUnit.HOURS));
+				runnable.run();
+			} catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
 	}
 
 	@Override
@@ -125,16 +126,13 @@ public class SkybridgeEnvironment extends Environment<FutureActionPack, Skybridg
 			shouldRun = initialized;
 		}
 		if (shouldRun) {
-			Objects.requireNonNull(postStepQueue.poll()).run();
-		}
-		synchronized (resetTaskLock) {
-			if (resetTask != null) {
-				resetTask.run();
-				synchronized (initializedLock) {
-					initialized = true;
-				}
-			}
-		}
+            try {
+				FutureTask<?> task = Objects.requireNonNull(postTickQueue.poll(10, TimeUnit.HOURS));
+				task.run();
+			} catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
 	}
 
 	public record Observation(List<BlockHitResult> blocks, List<@Nullable EntityHitResult> entities,

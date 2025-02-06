@@ -71,7 +71,8 @@ public class FutureActionPack {
 		BACKWARD(pack -> pack.setForward(-1)),
 		RIGHT(pack -> pack.setStrafing(-1)),
 		SPRINT(pack -> pack.setSprinting(true)),
-		SNEAK(pack -> pack.setSneaking(true));
+		SNEAK(pack -> pack.setSneaking(true)),
+		JUMP(pack -> pack.start(EntityPlayerActionPack.ActionType.JUMP, EntityPlayerActionPack.Action.continuous()));
 
 		private final Consumer<EntityPlayerActionPack> packModifier;
 

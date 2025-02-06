@@ -89,7 +89,7 @@ public class CommandManager implements CommandRegistrationCallback {
 		SkybridgeEnvironment environment = new SkybridgeEnvironment(agent, pos, distance, historyLength);
 		Rlmc.ENVIRONMENTS.add(environment);
 		Rlmc.getPythonEntrypoint().connectEnvironment("skybridge", environment);
-		Rlmc.getPythonEntrypoint().train(environment);
+		new Thread(() -> Rlmc.getPythonEntrypoint().train(environment)).start();
 		return 1;
 	}
 
