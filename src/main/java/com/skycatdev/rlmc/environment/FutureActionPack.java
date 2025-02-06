@@ -27,7 +27,7 @@ public class FutureActionPack {
 			actionType.packModifier.accept(pack);
 		}
 		pack.look(yaw, pitch);
-		pack.setSlot(hotbar);
+		pack.setSlot(hotbar + 1);
 	}
 
 	public Set<ActionType> getActions() {

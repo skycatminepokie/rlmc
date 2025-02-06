@@ -24,7 +24,7 @@ class Entrypoint(object):
     class Java:
         implements = ["com.skycatdev.rlmc.PythonEntrypoint"]
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 gateway = JavaGateway(start_callback_server=True, python_server_entry_point=Entrypoint(), auto_field=True)
 print("Gateway started")

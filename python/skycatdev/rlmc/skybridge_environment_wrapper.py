@@ -141,7 +141,8 @@ class WrappedSkybridgeEnvironment(WrappedJavaEnv):
 
         # action_pack.setYaw(action["yaw"]) TODO add these in
         # action_pack.setPitch(action["pitch"])
-        assert isinstance(action[9], np.int64)
+        # assert isinstance(action[9], np.int64)
+
         action_pack.setHotbar(action[9].item())
 
         return action_pack

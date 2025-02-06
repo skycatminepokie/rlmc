@@ -48,10 +48,10 @@ public class SkybridgeEnvironment extends Environment<FutureActionPack, Skybridg
 	}
 
 	@Override
-	public ResetTuple<Observation> reset(@Nullable Integer seed, @Nullable Map<String, Object> options) {
+	public synchronized ResetTuple<Observation> reset(@Nullable Integer seed, @Nullable Map<String, Object> options) {
 		FutureTask<ResetTuple<Observation>> postTick = new FutureTask<>(() -> {
 			agent.getInventory().clear();
-			for (BlockPos pos : BlockPos.iterateOutwards(startPos, 100, 10, 100)) {
+			for (BlockPos pos : BlockPos.iterateOutwards(startPos, distance + 6, 10, distance + 6)) {
 				world.setBlockState(pos, Blocks.AIR.getDefaultState());
 			}
 			world.setBlockState(startPos.down(), Blocks.STONE.getDefaultState());
@@ -78,7 +78,7 @@ public class SkybridgeEnvironment extends Environment<FutureActionPack, Skybridg
     }
 
 	@Override
-	public StepTuple<Observation> step(FutureActionPack action) {
+	public synchronized StepTuple<Observation> step(FutureActionPack action) {
 		FutureTask<StepTuple<Observation>> postTick = new FutureTask<>(() -> {
 			Observation observation = Observation.fromPlayer(agent, 100, 10, 180, history);
 
