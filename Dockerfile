@@ -11,4 +11,4 @@ COPY . .
 # Run Minecraft server
 RUN ["echo", "eula=true", ">>", "run/eula"]
 EXPOSE 25565
-CMD python3 python/skycatdev/rlmc/entrypoint.py & ./gradlew runServer
+CMD ["python3", "python/skycatdev/rlmc/entrypoint.py", "&", "./gradlew runServer"]

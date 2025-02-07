@@ -4,7 +4,7 @@ from gymnasium.spaces import Text, Discrete, Box, Dict, Sequence, MultiDiscrete
 from py4j.java_collections import JavaList
 from py4j.java_gateway import JavaObject, JavaGateway, java_import
 
-from skycatdev.rlmc.java_environment_wrapper import (
+from java_environment_wrapper import (
     WrappedJavaEnv,
     WrappedBlockHitResult,
     java_list_to_array,
