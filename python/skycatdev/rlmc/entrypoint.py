@@ -16,6 +16,7 @@ class Entrypoint(object):
         if environment == "skybridge":
             env = WrappedSkybridgeEnvironment(java_environment, get_gateway())
             self.envs[java_environment] = env
+
     def train(self, environment: JavaObject):
         # check_env(self.envs[environment])
         agent = A2C("MultiInputPolicy", self.envs[environment], verbose=1)
@@ -25,15 +26,17 @@ class Entrypoint(object):
         mean, std = evaluate_policy(agent, self.envs[environment], 1000)
         print(f"mean={mean}, std={std}")
 
-
-
     class Java:
         implements = ["com.skycatdev.rlmc.PythonEntrypoint"]
 
+
 logging.basicConfig(level=logging.INFO)
 
-gateway = JavaGateway(start_callback_server=True, python_server_entry_point=Entrypoint(), auto_field=True)
+gateway = JavaGateway(
+    start_callback_server=True, python_server_entry_point=Entrypoint(), auto_field=True
+)
 print("Gateway started")
+
 
 def get_gateway():
     return gateway

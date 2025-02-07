@@ -1,18 +1,16 @@
 import numpy as np
 from gymnasium.core import ActType, ObsType
-from gymnasium.spaces import Text, Discrete, Box, Dict, Sequence, MultiDiscrete
+from gymnasium.spaces import Text, Discrete, Box, Dict, MultiDiscrete
 from py4j.java_collections import JavaList
 from py4j.java_gateway import JavaObject, JavaGateway, java_import
 
 from java_environment_wrapper import (
-    WrappedJavaEnv,
-    WrappedBlockHitResult,
-    java_list_to_array,
+    WrappedJavaEnv
 )
 
 MAX_ID_LENGTH = 32767
 
-MAX_BLOCK_DISTANCE = 3000    # 30_000_554
+MAX_BLOCK_DISTANCE = 3000  # 30_000_554
 
 MAX_STACK_SIZE = 999
 
@@ -22,7 +20,9 @@ class WrappedSkybridgeEnvironment(WrappedJavaEnv):
         super().__init__(java_env, java_gateway)
         java_import(self.java_view, "com.skycatdev.rlmc.environment.FutureActionPack")
         java_import(self.java_view, "carpet.helpers.EntityPlayerActionPack")
-        item_space = Dict({"id" : Text(MAX_ID_LENGTH), "count" : Discrete(MAX_STACK_SIZE)})
+        item_space = Dict(
+            {"id": Text(MAX_ID_LENGTH), "count": Discrete(MAX_STACK_SIZE)}
+        )
         self.action_space = MultiDiscrete([2, 2, 2, 2, 2, 2, 2, 2, 2, 9])
         # {
         #     "attack" : Discrete(2),
@@ -38,28 +38,30 @@ class WrappedSkybridgeEnvironment(WrappedJavaEnv):
         #     "pitch" : Box(-90, 90), # TODO: Normalize
         #     "hotbar" : Discrete(9)
         # }
-        self.observation_space = Dict({
-            # "blocks" : Sequence(
-            #     Dict({
-            #         "block" : Text(MAX_ID_LENGTH),
-            #         "x" : Discrete(MAX_BLOCK_DISTANCE, start=-MAX_BLOCK_DISTANCE),
-            #         "y" : Discrete(MAX_BLOCK_DISTANCE, start=-MAX_BLOCK_DISTANCE),
-            #         "z" : Discrete(MAX_BLOCK_DISTANCE, start=-MAX_BLOCK_DISTANCE),
-            #     })
-            # ),
-            "x" : Box(-MAX_BLOCK_DISTANCE, MAX_BLOCK_DISTANCE),
-            "y" : Box(-MAX_BLOCK_DISTANCE, MAX_BLOCK_DISTANCE),
-            "z" : Box(-MAX_BLOCK_DISTANCE, MAX_BLOCK_DISTANCE),
-            "yaw" : Box(-180, 180, dtype=np.float32), # TODO: Normalize
-            "pitch" : Box(-90, 90, dtype=np.float32), # TODO: Normalize
-            "hotbar" : Discrete(9),
-            # "inventory" : Dict({
-            #     "main" : Sequence(item_space),
-            #     "armor" : Sequence(item_space),
-            #     "offhand":item_space,
-            # }),
-            # "history" : self.action_space
-        })
+        self.observation_space = Dict(
+            {
+                # "blocks" : Sequence(
+                #     Dict({
+                #         "block" : Text(MAX_ID_LENGTH),
+                #         "x" : Discrete(MAX_BLOCK_DISTANCE, start=-MAX_BLOCK_DISTANCE),
+                #         "y" : Discrete(MAX_BLOCK_DISTANCE, start=-MAX_BLOCK_DISTANCE),
+                #         "z" : Discrete(MAX_BLOCK_DISTANCE, start=-MAX_BLOCK_DISTANCE),
+                #     })
+                # ),
+                "x": Box(-MAX_BLOCK_DISTANCE, MAX_BLOCK_DISTANCE),
+                "y": Box(-MAX_BLOCK_DISTANCE, MAX_BLOCK_DISTANCE),
+                "z": Box(-MAX_BLOCK_DISTANCE, MAX_BLOCK_DISTANCE),
+                "yaw": Box(-180, 180, dtype=np.float32),  # TODO: Normalize
+                "pitch": Box(-90, 90, dtype=np.float32),  # TODO: Normalize
+                "hotbar": Discrete(9),
+                # "inventory" : Dict({
+                #     "main" : Sequence(item_space),
+                #     "armor" : Sequence(item_space),
+                #     "offhand":item_space,
+                # }),
+                # "history" : self.action_space
+            }
+        )
 
     def obs_to_python(self, java_obs: JavaObject) -> ObsType:
         assert isinstance(
@@ -71,16 +73,20 @@ class WrappedSkybridgeEnvironment(WrappedJavaEnv):
             #     WrappedBlockHitResult(hit_result).to_dict(agent.getWorld())
             #     for hit_result in java_obs.blocks()
             # ],
-            "x" : [agent.getX()],
-            "y" : [agent.getY()],
-            "z" : [agent.getZ()],
-            "yaw" : [self.java_view.net.minecraft.util.math.MathHelper.wrapDegrees(
-                agent.getYaw()
-            )],
-            "pitch" : [self.java_view.net.minecraft.util.math.MathHelper.wrapDegrees(
-                agent.getPitch()
-            )],
-            "hotbar" : agent.getInventory().selectedSlot
+            "x": [agent.getX()],
+            "y": [agent.getY()],
+            "z": [agent.getZ()],
+            "yaw": [
+                self.java_view.net.minecraft.util.math.MathHelper.wrapDegrees(
+                    agent.getYaw()
+                )
+            ],
+            "pitch": [
+                self.java_view.net.minecraft.util.math.MathHelper.wrapDegrees(
+                    agent.getPitch()
+                )
+            ],
+            "hotbar": agent.getInventory().selectedSlot,
             # "inventory" : {
             #     "main": java_list_to_array(agent.getInventory().main),
             #     "armor": java_list_to_array(agent.getInventory().armor),
@@ -149,7 +155,7 @@ class WrappedSkybridgeEnvironment(WrappedJavaEnv):
 
     def action_to_python(self, action: JavaObject) -> ActType:
         action_types = action.getActions()
-        python_action = [0,0,0,0,0,0,0,0,0]
+        python_action = [0, 0, 0, 0, 0, 0, 0, 0, 0]
         assert isinstance(
             action_types, JavaList
         ), f"Expected a JavaList, got a(n) {type(action_types)}"

@@ -2,7 +2,6 @@
 package com.skycatdev.rlmc.environment;
 
 import java.util.Map;
-
 import org.jetbrains.annotations.Nullable;
 
 /**

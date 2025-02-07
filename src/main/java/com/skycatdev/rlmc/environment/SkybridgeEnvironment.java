@@ -2,10 +2,8 @@
 package com.skycatdev.rlmc.environment;
 
 import carpet.fakes.ServerPlayerInterface;
-
 import java.util.*;
 import java.util.concurrent.*;
-
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.projectile.ProjectileUtil;
 import net.minecraft.item.ItemStack;

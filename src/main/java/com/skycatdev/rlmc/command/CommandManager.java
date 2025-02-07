@@ -1,17 +1,20 @@
+/* Licensed MIT 2025 */
 package com.skycatdev.rlmc.command;
+
+import static net.minecraft.server.command.CommandManager.*;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
-import com.mojang.brigadier.arguments.StringArgumentType;
-import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import com.mojang.brigadier.tree.LiteralCommandNode;
-import com.skycatdev.rlmc.PythonEntrypoint;
 import com.skycatdev.rlmc.Rlmc;
 import com.skycatdev.rlmc.environment.SkybridgeEnvironment;
+import java.util.Collection;
+import java.util.Objects;
+import java.util.Optional;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.command.argument.BlockPosArgumentType;
@@ -19,12 +22,6 @@ import net.minecraft.command.argument.GameProfileArgumentType;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
-
-import java.util.Collection;
-import java.util.Objects;
-import java.util.Optional;
-
-import static net.minecraft.server.command.CommandManager.*;
 
 public class CommandManager implements CommandRegistrationCallback {
 	public static final DynamicCommandExceptionType NOT_ONE_AGENT_EXCEPTION_TYPE =

@@ -48,7 +48,9 @@ class WrappedJavaEnv(ABC, gym.Env):
         )
 
     def unwrap_reset(self, reset_tuple: JavaObject) -> tuple[ObsType, dict[str, Any]]:
-        return self.obs_to_python(reset_tuple.observation()), java_map_to_dict(reset_tuple.info())
+        return self.obs_to_python(reset_tuple.observation()), java_map_to_dict(
+            reset_tuple.info()
+        )
 
 
 def java_map_to_dict(java_map: JavaMap) -> dict:

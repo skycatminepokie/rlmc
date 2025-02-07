@@ -1,14 +1,14 @@
+/* Licensed MIT 2025 */
 package com.skycatdev.rlmc.mixin;
 
 import com.skycatdev.rlmc.Rlmc;
 import com.skycatdev.rlmc.environment.Environment;
+import java.util.function.BooleanSupplier;
 import net.minecraft.server.MinecraftServer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.util.function.BooleanSupplier;
 
 @Mixin(MinecraftServer.class)
 public abstract class MinecraftServerMixin {
