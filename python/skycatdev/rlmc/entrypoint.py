@@ -3,6 +3,7 @@ import string
 
 from py4j.java_gateway import JavaGateway, JavaObject
 from stable_baselines3 import A2C
+from stable_baselines3.common.evaluation import evaluate_policy
 
 from skybridge_environment_wrapper import WrappedSkybridgeEnvironment
 
@@ -17,8 +18,14 @@ class Entrypoint(object):
             self.envs[java_environment] = env
     def train(self, environment: JavaObject):
         # check_env(self.envs[environment])
-        agent = A2C("MultiInputPolicy", self.envs[environment])
-        agent.learn(100)
+        agent = A2C("MultiInputPolicy", self.envs[environment], verbose=1)
+        mean, std = evaluate_policy(agent, self.envs[environment], 1000)
+        print(f"mean={mean}, std={std}")
+        agent.learn(10000)
+        mean, std = evaluate_policy(agent, self.envs[environment], 1000)
+        print(f"mean={mean}, std={std}")
+
+
 
     class Java:
         implements = ["com.skycatdev.rlmc.PythonEntrypoint"]

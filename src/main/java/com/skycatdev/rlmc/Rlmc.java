@@ -5,6 +5,8 @@ import com.skycatdev.rlmc.command.CommandManager;
 import com.skycatdev.rlmc.environment.Environment;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.LogManager;
+
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import org.slf4j.Logger;
@@ -20,7 +22,8 @@ public class Rlmc implements ModInitializer {
 	public static final List<Environment<?, ?>> ENVIRONMENTS = new ArrayList<>();
 
 	static {
-		GATEWAY_SERVER.start(true);
+		new Thread(() -> GATEWAY_SERVER.start(false), "RLMC Python Gateway Server Thread").start();
+
 	}
 
 	@Override
