@@ -20,6 +20,12 @@ class Entrypoint(object):
                 max_episode_steps=200,
             )
             self.envs[java_environment] = env
+        elif environment == "fight_skeleton":
+            env = TimeLimit(
+                WrappedSkybridgeEnvironment(java_environment, get_gateway()),
+                max_episode_steps=400,
+            )
+            self.envs[java_environment] = env
 
     def train(self, environment: JavaObject):
         # check_env(self.envs[environment])

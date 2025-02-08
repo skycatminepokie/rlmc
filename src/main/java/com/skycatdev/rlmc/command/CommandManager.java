@@ -12,6 +12,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.skycatdev.rlmc.Rlmc;
+import com.skycatdev.rlmc.environment.FightSkeletonEnvironment;
 import com.skycatdev.rlmc.environment.SkybridgeEnvironment;
 import java.util.Collection;
 import java.util.Optional;
@@ -42,6 +43,7 @@ public class CommandManager implements CommandRegistrationCallback {
 		// spotless:off
 		environment.addChild(create);
 			appendSkybridge(create);
+			appendFightSkeleton(create);
 		// spotless:on
 
 		dispatcher.getRoot().addChild(environment);
@@ -73,8 +75,46 @@ public class CommandManager implements CommandRegistrationCallback {
 		// spotless:on
 	}
 
-	private static int makeSkybridgeEnvironment(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
-		Collection<GameProfile> agents = GameProfileArgumentType.getProfileArgument(context, "agent");
+	private void appendFightSkeleton(LiteralCommandNode<ServerCommandSource> create) {
+		var fightSkeleton = literal("skeleton")
+				.requires(source -> source.hasPermissionLevel(4))
+				.build();
+		var agent = argument("agent", GameProfileArgumentType.gameProfile())
+				.requires(source -> source.hasPermissionLevel(4))
+				.build();
+		var agentPos = argument("agent_pos", BlockPosArgumentType.blockPos())
+				.requires(source -> source.hasPermissionLevel(4))
+				.build();
+		var skeletonPos = argument("skeleton_pos", BlockPosArgumentType.blockPos())
+				.requires(source -> source.hasPermissionLevel(4))
+				.build();
+		var historyLength = argument("history_length", IntegerArgumentType.integer(0))
+				.requires(source -> source.hasPermissionLevel(4))
+				.executes(CommandManager::makeFightSkeletonEnvironment)
+				.build();
+		// spotless:off
+		create.addChild(fightSkeleton);
+			fightSkeleton.addChild(agent);
+				agent.addChild(agentPos);
+					agentPos.addChild(skeletonPos);
+						skeletonPos.addChild(historyLength);
+		// spotless:on
+	}
+
+	private static int makeFightSkeletonEnvironment(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+		ServerPlayerEntity agent = getOneAgent(context, "agent");
+		BlockPos agentPos = BlockPosArgumentType.getLoadedBlockPos(context, context.getSource().getWorld(), "agent_pos");
+		BlockPos skeletonPos = BlockPosArgumentType.getLoadedBlockPos(context, context.getSource().getWorld(), "skeleton_pos");
+		int historyLength = IntegerArgumentType.getInteger(context, "history_length");
+		FightSkeletonEnvironment environment = new FightSkeletonEnvironment(agent, agentPos, skeletonPos, historyLength);
+		Rlmc.getPythonEntrypoint().connectEnvironment("fight_skeleton", environment);
+		new Thread(() -> Rlmc.getPythonEntrypoint().train(environment), "Skeleton fight training thread").start();
+
+		return Command.SINGLE_SUCCESS;
+	}
+
+	private static ServerPlayerEntity getOneAgent(CommandContext<ServerCommandSource> context, String agentParameterName) throws CommandSyntaxException {
+		Collection<GameProfile> agents = GameProfileArgumentType.getProfileArgument(context, agentParameterName);
 		if (agents.size() != 1) {
 			throw NOT_ONE_AGENT_EXCEPTION_TYPE.create(agents.size());
 		}
@@ -85,6 +125,11 @@ public class CommandManager implements CommandRegistrationCallback {
 		if (agent == null) {
 			throw AGENT_NOT_FOUND_EXCEPTION_TYPE.create(optGameProfile.get().getName());
 		}
+		return agent;
+	}
+
+	private static int makeSkybridgeEnvironment(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+		ServerPlayerEntity agent = getOneAgent(context, "agent");
 		BlockPos pos = BlockPosArgumentType.getLoadedBlockPos(context, "pos");
 		int distance = IntegerArgumentType.getInteger(context, "distance");
 		int historyLength = IntegerArgumentType.getInteger(context, "historyLength");

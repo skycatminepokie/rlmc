@@ -2,10 +2,7 @@
 package com.skycatdev.rlmc.environment;
 
 import carpet.fakes.ServerPlayerInterface;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.FutureTask;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnReason;
@@ -25,15 +22,14 @@ public class FightSkeletonEnvironment extends Environment<FutureActionPack, Visi
     protected BlockPos agentStartPos;
     protected BlockPos skeletonStartPos;
     protected ServerWorld world;
-    protected int distance;
     protected List<FutureActionPack> history = new ArrayList<>();
     protected int historyLength;
+    protected @Nullable SkeletonEntity skeleton;
 
-    public FightSkeletonEnvironment(ServerPlayerEntity agent, BlockPos agentStartPos, BlockPos skeletonStartPos, int distance, int historyLength) {
+    public FightSkeletonEnvironment(ServerPlayerEntity agent, BlockPos agentStartPos, BlockPos skeletonStartPos, int historyLength) {
         this.agent = agent;
         this.agentStartPos = agentStartPos;
         this.skeletonStartPos = skeletonStartPos;
-        this.distance = distance;
         this.historyLength = historyLength;
         world = agent.getServerWorld();
     }
@@ -48,7 +44,7 @@ public class FightSkeletonEnvironment extends Environment<FutureActionPack, Visi
         agent.teleport(world, agentStartPos.getX(), agentStartPos.getY(), agentStartPos.getZ(), 0, 0);
         agent.setHealth(20);
         agent.getHungerManager().setFoodLevel(20);
-        @Nullable SkeletonEntity skeleton = EntityType.SKELETON.spawn(world, skeletonStartPos, SpawnReason.COMMAND);
+        skeleton = EntityType.SKELETON.spawn(world, skeletonStartPos, SpawnReason.COMMAND);
         if (skeleton == null) {
             throw new NullPointerException("Skeleton was null, expected non-null");
         }
@@ -75,7 +71,7 @@ public class FightSkeletonEnvironment extends Environment<FutureActionPack, Visi
             int damageTaken = agent.getStatHandler().getStat(Stats.CUSTOM.getOrCreateStat(Stats.DAMAGE_TAKEN));
             int reward = damageDealt - damageTaken;
 
-            boolean terminated = agent.isDead();
+            boolean terminated = agent.isDead() || Objects.requireNonNull(skeleton).isDead();
             if (agent.isDead()) {
                 agent.requestRespawn(); // TODO: Test
             }
