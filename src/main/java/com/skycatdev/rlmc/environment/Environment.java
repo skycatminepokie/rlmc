@@ -2,7 +2,6 @@
 package com.skycatdev.rlmc.environment;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.SynchronousQueue;
@@ -79,7 +78,10 @@ public abstract class Environment<A, O> {
         }
         if (shouldRun) {
             try {
-                var tasks = Objects.requireNonNull(queue.poll(10, TimeUnit.HOURS)); // TODO: Wait time is for debug.
+                @Nullable var tasks = queue.poll(10, TimeUnit.HOURS); // TODO: Wait time is for debug.
+                if (tasks == null) {
+                    throw new EnvironmentException("Expected non-null tasks, got null. This could be because Python shut down.");
+                }
                 postTick = tasks.getRight();
                 if (tasks.getLeft() != null) {
                     tasks.getLeft().run();
