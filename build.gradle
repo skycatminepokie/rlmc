@@ -31,6 +31,7 @@ spotless {
 	}
 
 	java {
+		toggleOffOn()
 		importOrder()
 		removeUnusedImports()
 		formatAnnotations()
