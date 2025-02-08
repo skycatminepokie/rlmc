@@ -27,19 +27,6 @@ public class SkybridgeEnvironment extends Environment<FutureActionPack, Skybridg
 	protected int distance;
 	protected List<FutureActionPack> history = new ArrayList<>();
 	protected int historyLength;
-    /**
-     * Queue of things to do around a tick. Left is before tick, right is after tick. Left will always be finished before right.
-     */
-	protected SynchronousQueue<Pair<FutureTask<?>, @Nullable FutureTask<?>>> queue = new SynchronousQueue<>();
-	/**
-	 * True when {@link SkybridgeEnvironment#reset(Integer, Map)} has been called at least once. Synchronize on {@link SkybridgeEnvironment#initializedLock} first.
-	 */
-	protected boolean initialized;
-	protected final Object[] initializedLock = new Object[] {};
-    /**
-     * What to do on the next post-tick. Do not access outside the server thread or during a tick.
-     */
-	protected @Nullable FutureTask<?> postTick;
 
 	public SkybridgeEnvironment(ServerPlayerEntity agent, BlockPos startPos, int distance, int historyLength) {
 		this.agent = agent;
@@ -54,44 +41,15 @@ public class SkybridgeEnvironment extends Environment<FutureActionPack, Skybridg
 	}
 
 	@Override
-	public synchronized ResetTuple<Observation> reset(@Nullable Integer seed, @Nullable Map<String, Object> options) {
-		FutureTask<ResetTuple<Observation>> resetTask = new FutureTask<>(() -> {
-			agent.getInventory().clear();
-			for (BlockPos pos : BlockPos.iterateOutwards(startPos, distance + 6, 40, distance + 6)) {
-				world.setBlockState(pos, Blocks.AIR.getDefaultState());
+	protected Pair<@Nullable FutureTask<?>, FutureTask<StepTuple<Observation>>> innerStep(FutureActionPack action) {
+		FutureTask<Boolean> preTick = new FutureTask<>(() -> {
+			action.copyTo(((ServerPlayerInterface)agent).getActionPack());
+			history.add(action);
+			if (history.size() > historyLength) {
+				history.removeFirst();
 			}
-			world.setBlockState(startPos.down(), Blocks.STONE.getDefaultState());
-			for (int i = 0; i < 36; i++) {
-				agent.getInventory().offer(new ItemStack(Items.STONE, 64), true);
-			}
-			history.clear();
-			agent.teleport(world, startPos.getX(), startPos.getY(), startPos.getZ(), Set.of(), 0, 0);
-
-			Observation observation = Observation.fromPlayer(agent, 100, 10, 180, history);
-
-			return new ResetTuple<>(observation, new HashMap<>());
+			return true;
 		});
-        try {
-			synchronized (initializedLock) {
-				initialized = true;
-			}
-			queue.put(new Pair<>(resetTask, null));
-			return resetTask.get();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-	@Override
-	public synchronized StepTuple<Observation> step(FutureActionPack action) {
-        FutureTask<Boolean> preTick = new FutureTask<>(() -> {
-            action.copyTo(((ServerPlayerInterface)agent).getActionPack());
-            history.add(action);
-            if (history.size() > historyLength) {
-                history.removeFirst();
-            }
-            return true;
-        });
 		FutureTask<StepTuple<Observation>> postTick = new FutureTask<>(() -> {
 			Observation observation = Observation.fromPlayer(agent, 100, 10, 180, history);
 
@@ -104,38 +62,26 @@ public class SkybridgeEnvironment extends Environment<FutureActionPack, Skybridg
 			boolean truncated = agent.getServerWorld() != world || agent.isDead();
 
 			return new StepTuple<>(observation, reward, terminated, truncated, new HashMap<>());
-        });
-        try {
-            queue.put(new Pair<>(preTick, postTick));
-            return postTick.get();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-	@Override
-	public void preTick() {
-		boolean shouldRun;
-		synchronized (initializedLock) {
-			shouldRun = this.initialized;
-		}
-		if (shouldRun) {
-            try {
-                var tasks = Objects.requireNonNull(queue.poll(10, TimeUnit.HOURS)); // TODO: Wait time is for debug.
-                postTick = tasks.getRight();
-                tasks.getLeft().run();
-			} catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }
+		});
+		return new Pair<>(preTick, postTick);
 	}
 
 	@Override
-	public void postTick() {
-		if (postTick != null) {
-            postTick.run();
-            postTick = null;
-        }
+	protected ResetTuple<Observation> innerReset(@Nullable Integer seed, @Nullable Map<String, Object> options) {
+		agent.getInventory().clear();
+		for (BlockPos pos : BlockPos.iterateOutwards(startPos, distance + 6, 40, distance + 6)) {
+			world.setBlockState(pos, Blocks.AIR.getDefaultState());
+		}
+		world.setBlockState(startPos.down(), Blocks.STONE.getDefaultState());
+		for (int i = 0; i < 36; i++) {
+			agent.getInventory().offer(new ItemStack(Items.STONE, 64), true);
+		}
+		history.clear();
+		agent.teleport(world, startPos.getX(), startPos.getY(), startPos.getZ(), Set.of(), 0, 0);
+
+		Observation observation = Observation.fromPlayer(agent, 100, 10, 180, history);
+
+		return new ResetTuple<>(observation, new HashMap<>());
 	}
 
 	public record Observation(List<BlockHitResult> blocks, List<@Nullable EntityHitResult> entities,
