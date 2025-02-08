@@ -36,10 +36,6 @@ public class SkybridgeEnvironment extends Environment<FutureActionPack, Skybridg
 		world = agent.getServerWorld();
 	}
 
-	public ServerPlayerEntity getAgent() {
-		return agent;
-	}
-
 	@Override
 	protected Pair<@Nullable FutureTask<?>, FutureTask<StepTuple<Observation>>> innerStep(FutureActionPack action) {
 		FutureTask<Boolean> preTick = new FutureTask<>(() -> {
@@ -86,7 +82,7 @@ public class SkybridgeEnvironment extends Environment<FutureActionPack, Skybridg
 
 	public record Observation(List<BlockHitResult> blocks, List<@Nullable EntityHitResult> entities,
 							  ServerPlayerEntity self, List<FutureActionPack> history) {
-		public static Observation fromPlayer(ServerPlayerEntity player, int raycasts, double maxDistance, double fov, List<FutureActionPack> history) { // TODO: Test
+		public static Observation fromPlayer(ServerPlayerEntity player, int raycasts, double maxDistance, double fov, List<FutureActionPack> history) {
 			List<BlockHitResult> blocks = new ArrayList<>();
 			List<@Nullable EntityHitResult> entities = new ArrayList<>();
 			double sqrtRaycasts = Math.sqrt(raycasts);

@@ -16,8 +16,8 @@ import py4j.Py4JServerConnection;
 public class Rlmc implements ModInitializer {
 	public static final String MOD_ID = "rl-agents";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
-	public static final GatewayServer GATEWAY_SERVER = new GatewayServer();
-	public static final List<Environment<?, ?>> ENVIRONMENTS = new ArrayList<>();
+	private static final GatewayServer GATEWAY_SERVER = new GatewayServer();
+	private static final List<Environment<?, ?>> ENVIRONMENTS = new ArrayList<>();
 
 	static {
 		new Thread(() -> GATEWAY_SERVER.start(false), "RLMC Python Gateway Server Thread").start();
@@ -27,45 +27,45 @@ public class Rlmc implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		CommandRegistrationCallback.EVENT.register(new CommandManager());
-		GATEWAY_SERVER.addListener(new GatewayServerListener() { // TODO: this is debug.
+		GATEWAY_SERVER.addListener(new GatewayServerListener() {
 			@Override
 			public void connectionError(Exception e) {
-				LOGGER.info("Connection Error. Printing stack trace.", e);
+				LOGGER.debug("Py4J Connection Error. Printing stack trace.", e);
 			}
 
 			@Override
 			public void connectionStarted(Py4JServerConnection gatewayConnection) {
-				LOGGER.info("Py4J connection started");
+				LOGGER.debug("Py4J connection started");
 			}
 
 			@Override
 			public void connectionStopped(Py4JServerConnection gatewayConnection) {
-				LOGGER.info("Py4J connection stopped");
+				LOGGER.debug("Py4J connection stopped");
 			}
 
 			@Override
 			public void serverError(Exception e) {
-				LOGGER.info("Server Error. Print stack trace.", e);
+				LOGGER.debug("Py4J Server Error. Print stack trace.", e);
 			}
 
 			@Override
 			public void serverPostShutdown() {
-				LOGGER.info("Server post shutdown");
+				LOGGER.debug("Py4J server post shutdown");
 			}
 
 			@Override
 			public void serverPreShutdown() {
-				LOGGER.info("Server pre shutdown");
+				LOGGER.debug("Py4J server pre shutdown");
 			}
 
 			@Override
 			public void serverStarted() {
-				LOGGER.info("Server started");
+				LOGGER.debug("Py4J server started");
 			}
 
 			@Override
 			public void serverStopped() {
-				LOGGER.info("Server stopped");
+				LOGGER.debug("Py4J server stopped");
 			}
 		});
 	}

@@ -13,7 +13,6 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.skycatdev.rlmc.Rlmc;
 import com.skycatdev.rlmc.environment.SkybridgeEnvironment;
 import java.util.Collection;
-import java.util.Objects;
 import java.util.Optional;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.command.CommandRegistryAccess;
@@ -22,10 +21,13 @@ import net.minecraft.command.argument.GameProfileArgumentType;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
+import org.jetbrains.annotations.Nullable;
 
 public class CommandManager implements CommandRegistrationCallback {
 	public static final DynamicCommandExceptionType NOT_ONE_AGENT_EXCEPTION_TYPE =
 			new DynamicCommandExceptionType(numAgents -> () -> String.format("Expected exactly one player, got %s", numAgents));
+	public static final DynamicCommandExceptionType AGENT_NOT_FOUND_EXCEPTION_TYPE =
+			new DynamicCommandExceptionType(agentName -> () -> String.format("The agent %s is not online!", agentName));
 
 	@Override
 	public void register(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess registryAccess, RegistrationEnvironment registrationEnvironment) {
@@ -76,15 +78,18 @@ public class CommandManager implements CommandRegistrationCallback {
 			throw NOT_ONE_AGENT_EXCEPTION_TYPE.create(agents.size());
 		}
 		Optional<GameProfile> optGameProfile = agents.stream().findFirst();
-		assert optGameProfile.isPresent(); // TODO: Exception instead of assert
+		// assert optGameProfile.isPresent();
 
-		ServerPlayerEntity agent = Objects.requireNonNull(context.getSource().getServer().getPlayerManager().getPlayer(optGameProfile.get().getId())); // TODO: Exception instead of requireNonNull
+		@Nullable ServerPlayerEntity agent = context.getSource().getServer().getPlayerManager().getPlayer(optGameProfile.get().getId());
+		if (agent == null) {
+			throw AGENT_NOT_FOUND_EXCEPTION_TYPE.create(optGameProfile.get().getName());
+		}
 		BlockPos pos = BlockPosArgumentType.getLoadedBlockPos(context, "pos");
 		int distance = IntegerArgumentType.getInteger(context, "distance");
 		int historyLength = IntegerArgumentType.getInteger(context, "historyLength");
 
 		SkybridgeEnvironment environment = new SkybridgeEnvironment(agent, pos, distance, historyLength);
-		Rlmc.ENVIRONMENTS.add(environment);
+		Rlmc.getEnvironments().add(environment);
 		Rlmc.getPythonEntrypoint().connectEnvironment("skybridge", environment);
 		new Thread(() -> Rlmc.getPythonEntrypoint().train(environment)).start();
 		return 1;
