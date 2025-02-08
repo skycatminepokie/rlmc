@@ -1,15 +1,14 @@
 /* Licensed MIT 2025 */
 package com.skycatdev.rlmc.environment;
 
-import net.minecraft.util.Pair;
-import org.jetbrains.annotations.Nullable;
-
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.TimeUnit;
+import net.minecraft.util.Pair;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * A Java implementation of a <a href="https://github.com/Farama-Foundation/Gymnasium">Farama Foundation Gymnasium</a>

@@ -15,7 +15,10 @@ class Entrypoint(object):
     # noinspection PyPep8Naming
     def connectEnvironment(self, environment: string, java_environment: JavaObject):
         if environment == "skybridge":
-            env = TimeLimit(WrappedSkybridgeEnvironment(java_environment, get_gateway()), max_episode_steps=200)
+            env = TimeLimit(
+                WrappedSkybridgeEnvironment(java_environment, get_gateway()),
+                max_episode_steps=200,
+            )
             self.envs[java_environment] = env
 
     def train(self, environment: JavaObject):
