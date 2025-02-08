@@ -4,6 +4,7 @@ package com.skycatdev.rlmc.command;
 import static net.minecraft.server.command.CommandManager.*;
 
 import com.mojang.authlib.GameProfile;
+import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
@@ -92,7 +93,7 @@ public class CommandManager implements CommandRegistrationCallback {
 		Rlmc.getEnvironments().add(environment);
 		Rlmc.getPythonEntrypoint().connectEnvironment("skybridge", environment);
 		new Thread(() -> Rlmc.getPythonEntrypoint().train(environment)).start();
-		return 1;
+		return Command.SINGLE_SUCCESS;
 	}
 
 
