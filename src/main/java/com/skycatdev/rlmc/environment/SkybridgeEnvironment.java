@@ -15,6 +15,7 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import org.jetbrains.annotations.Nullable;
@@ -56,7 +57,7 @@ public class SkybridgeEnvironment extends Environment<FutureActionPack, Skybridg
 	public synchronized ResetTuple<Observation> reset(@Nullable Integer seed, @Nullable Map<String, Object> options) {
 		FutureTask<ResetTuple<Observation>> resetTask = new FutureTask<>(() -> {
 			agent.getInventory().clear();
-			for (BlockPos pos : BlockPos.iterateOutwards(startPos, distance + 6, 10, distance + 6)) {
+			for (BlockPos pos : BlockPos.iterateOutwards(startPos, distance + 6, 40, distance + 6)) {
 				world.setBlockState(pos, Blocks.AIR.getDefaultState());
 			}
 			world.setBlockState(startPos.down(), Blocks.STONE.getDefaultState());
@@ -94,7 +95,11 @@ public class SkybridgeEnvironment extends Environment<FutureActionPack, Skybridg
 		FutureTask<StepTuple<Observation>> postTick = new FutureTask<>(() -> {
 			Observation observation = Observation.fromPlayer(agent, 100, 10, 180, history);
 
-			int reward = agent.isOnGround() ? startPos.getX() - agent.getBlockX() : 0;
+			int reward = 0;
+			BlockPos.Mutable blockPos = new BlockPos.Mutable(startPos.getX(), startPos.getY(), startPos.getZ());
+			while (!world.getBlockState(blockPos.move(Direction.NORTH)).isAir()) {
+				reward++;
+			}
 			boolean terminated = startPos.getX() - agent.getBlockX() >= distance || agent.getBlockY() < startPos.getY() - 1;
 			boolean truncated = agent.getServerWorld() != world || agent.isDead();
 
