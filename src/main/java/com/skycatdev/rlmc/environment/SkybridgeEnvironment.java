@@ -94,9 +94,9 @@ public class SkybridgeEnvironment extends Environment<FutureActionPack, Skybridg
 		FutureTask<StepTuple<Observation>> postTick = new FutureTask<>(() -> {
 			Observation observation = Observation.fromPlayer(agent, 100, 10, 180, history);
 
-			int reward = startPos.getX() - agent.getBlockX();
-			boolean terminated = startPos.getX() - agent.getBlockX() >= distance;
-			boolean truncated = agent.getServerWorld() != world || agent.isDead() || agent.getBlockY() < startPos.getY() - 1;
+			int reward = agent.isOnGround() ? startPos.getX() - agent.getBlockX() : 0;
+			boolean terminated = startPos.getX() - agent.getBlockX() >= distance || agent.getBlockY() < startPos.getY() - 1;
+			boolean truncated = agent.getServerWorld() != world || agent.isDead();
 
 			return new StepTuple<>(observation, reward, terminated, truncated, new HashMap<>());
         });

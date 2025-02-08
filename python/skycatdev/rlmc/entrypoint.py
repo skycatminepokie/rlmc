@@ -20,7 +20,7 @@ class Entrypoint(object):
     def train(self, environment: JavaObject):
         # check_env(self.envs[environment])
         agent = A2C("MultiInputPolicy", self.envs[environment], verbose=1)
-        mean, std = evaluate_policy(agent, self.envs[environment], 1000)
+        mean, std = evaluate_policy(agent, self.envs[environment], 100)
         print(f"mean={mean}, std={std}")
         agent.learn(10000)
         mean, std = evaluate_policy(agent, self.envs[environment], 1000)

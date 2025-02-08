@@ -4,9 +4,7 @@ from gymnasium.spaces import Text, Discrete, Box, Dict, MultiDiscrete
 from py4j.java_collections import JavaList
 from py4j.java_gateway import JavaObject, JavaGateway, java_import
 
-from java_environment_wrapper import (
-    WrappedJavaEnv
-)
+from java_environment_wrapper import WrappedJavaEnv
 
 MAX_ID_LENGTH = 32767
 
@@ -23,7 +21,8 @@ class WrappedSkybridgeEnvironment(WrappedJavaEnv):
         item_space = Dict(
             {"id": Text(MAX_ID_LENGTH), "count": Discrete(MAX_STACK_SIZE)}
         )
-        self.action_space = MultiDiscrete([2, 2, 2, 2, 2, 2, 2, 2, 2, 9])
+        # attack, use, forward, left, backward, right, sprint, sneak, jump, hotbar yaw, pitch
+        self.action_space = MultiDiscrete([2, 2, 2, 2, 2, 2, 2, 2, 2, 9, 360, 180])
         # {
         #     "attack" : Discrete(2),
         #     "use" : Discrete(2),
@@ -37,7 +36,7 @@ class WrappedSkybridgeEnvironment(WrappedJavaEnv):
         #     "yaw" : Box(0, 360), # TODO: Normalize
         #     "pitch" : Box(-90, 90), # TODO: Normalize
         #     "hotbar" : Discrete(9)
-        # }
+        # })
         self.observation_space = Dict(
             {
                 # "blocks" : Sequence(
@@ -145,17 +144,16 @@ class WrappedSkybridgeEnvironment(WrappedJavaEnv):
         else:
             action_pack.remove(self.java_view.FutureActionPack.ActionType.JUMP)
 
-        # action_pack.setYaw(action["yaw"]) TODO add these in
-        # action_pack.setPitch(action["pitch"])
-        # assert isinstance(action[9], np.int64)
-
         action_pack.setHotbar(action[9].item())
+
+        action_pack.setYaw(float(action[10]))
+        action_pack.setPitch(float(action[11]))
 
         return action_pack
 
     def action_to_python(self, action: JavaObject) -> ActType:
         action_types = action.getActions()
-        python_action = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+        python_action = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         assert isinstance(
             action_types, JavaList
         ), f"Expected a JavaList, got a(n) {type(action_types)}"
@@ -179,8 +177,8 @@ class WrappedSkybridgeEnvironment(WrappedJavaEnv):
             elif action_type == self.java_view.FutureActionPack.ActionType.JUMP:
                 python_action[8] = 1
 
-        # python_action["yaw"] = action.getYaw()
-        # python_action["pitch"] = action.getPitch() TODO: put this back in
         python_action[9] = action.getHotbar()
+        python_action[11] = int(action.getYaw())
+        python_action[12] = int(action.getPitch())
 
         return python_action
