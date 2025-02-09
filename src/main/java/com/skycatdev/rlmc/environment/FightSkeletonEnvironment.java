@@ -51,7 +51,7 @@ public class FightSkeletonEnvironment extends Environment<FutureActionPack, Visi
         history.clear();
 
 
-        return new ResetTuple<>(VisionSelfHistoryObservation.fromPlayer(agent, 5, 5, 10, Math.PI/2, history), new HashMap<>());
+        return new ResetTuple<>(VisionSelfHistoryObservation.fromPlayer(agent, 3, 3, 10, Math.PI/2, history), new HashMap<>());
     }
 
     @Override
@@ -65,7 +65,7 @@ public class FightSkeletonEnvironment extends Environment<FutureActionPack, Visi
             return true;
         });
         FutureTask<StepTuple<VisionSelfHistoryObservation>> postTick = new FutureTask<>(() -> {
-            VisionSelfHistoryObservation observation = VisionSelfHistoryObservation.fromPlayer(agent,  5, 5, 10, Math.PI/2, history);
+            VisionSelfHistoryObservation observation = VisionSelfHistoryObservation.fromPlayer(agent,  3, 3, 10, Math.PI/2, history);
 
             int damageDealt = agent.getStatHandler().getStat(Stats.CUSTOM.getOrCreateStat(Stats.DAMAGE_DEALT));
             int damageTaken = agent.getStatHandler().getStat(Stats.CUSTOM.getOrCreateStat(Stats.DAMAGE_TAKEN));
