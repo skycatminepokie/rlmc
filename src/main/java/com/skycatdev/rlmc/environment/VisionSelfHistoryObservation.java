@@ -14,16 +14,17 @@ import org.jetbrains.annotations.Nullable;
 
 public record VisionSelfHistoryObservation(List<BlockHitResult> blocks, List<@Nullable EntityHitResult> entities,
                                            ServerPlayerEntity self, List<FutureActionPack> history) {
-    public static VisionSelfHistoryObservation fromPlayer(ServerPlayerEntity player, int raycasts, double maxDistance, double fov, List<FutureActionPack> history) {
+    public static VisionSelfHistoryObservation fromPlayer(ServerPlayerEntity player, int xRaycasts, int yRaycasts, double maxDistance, double fovRad, List<FutureActionPack> history) {
         List<BlockHitResult> blocks = new ArrayList<>();
         List<@Nullable EntityHitResult> entities = new ArrayList<>();
-        double sqrtRaycasts = Math.sqrt(raycasts);
-        double deltaAngle = fov / raycasts;
-        for (double i = -sqrtRaycasts / 2; i < sqrtRaycasts / 2; i++) {
-            for (double j = -sqrtRaycasts / 2; j < sqrtRaycasts / 2; j++) {
-                Vec3d pos = player.getCameraPosVec(1);
-                Vec3d rot = player.getRotationVec(1).add(i * deltaAngle, j * deltaAngle, 0);
-                Vec3d max = pos.add(rot.x * maxDistance, rot.y * maxDistance, rot.x * maxDistance);
+        double deltaAngleX = fovRad / xRaycasts;
+        double deltaAngleY = fovRad / yRaycasts;
+        for (double i = 0; i < xRaycasts; i++) {
+            for (double j = 0; j < yRaycasts; j++) {
+                Vec3d pos = player.getCameraPosVec(0);
+                Vec3d rot = player.getRotationVec(0).rotateX((float) (i * deltaAngleX - (fovRad / 2)));
+                rot = rot.rotateY((float) (j * deltaAngleY - (fovRad / 2)));
+                Vec3d max = pos.add(rot.x * maxDistance, rot.y * maxDistance, rot.z * maxDistance);
                 // Blocks (see Entity#raycast)
                 BlockHitResult blockHitResult = player.getServerWorld().raycast(new RaycastContext(pos, max, RaycastContext.ShapeType.VISUAL, RaycastContext.FluidHandling.ANY, player));
                 blocks.add(blockHitResult);

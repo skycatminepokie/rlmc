@@ -1,14 +1,23 @@
 import numpy as np
 from gymnasium.core import ActType, ObsType
-from gymnasium.spaces import Text, Discrete, Box, Dict, MultiDiscrete
+from gymnasium.spaces import (
+    Text,
+    Discrete,
+    Box,
+    Dict,
+    MultiDiscrete,
+    Sequence,
+    flatten_space,
+)
 from py4j.java_collections import JavaList
 from py4j.java_gateway import JavaObject, JavaGateway, java_import
 
-from java_environment_wrapper import WrappedJavaEnv
+from skycatdev.rlmc.java.wrappers import block_pos
+from skycatdev.rlmc.java.wrappers.java_environment_wrapper import WrappedJavaEnv
+
+from skycatdev.rlmc.java.wrappers.block_pos import MAX_BLOCK_DISTANCE, BlockPos
 
 MAX_ID_LENGTH = 32767
-
-MAX_BLOCK_DISTANCE = 3000  # 30_000_554
 
 MAX_STACK_SIZE = 999
 
@@ -16,6 +25,7 @@ MAX_STACK_SIZE = 999
 class WrappedSkybridgeEnvironment(WrappedJavaEnv):
     def __init__(self, java_env: JavaObject, java_gateway: JavaGateway):
         super().__init__(java_env, java_gateway)
+        self.raycasts = 9  # todo get from env
         java_import(self.java_view, "com.skycatdev.rlmc.environment.FutureActionPack")
         java_import(self.java_view, "carpet.helpers.EntityPlayerActionPack")
         item_space = Dict(
@@ -23,35 +33,14 @@ class WrappedSkybridgeEnvironment(WrappedJavaEnv):
         )
         # attack, use, forward, left, backward, right, sprint, sneak, jump, hotbar yaw, pitch
         self.action_space = MultiDiscrete([2, 2, 2, 2, 2, 2, 2, 2, 2, 9, 360, 180])
-        # {
-        #     "attack" : Discrete(2),
-        #     "use" : Discrete(2),
-        #     "forward" : Discrete(2),
-        #     "left" : Discrete(2),
-        #     "backward" : Discrete(2),
-        #     "right" : Discrete(2),
-        #     "sprint" : Discrete(2),
-        #     "sneak" : Discrete(2),
-        #     "jump" : Discrete(2),
-        #     "yaw" : Box(0, 360), # TODO: Normalize
-        #     "pitch" : Box(-90, 90), # TODO: Normalize
-        #     "hotbar" : Discrete(9)
-        # })
         self.observation_space = Dict(
             {
-                # "blocks" : Sequence(
-                #     Dict({
-                #         "block" : Text(MAX_ID_LENGTH),
-                #         "x" : Discrete(MAX_BLOCK_DISTANCE, start=-MAX_BLOCK_DISTANCE),
-                #         "y" : Discrete(MAX_BLOCK_DISTANCE, start=-MAX_BLOCK_DISTANCE),
-                #         "z" : Discrete(MAX_BLOCK_DISTANCE, start=-MAX_BLOCK_DISTANCE),
-                #     })
-                # ),
-                "x": Box(-MAX_BLOCK_DISTANCE, MAX_BLOCK_DISTANCE),
-                "y": Box(-MAX_BLOCK_DISTANCE, MAX_BLOCK_DISTANCE),
-                "z": Box(-MAX_BLOCK_DISTANCE, MAX_BLOCK_DISTANCE),
-                "yaw": Box(-180, 180, dtype=np.float32),  # TODO: Normalize
-                "pitch": Box(-90, 90, dtype=np.float32),  # TODO: Normalize
+                "blocks": block_pos.flat_sequence_space(self.raycasts),
+                "x": Box(-MAX_BLOCK_DISTANCE, MAX_BLOCK_DISTANCE, shape=(1,)),
+                "y": Box(-MAX_BLOCK_DISTANCE, MAX_BLOCK_DISTANCE, shape=(1,)),
+                "z": Box(-MAX_BLOCK_DISTANCE, MAX_BLOCK_DISTANCE, shape=(1,)),
+                "yaw": Box(-180, 180, dtype=np.float32, shape=(1,)),  # TODO: Normalize
+                "pitch": Box(-90, 90, dtype=np.float32, shape=(1,)),  # TODO: Normalize
                 "hotbar": Discrete(9),
                 # "inventory" : Dict({
                 #     "main" : Sequence(item_space),
@@ -68,10 +57,10 @@ class WrappedSkybridgeEnvironment(WrappedJavaEnv):
         ), f"Expected JavaList, got {type(java_obs.blocks())}"
         agent = java_obs.self()
         return {
-            # "blocks" : [
-            #     WrappedBlockHitResult(hit_result).to_dict(agent.getWorld())
-            #     for hit_result in java_obs.blocks()
-            # ],
+            "blocks": tuple(
+                BlockPos(hit_result.getBlockPos()).to_array()
+                for hit_result in java_obs.blocks()
+            ),
             "x": [agent.getX()],
             "y": [agent.getY()],
             "z": [agent.getZ()],

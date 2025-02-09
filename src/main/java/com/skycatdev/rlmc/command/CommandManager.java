@@ -134,7 +134,7 @@ public class CommandManager implements CommandRegistrationCallback {
 		int distance = IntegerArgumentType.getInteger(context, "distance");
 		int historyLength = IntegerArgumentType.getInteger(context, "historyLength");
 
-		SkybridgeEnvironment environment = new SkybridgeEnvironment(agent, pos, distance, historyLength);
+		SkybridgeEnvironment environment = new SkybridgeEnvironment(agent, pos, distance, historyLength, 3, 3);
 		Rlmc.getEnvironments().add(environment);
 		Rlmc.getPythonEntrypoint().connectEnvironment("skybridge", environment);
 		new Thread(() -> Rlmc.getPythonEntrypoint().train(environment)).start();

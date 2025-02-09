@@ -21,14 +21,18 @@ public class SkybridgeEnvironment extends Environment<FutureActionPack, VisionSe
 	protected int distance;
 	protected List<FutureActionPack> history = new ArrayList<>();
 	protected int historyLength;
+	protected final int xRaycasts;
+	protected final int yRaycasts;
 
-	public SkybridgeEnvironment(ServerPlayerEntity agent, BlockPos startPos, int distance, int historyLength) {
+	public SkybridgeEnvironment(ServerPlayerEntity agent, BlockPos startPos, int distance, int historyLength, int xRaycasts, int yRaycasts) {
 		this.agent = agent;
 		this.startPos = startPos;
 		this.distance = distance;
 		this.historyLength = historyLength;
 		world = agent.getServerWorld();
-	}
+        this.xRaycasts = xRaycasts;
+		this.yRaycasts = yRaycasts;
+    }
 
 	@Override
 	protected Pair<@Nullable FutureTask<?>, FutureTask<StepTuple<VisionSelfHistoryObservation>>> innerStep(FutureActionPack action) {
@@ -41,7 +45,7 @@ public class SkybridgeEnvironment extends Environment<FutureActionPack, VisionSe
 			return true;
 		});
 		FutureTask<StepTuple<VisionSelfHistoryObservation>> postTick = new FutureTask<>(() -> {
-			VisionSelfHistoryObservation observation = VisionSelfHistoryObservation.fromPlayer(agent, 100, 10, 180, history);
+			VisionSelfHistoryObservation observation = VisionSelfHistoryObservation.fromPlayer(agent,  xRaycasts, yRaycasts, 10, Math.PI/2, history);
 
 			int reward = 0;
 			BlockPos.Mutable blockPos = new BlockPos.Mutable(startPos.getX(), startPos.getY(), startPos.getZ());
@@ -69,7 +73,7 @@ public class SkybridgeEnvironment extends Environment<FutureActionPack, VisionSe
 		history.clear();
 		agent.teleport(world, startPos.getX(), startPos.getY(), startPos.getZ(), Set.of(), 0, 0);
 
-		VisionSelfHistoryObservation observation = VisionSelfHistoryObservation.fromPlayer(agent, 100, 10, 180, history);
+		VisionSelfHistoryObservation observation = VisionSelfHistoryObservation.fromPlayer(agent, xRaycasts, yRaycasts, 10, Math.PI/2, history);
 
 		return new ResetTuple<>(observation, new HashMap<>());
 	}
