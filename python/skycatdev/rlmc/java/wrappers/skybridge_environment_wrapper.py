@@ -6,16 +6,15 @@ from gymnasium.spaces import (
     Box,
     Dict,
     MultiDiscrete,
-    Sequence,
-    flatten_space,
 )
 from py4j.java_collections import JavaList
 from py4j.java_gateway import JavaObject, JavaGateway, java_import
 
-from skycatdev.rlmc.java.wrappers import block_pos
+from skycatdev.rlmc.java.utils import java_list_to_array
+from skycatdev.rlmc.java.wrappers import block_hit_result
+from skycatdev.rlmc.java.wrappers.block_hit_result import WrappedBlockHitResult
+from skycatdev.rlmc.java.wrappers.block_pos import MAX_BLOCK_DISTANCE
 from skycatdev.rlmc.java.wrappers.java_environment_wrapper import WrappedJavaEnv
-
-from skycatdev.rlmc.java.wrappers.block_pos import MAX_BLOCK_DISTANCE, BlockPos
 
 MAX_ID_LENGTH = 32767
 
@@ -33,9 +32,10 @@ class WrappedSkybridgeEnvironment(WrappedJavaEnv):
         )
         # attack, use, forward, left, backward, right, sprint, sneak, jump, hotbar yaw, pitch
         self.action_space = MultiDiscrete([2, 2, 2, 2, 2, 2, 2, 2, 2, 9, 360, 180])
+        self.block_space = block_hit_result.flat_space(self.raycasts)
         self.observation_space = Dict(
             {
-                "blocks": block_pos.flat_sequence_space(self.raycasts),
+                "blocks": self.block_space,
                 "x": Box(-MAX_BLOCK_DISTANCE, MAX_BLOCK_DISTANCE, shape=(1,)),
                 "y": Box(-MAX_BLOCK_DISTANCE, MAX_BLOCK_DISTANCE, shape=(1,)),
                 "z": Box(-MAX_BLOCK_DISTANCE, MAX_BLOCK_DISTANCE, shape=(1,)),
@@ -56,10 +56,21 @@ class WrappedSkybridgeEnvironment(WrappedJavaEnv):
             java_obs.blocks(), JavaList
         ), f"Expected JavaList, got {type(java_obs.blocks())}"
         agent = java_obs.self()
+        block_hit_results = tuple(
+            WrappedBlockHitResult(hit_result)
+            for hit_result in java_list_to_array(java_obs.blocks())
+        )
         return {
-            "blocks": tuple(
-                BlockPos(hit_result.getBlockPos()).to_array()
-                for hit_result in java_obs.blocks()
+            "blocks": np.array(
+                tuple(
+                    [
+                        hit_result.get_block_pos().get_x(),
+                        hit_result.get_block_pos().get_y(),
+                        hit_result.get_block_pos().get_z(),
+                        hit_result.get_side(),
+                    ]
+                    for hit_result in block_hit_results
+                )
             ),
             "x": [agent.getX()],
             "y": [agent.getY()],

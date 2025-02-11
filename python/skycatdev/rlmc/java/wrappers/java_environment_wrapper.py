@@ -3,10 +3,9 @@ from typing import Any, SupportsFloat
 
 import gymnasium as gym
 from gymnasium.core import ObsType, ActType
-from py4j.java_collections import JavaMap, MapConverter
 from py4j.java_gateway import JavaObject, JavaGateway
 
-from skycatdev.rlmc.java.utils import java_map_to_dict, dict_to_java_map
+from skycatdev.rlmc.java.utils import java_map_to_dict
 
 
 class WrappedJavaEnv(ABC, gym.Env):
