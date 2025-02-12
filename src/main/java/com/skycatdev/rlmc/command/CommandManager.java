@@ -3,10 +3,12 @@ package com.skycatdev.rlmc.command;
 
 import static net.minecraft.server.command.CommandManager.*;
 
+import carpet.patches.EntityPlayerMPFake;
 import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
@@ -23,6 +25,8 @@ import net.minecraft.command.argument.GameProfileArgumentType;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.GameMode;
 import org.jetbrains.annotations.Nullable;
 
 public class CommandManager implements CommandRegistrationCallback {
@@ -79,7 +83,7 @@ public class CommandManager implements CommandRegistrationCallback {
 		var fightSkeleton = literal("skeleton")
 				.requires(source -> source.hasPermissionLevel(4))
 				.build();
-		var agent = argument("agent", GameProfileArgumentType.gameProfile())
+		var agent = argument("agent", StringArgumentType.word())
 				.requires(source -> source.hasPermissionLevel(4))
 				.build();
 		var agentPos = argument("agent_pos", BlockPosArgumentType.blockPos())
@@ -102,15 +106,26 @@ public class CommandManager implements CommandRegistrationCallback {
 	}
 
 	private static int makeFightSkeletonEnvironment(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
-		ServerPlayerEntity agent = getOneAgent(context, "agent");
+		String agent = StringArgumentType.getString(context, "agent");
 		BlockPos agentPos = BlockPosArgumentType.getLoadedBlockPos(context, context.getSource().getWorld(), "agent_pos");
 		BlockPos skeletonPos = BlockPosArgumentType.getLoadedBlockPos(context, context.getSource().getWorld(), "skeleton_pos");
 		int historyLength = IntegerArgumentType.getInteger(context, "history_length");
-		FightSkeletonEnvironment environment = new FightSkeletonEnvironment(agent, agentPos, skeletonPos, historyLength);
-		Rlmc.getPythonEntrypoint().connectEnvironment("fight_skeleton", environment);
-		new Thread(() -> Rlmc.getPythonEntrypoint().train(environment), "Skeleton fight training thread").start();
 
-		return Command.SINGLE_SUCCESS;
+		if (EntityPlayerMPFake.createFake(agent, context.getSource().getServer(), new Vec3d(agentPos.getX(), agentPos.getY(), agentPos.getZ()), 0, 0, context.getSource().getWorld().getRegistryKey(), GameMode.SURVIVAL, false)) {
+			new Thread(()-> {
+				@Nullable ServerPlayerEntity player = context.getSource().getServer().getPlayerManager().getPlayer(agent);
+				while (player == null) {
+					Thread.yield();
+					player = context.getSource().getServer().getPlayerManager().getPlayer(agent);
+				}
+				FightSkeletonEnvironment environment = new FightSkeletonEnvironment(player, context.getSource().getWorld(), agentPos, skeletonPos, historyLength);
+				Rlmc.getEnvironments().add(environment);
+				Rlmc.getPythonEntrypoint().connectEnvironment("fight_skeleton", environment);
+				Rlmc.getPythonEntrypoint().train(environment);
+			}, "Skeleton fight training thread").start();
+			return Command.SINGLE_SUCCESS;
+		}
+		return 0;
 	}
 
 	private static ServerPlayerEntity getOneAgent(CommandContext<ServerCommandSource> context, String agentParameterName) throws CommandSyntaxException {

@@ -18,6 +18,7 @@ import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
 
 public class FightSkeletonEnvironment extends Environment<FutureActionPack, VisionSelfHistoryObservation> {
+    protected final ServerWorld serverWorld;
     protected ServerPlayerEntity agent;
     protected BlockPos agentStartPos;
     protected BlockPos skeletonStartPos;
@@ -26,12 +27,13 @@ public class FightSkeletonEnvironment extends Environment<FutureActionPack, Visi
     protected int historyLength;
     protected @Nullable SkeletonEntity skeleton;
 
-    public FightSkeletonEnvironment(ServerPlayerEntity agent, BlockPos agentStartPos, BlockPos skeletonStartPos, int historyLength) {
+    public FightSkeletonEnvironment(ServerPlayerEntity agent, ServerWorld serverWorld, BlockPos agentStartPos, BlockPos skeletonStartPos, int historyLength) {
         this.agent = agent;
         this.agentStartPos = agentStartPos;
         this.skeletonStartPos = skeletonStartPos;
+        this.serverWorld = serverWorld;
         this.historyLength = historyLength;
-        world = agent.getServerWorld();
+        world = serverWorld;
     }
 
     @Override
@@ -40,10 +42,13 @@ public class FightSkeletonEnvironment extends Environment<FutureActionPack, Visi
         inventory.clear();
         inventory.offer(new ItemStack(Items.DIAMOND_SWORD), true);
         inventory.offer(new ItemStack(Items.DIAMOND_AXE), true);
-        inventory.offHand.add(new ItemStack(Items.SHIELD));
+        inventory.setStack(PlayerInventory.OFF_HAND_SLOT, new ItemStack(Items.SHIELD));
         agent.teleport(world, agentStartPos.getX(), agentStartPos.getY(), agentStartPos.getZ(), 0, 0);
         agent.setHealth(20);
         agent.getHungerManager().setFoodLevel(20);
+        if (skeleton != null) {
+            skeleton.kill();
+        }
         skeleton = EntityType.SKELETON.spawn(world, skeletonStartPos, SpawnReason.COMMAND);
         if (skeleton == null) {
             throw new NullPointerException("Skeleton was null, expected non-null");
@@ -80,5 +85,11 @@ public class FightSkeletonEnvironment extends Environment<FutureActionPack, Visi
             return new StepTuple<>(observation, reward, terminated, truncated, new HashMap<>());
         });
         return new Pair<>(preTick, postTick);
+    }
+
+    @Override
+    public void close() {
+        super.close();
+        agent.kill();
     }
 }
