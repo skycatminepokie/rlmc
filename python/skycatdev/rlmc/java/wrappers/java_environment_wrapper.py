@@ -25,6 +25,9 @@ class WrappedJavaEnv(ABC, gym.Env):
         unwrapped = self.unwrap_reset(self.java_env.reset(seed, options))
         return unwrapped
 
+    def close(self):
+        self.java_env.close()
+
     @abstractmethod
     def obs_to_python(self, java_obs: JavaObject) -> ObsType:
         pass

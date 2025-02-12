@@ -37,6 +37,7 @@ class Entrypoint(object):
         agent.save("trained_agent")
         agent.learn(45000)
         agent.save("trained_agent2")
+        self.envs[environment].close()
 
     class Java:
         implements = ["com.skycatdev.rlmc.PythonEntrypoint"]

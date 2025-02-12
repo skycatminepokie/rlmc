@@ -1,6 +1,7 @@
 /* Licensed MIT 2025 */
 package com.skycatdev.rlmc.environment;
 
+import com.skycatdev.rlmc.Rlmc;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
@@ -22,6 +23,7 @@ import org.jetbrains.annotations.Nullable;
  */
 public abstract class Environment<A, O> {
     private final Object[] initializedLock = new Object[]{};
+    private final Object[] closedLock = new Object[]{};
     /**
      * Queue of things to do around a tick. Left is before tick, right is after tick. Left will always be finished before right.
      */
@@ -34,6 +36,18 @@ public abstract class Environment<A, O> {
      * True when {@link Environment#reset(Integer, Map)} has been called at least once. Synchronize on {@link Environment#initializedLock} first.
      */
     private boolean initialized;
+    /**
+     * True when {@link Environment#close()} has been called at least once. Synchronize on {@link Environment#closedLock} first.
+     */
+    private boolean closed;
+
+    @SuppressWarnings("unused") // Used by java_environment_wrapper.py
+    public void close() {
+        synchronized (closedLock) {
+            closed = true;
+            Rlmc.getEnvironments().remove(this);
+        }
+    }
 
     /**
      * Will be called at the beginning of a tick when a reset is requested. Should be blocking.
@@ -75,6 +89,9 @@ public abstract class Environment<A, O> {
         boolean shouldRun;
         synchronized (initializedLock) {
             shouldRun = this.initialized;
+        }
+        synchronized (closedLock) {
+            shouldRun = shouldRun && !this.closed;
         }
         if (shouldRun) {
             try {
