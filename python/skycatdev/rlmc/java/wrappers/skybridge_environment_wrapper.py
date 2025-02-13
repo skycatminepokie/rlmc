@@ -6,14 +6,16 @@ from gymnasium.spaces import (
     Box,
     Dict,
     MultiDiscrete,
+    flatten,
 )
 from py4j.java_collections import JavaList
 from py4j.java_gateway import JavaObject, JavaGateway, java_import
 
 from skycatdev.rlmc.java.utils import java_list_to_array
-from skycatdev.rlmc.java.wrappers import block_hit_result
+from skycatdev.rlmc.java.wrappers import block_hit_result, entity_hit_result
 from skycatdev.rlmc.java.wrappers.block_hit_result import WrappedBlockHitResult
 from skycatdev.rlmc.java.wrappers.block_pos import MAX_BLOCK_DISTANCE
+from skycatdev.rlmc.java.wrappers.entity_hit_result import WrappedEntityHitResult
 from skycatdev.rlmc.java.wrappers.java_environment_wrapper import WrappedJavaEnv
 
 MAX_ID_LENGTH = 32767
@@ -33,6 +35,9 @@ class WrappedSkybridgeEnvironment(WrappedJavaEnv):
         # attack, use, forward, left, backward, right, sprint, sneak, jump, hotbar yaw, pitch
         self.action_space = MultiDiscrete([2, 2, 2, 2, 2, 2, 2, 2, 2, 9, 360, 180])
         self.block_space = block_hit_result.flat_space(self.raycasts)
+        self.flat_entity_space, self.entity_space = entity_hit_result.space_of(
+            self.raycasts
+        )
         self.observation_space = Dict(
             {
                 "blocks": self.block_space,
@@ -42,6 +47,7 @@ class WrappedSkybridgeEnvironment(WrappedJavaEnv):
                 "yaw": Box(-180, 180, dtype=np.float32, shape=(1,)),  # TODO: Normalize
                 "pitch": Box(-90, 90, dtype=np.float32, shape=(1,)),  # TODO: Normalize
                 "hotbar": Discrete(9),
+                "entities": self.flat_entity_space,
                 # "inventory" : Dict({
                 #     "main" : Sequence(item_space),
                 #     "armor" : Sequence(item_space),
@@ -60,8 +66,13 @@ class WrappedSkybridgeEnvironment(WrappedJavaEnv):
             WrappedBlockHitResult(hit_result)
             for hit_result in java_list_to_array(java_obs.blocks())
         )
+        entity_hit_results = tuple(
+            WrappedEntityHitResult(hit_result, self.java_view)
+            for hit_result in java_list_to_array(java_obs.entities())
+        )
+        entities = entity_hit_result.to_dict(entity_hit_results)
         return {
-            "blocks": np.array(
+            "blocks": np.array(  # todo: Use block_hit_result.to_array
                 tuple(
                     [
                         hit_result.get_block_pos().get_x(),
@@ -86,6 +97,7 @@ class WrappedSkybridgeEnvironment(WrappedJavaEnv):
                 )
             ],
             "hotbar": agent.getInventory().selectedSlot,
+            "entities": flatten(self.entity_space, entities),
             # "inventory" : {
             #     "main": java_list_to_array(agent.getInventory().main),
             #     "armor": java_list_to_array(agent.getInventory().armor),
