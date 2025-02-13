@@ -42,6 +42,7 @@ public class FightSkeletonEnvironment extends Environment<FutureActionPack, Visi
 
     @Override
     protected ResetTuple<VisionSelfHistoryObservation> innerReset(@Nullable Integer seed, @Nullable Map<String, Object> options) {
+        // TODO: Kill off arrows and dropped items
         PlayerInventory inventory = agent.getInventory();
         inventory.clear();
         inventory.offer(new ItemStack(Items.DIAMOND_SWORD), true);

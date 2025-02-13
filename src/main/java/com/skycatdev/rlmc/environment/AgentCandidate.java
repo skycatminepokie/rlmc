@@ -3,6 +3,9 @@ package com.skycatdev.rlmc.environment;
 
 import java.util.function.Consumer;
 
+/**
+ * Marks something as an agent. An agent cannot die normally, but can trigger a callback when killed.
+ */
 public interface AgentCandidate {
     boolean rlmc$isAgent();
     void rlmc$setIsAgent(boolean isAgent);
@@ -16,4 +19,9 @@ public interface AgentCandidate {
     }
 
     void rlmc$setKilledTrigger(Consumer<AgentCandidate> trigger);
+
+    /**
+     * Unmark this as an agent and kill it. Killed trigger will not be triggered.
+     */
+    void rlmc$forceKill();
 }
