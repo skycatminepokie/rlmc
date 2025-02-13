@@ -4,36 +4,33 @@ package com.skycatdev.rlmc.command;
 import static net.minecraft.server.command.CommandManager.*;
 
 import carpet.patches.EntityPlayerMPFake;
-import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.skycatdev.rlmc.Rlmc;
+import com.skycatdev.rlmc.environment.AgentCandidate;
 import com.skycatdev.rlmc.environment.FightSkeletonEnvironment;
 import com.skycatdev.rlmc.environment.SkybridgeEnvironment;
-import java.util.Collection;
-import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.command.argument.BlockPosArgumentType;
 import net.minecraft.command.argument.GameProfileArgumentType;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameMode;
+import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 public class CommandManager implements CommandRegistrationCallback {
-	public static final DynamicCommandExceptionType NOT_ONE_AGENT_EXCEPTION_TYPE =
-			new DynamicCommandExceptionType(numAgents -> () -> String.format("Expected exactly one player, got %s", numAgents));
-	public static final DynamicCommandExceptionType AGENT_NOT_FOUND_EXCEPTION_TYPE =
-			new DynamicCommandExceptionType(agentName -> () -> String.format("The agent %s is not online!", agentName));
 
 	@Override
 	public void register(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess registryAccess, RegistrationEnvironment registrationEnvironment) {
@@ -106,54 +103,60 @@ public class CommandManager implements CommandRegistrationCallback {
 	}
 
 	private static int makeFightSkeletonEnvironment(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
-		String agent = StringArgumentType.getString(context, "agent");
+		String name = StringArgumentType.getString(context, "agent");
 		BlockPos agentPos = BlockPosArgumentType.getLoadedBlockPos(context, context.getSource().getWorld(), "agent_pos");
 		BlockPos skeletonPos = BlockPosArgumentType.getLoadedBlockPos(context, context.getSource().getWorld(), "skeleton_pos");
 		int historyLength = IntegerArgumentType.getInteger(context, "history_length");
-
-		if (EntityPlayerMPFake.createFake(agent, context.getSource().getServer(), new Vec3d(agentPos.getX(), agentPos.getY(), agentPos.getZ()), 0, 0, context.getSource().getWorld().getRegistryKey(), GameMode.SURVIVAL, false)) {
-			new Thread(()-> {
-				@Nullable ServerPlayerEntity player = context.getSource().getServer().getPlayerManager().getPlayer(agent);
-				while (player == null) {
-					Thread.yield();
-					player = context.getSource().getServer().getPlayerManager().getPlayer(agent);
-				}
-				FightSkeletonEnvironment environment = new FightSkeletonEnvironment(player, context.getSource().getWorld(), agentPos, skeletonPos, historyLength);
+        @Nullable CompletableFuture<ServerPlayerEntity> agentFuture = createPlayerAgent(name, context.getSource().getServer(), Vec3d.of(agentPos), context.getSource().getWorld().getRegistryKey());
+		if (agentFuture != null) {
+			agentFuture.thenAcceptAsync((agent) -> {
+				FightSkeletonEnvironment environment = new FightSkeletonEnvironment(agent, context.getSource().getWorld(), agentPos, skeletonPos, historyLength);
 				Rlmc.getEnvironments().add(environment);
 				Rlmc.getPythonEntrypoint().connectEnvironment("fight_skeleton", environment);
-				Rlmc.getPythonEntrypoint().train(environment);
-			}, "Skeleton fight training thread").start();
+				new Thread(() -> Rlmc.getPythonEntrypoint().train(environment), "RLMC Skeleton Training Thread");
+			});
 			return Command.SINGLE_SUCCESS;
 		}
-		return 0;
+		return -1;
 	}
 
-	private static ServerPlayerEntity getOneAgent(CommandContext<ServerCommandSource> context, String agentParameterName) throws CommandSyntaxException {
-		Collection<GameProfile> agents = GameProfileArgumentType.getProfileArgument(context, agentParameterName);
-		if (agents.size() != 1) {
-			throw NOT_ONE_AGENT_EXCEPTION_TYPE.create(agents.size());
-		}
-		Optional<GameProfile> optGameProfile = agents.stream().findFirst();
-		// assert optGameProfile.isPresent();
+    private static @Nullable CompletableFuture<ServerPlayerEntity> createPlayerAgent(String name, MinecraftServer server, Vec3d pos, RegistryKey<World> world) {
+        return createPlayerAgent(name, server, pos, 0.0, 0.0, world, GameMode.SURVIVAL, false);
+    }
 
-		@Nullable ServerPlayerEntity agent = context.getSource().getServer().getPlayerManager().getPlayer(optGameProfile.get().getId());
-		if (agent == null) {
-			throw AGENT_NOT_FOUND_EXCEPTION_TYPE.create(optGameProfile.get().getName());
+    private static @Nullable CompletableFuture<ServerPlayerEntity> createPlayerAgent(String name, MinecraftServer server, Vec3d pos, double yaw, double pitch, RegistryKey<World> world, GameMode gamemode, boolean flying) {
+		if (EntityPlayerMPFake.createFake(name, server, pos, yaw, pitch, world, gamemode, flying)) {
+			CompletableFuture<ServerPlayerEntity> future = new CompletableFuture<>();
+			new Thread(() -> {
+					@Nullable ServerPlayerEntity player = server.getPlayerManager().getPlayer(name);
+					while (player == null) {
+						Thread.yield();
+						player = server.getPlayerManager().getPlayer(name);
+					}
+                	((AgentCandidate) player).rlmc$markAsAgent();
+					future.complete(player);
+			}, "RLMC Create Player Agent Thread").start();
+			return future;
+		} else {
+			return null;
 		}
-		return agent;
 	}
 
 	private static int makeSkybridgeEnvironment(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
-		ServerPlayerEntity agent = getOneAgent(context, "agent");
 		BlockPos pos = BlockPosArgumentType.getLoadedBlockPos(context, "pos");
 		int distance = IntegerArgumentType.getInteger(context, "distance");
 		int historyLength = IntegerArgumentType.getInteger(context, "historyLength");
-
-		SkybridgeEnvironment environment = new SkybridgeEnvironment(agent, pos, distance, historyLength, 3, 3);
-		Rlmc.getEnvironments().add(environment);
-		Rlmc.getPythonEntrypoint().connectEnvironment("skybridge", environment);
-		new Thread(() -> Rlmc.getPythonEntrypoint().train(environment)).start();
-		return Command.SINGLE_SUCCESS;
+		@Nullable CompletableFuture<ServerPlayerEntity> agentFuture = createPlayerAgent(StringArgumentType.getString(context, "agent"), context.getSource().getServer(), Vec3d.of(pos), context.getSource().getWorld().getRegistryKey());
+		if (agentFuture != null) {
+			agentFuture.thenAcceptAsync((agent) -> {
+				SkybridgeEnvironment environment = new SkybridgeEnvironment(agent, pos, distance, historyLength, 3, 3);
+				Rlmc.getEnvironments().add(environment);
+				Rlmc.getPythonEntrypoint().connectEnvironment("skybridge", environment);
+				new Thread(() -> Rlmc.getPythonEntrypoint().train(environment), "RLMC Skybridge Training Thread").start();
+			});
+			return Command.SINGLE_SUCCESS;
+		}
+		return -1;
 	}
 
 
