@@ -23,16 +23,26 @@ public class SkybridgeEnvironment extends Environment<FutureActionPack, VisionSe
 	protected int historyLength;
 	protected final int xRaycasts;
 	protected final int yRaycasts;
+	protected boolean justKilled;
 
 	public SkybridgeEnvironment(ServerPlayerEntity agent, BlockPos startPos, int distance, int historyLength, int xRaycasts, int yRaycasts) {
 		this.agent = agent;
+		((AgentCandidate)agent).rlmc$markAsAgent();
+		((AgentCandidate)agent).rlmc$setKilledTrigger(this::onAgentKilled);
 		this.startPos = startPos;
 		this.distance = distance;
 		this.historyLength = historyLength;
 		world = agent.getServerWorld();
         this.xRaycasts = xRaycasts;
 		this.yRaycasts = yRaycasts;
+		justKilled = false;
     }
+
+	protected void onAgentKilled(AgentCandidate agent) {
+        //noinspection EqualsBetweenInconvertibleTypes mixins go brrr
+        assert (agent == this.agent);
+		justKilled = true;
+	}
 
 	@Override
 	protected Pair<@Nullable FutureTask<?>, FutureTask<StepTuple<VisionSelfHistoryObservation>>> innerStep(FutureActionPack action) {
@@ -54,6 +64,10 @@ public class SkybridgeEnvironment extends Environment<FutureActionPack, VisionSe
 			}
 			boolean terminated = startPos.getX() - agent.getBlockX() >= distance || agent.getBlockY() < startPos.getY() - 1;
 			boolean truncated = agent.getServerWorld() != world || agent.isDead();
+			if (justKilled) {
+				truncated = true;
+				justKilled = false;
+			}
 
 			return new StepTuple<>(observation, reward, terminated, truncated, new HashMap<>());
 		});
@@ -78,4 +92,10 @@ public class SkybridgeEnvironment extends Environment<FutureActionPack, VisionSe
 		return new ResetTuple<>(observation, new HashMap<>());
 	}
 
+	@Override
+	public void close() {
+		super.close();
+		((AgentCandidate)agent).rlmc$unmarkAsAgent();
+		agent.kill();
+	}
 }

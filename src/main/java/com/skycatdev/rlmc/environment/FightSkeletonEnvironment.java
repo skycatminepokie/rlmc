@@ -26,14 +26,18 @@ public class FightSkeletonEnvironment extends Environment<FutureActionPack, Visi
     protected List<FutureActionPack> history = new ArrayList<>();
     protected int historyLength;
     protected @Nullable SkeletonEntity skeleton;
+    protected boolean justKilled;
 
     public FightSkeletonEnvironment(ServerPlayerEntity agent, ServerWorld serverWorld, BlockPos agentStartPos, BlockPos skeletonStartPos, int historyLength) {
         this.agent = agent;
+        ((AgentCandidate)agent).rlmc$markAsAgent();
+        ((AgentCandidate)agent).rlmc$setKilledTrigger(this::onAgentKilled);
         this.agentStartPos = agentStartPos;
         this.skeletonStartPos = skeletonStartPos;
         this.serverWorld = serverWorld;
         this.historyLength = historyLength;
         world = serverWorld;
+        justKilled = false;
     }
 
     @Override
@@ -54,9 +58,17 @@ public class FightSkeletonEnvironment extends Environment<FutureActionPack, Visi
             throw new NullPointerException("Skeleton was null, expected non-null");
         }
         history.clear();
+        agent.getStatHandler().setStat(agent, Stats.CUSTOM.getOrCreateStat(Stats.DAMAGE_DEALT), 0);
+        agent.getStatHandler().setStat(agent, Stats.CUSTOM.getOrCreateStat(Stats.DAMAGE_TAKEN), 0);
 
 
         return new ResetTuple<>(VisionSelfHistoryObservation.fromPlayer(agent, 3, 3, 10, Math.PI/2, history), new HashMap<>());
+    }
+
+    protected void onAgentKilled(AgentCandidate agent) {
+        //noinspection EqualsBetweenInconvertibleTypes mixins go brrr
+        assert (agent == this.agent);
+        justKilled = true;
     }
 
     @Override
@@ -76,11 +88,13 @@ public class FightSkeletonEnvironment extends Environment<FutureActionPack, Visi
             int damageTaken = agent.getStatHandler().getStat(Stats.CUSTOM.getOrCreateStat(Stats.DAMAGE_TAKEN));
             int reward = damageDealt - damageTaken;
 
-            boolean terminated = agent.isDead() || Objects.requireNonNull(skeleton).isDead();
-            if (agent.isDead()) {
-                agent.requestRespawn(); // TODO: Test
+            boolean terminated = Objects.requireNonNull(skeleton).isDead();
+            if (justKilled) {
+                terminated = true;
+                justKilled = false;
             }
             boolean truncated = agent.getServerWorld() != world;
+
 
             return new StepTuple<>(observation, reward, terminated, truncated, new HashMap<>());
         });
@@ -90,6 +104,7 @@ public class FightSkeletonEnvironment extends Environment<FutureActionPack, Visi
     @Override
     public void close() {
         super.close();
+        ((AgentCandidate)agent).rlmc$unmarkAsAgent();
         agent.kill();
     }
 }

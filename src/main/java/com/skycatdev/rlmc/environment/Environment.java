@@ -86,14 +86,7 @@ public abstract class Environment<A, O> {
      * @see Environment#innerReset(Integer, Map)
      */
     public void preTick() {
-        boolean shouldRun;
-        synchronized (initializedLock) {
-            shouldRun = this.initialized;
-        }
-        synchronized (closedLock) {
-            shouldRun = shouldRun && !this.closed;
-        }
-        if (shouldRun) {
+        if (shouldRunPreTick()) {
             try {
                 @Nullable var tasks = queue.poll(10, TimeUnit.HOURS); // TODO: Wait time is for debug.
                 if (tasks == null) {
@@ -107,6 +100,17 @@ public abstract class Environment<A, O> {
                 throw new RuntimeException(e);
             }
         }
+    }
+
+    protected boolean shouldRunPreTick() {
+        boolean shouldRun;
+        synchronized (initializedLock) {
+            shouldRun = this.initialized;
+        }
+        synchronized (closedLock) {
+            shouldRun = shouldRun && !this.closed;
+        }
+        return shouldRun;
     }
 
     /**
