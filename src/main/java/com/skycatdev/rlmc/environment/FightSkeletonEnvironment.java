@@ -52,7 +52,7 @@ public class FightSkeletonEnvironment extends Environment<FutureActionPack, Visi
         agent.setHealth(20);
         agent.getHungerManager().setFoodLevel(20);
         if (skeleton != null) {
-            skeleton.kill();
+            skeleton.discard();
         }
         skeleton = EntityType.SKELETON.spawn(world, skeletonStartPos, SpawnReason.COMMAND);
         if (skeleton == null) {

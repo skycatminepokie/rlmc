@@ -113,8 +113,8 @@ public class CommandManager implements CommandRegistrationCallback {
 				FightSkeletonEnvironment environment = new FightSkeletonEnvironment(agent, context.getSource().getWorld(), agentPos, skeletonPos, historyLength);
 				Rlmc.getEnvironments().add(environment);
 				Rlmc.getPythonEntrypoint().connectEnvironment("fight_skeleton", environment);
-				new Thread(() -> Rlmc.getPythonEntrypoint().train(environment), "RLMC Skeleton Training Thread");
-			});
+				new Thread(() -> Rlmc.getPythonEntrypoint().train(environment), "RLMC Skeleton Training Thread").start();
+			}, (runnable) -> new Thread(runnable).start());
 			return Command.SINGLE_SUCCESS;
 		}
 		return -1;
@@ -153,7 +153,7 @@ public class CommandManager implements CommandRegistrationCallback {
 				Rlmc.getEnvironments().add(environment);
 				Rlmc.getPythonEntrypoint().connectEnvironment("skybridge", environment);
 				new Thread(() -> Rlmc.getPythonEntrypoint().train(environment), "RLMC Skybridge Training Thread").start();
-			});
+			}, (runnable) -> new Thread(runnable).start());
 			return Command.SINGLE_SUCCESS;
 		}
 		return -1;
