@@ -12,5 +12,7 @@ RUN ["echo", "eula=true", ">>", "run/eula"]
 EXPOSE 25565
 
 COPY . .
+RUN ["chmod", "+x", "./start.sh"]
+RUN ["chmod", "+x", "./gradlew"]
 
 CMD ["./start.sh"]
