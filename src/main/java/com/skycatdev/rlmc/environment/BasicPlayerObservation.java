@@ -12,9 +12,9 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import org.jetbrains.annotations.Nullable;
 
-public record VisionSelfHistoryObservation(List<BlockHitResult> blocks, List<@Nullable EntityHitResult> entities,
-                                           ServerPlayerEntity self, List<FutureActionPack> history) {
-    public static VisionSelfHistoryObservation fromPlayer(ServerPlayerEntity player, int xRaycasts, int yRaycasts, double maxDistance, double fovRad, List<FutureActionPack> history) {
+public record BasicPlayerObservation(List<BlockHitResult> blocks, List<@Nullable EntityHitResult> entities,
+                                     ServerPlayerEntity self, FutureActionPack.History history) {
+    public static BasicPlayerObservation fromPlayer(ServerPlayerEntity player, int xRaycasts, int yRaycasts, double maxDistance, double fovRad, FutureActionPack.History history) {
         List<BlockHitResult> blocks = new ArrayList<>();
         List<@Nullable EntityHitResult> entities = new ArrayList<>();
         double deltaAngleX = fovRad / xRaycasts;
@@ -36,6 +36,6 @@ public record VisionSelfHistoryObservation(List<BlockHitResult> blocks, List<@Nu
                 entities.add(entityHitResult);
             }
         }
-        return new VisionSelfHistoryObservation(blocks, entities, player, history);
+        return new BasicPlayerObservation(blocks, entities, player, history);
     }
 }

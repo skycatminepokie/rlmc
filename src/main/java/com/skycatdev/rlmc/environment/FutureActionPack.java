@@ -2,9 +2,12 @@
 package com.skycatdev.rlmc.environment;
 
 import carpet.helpers.EntityPlayerActionPack;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import org.jetbrains.annotations.Contract;
 
 @SuppressWarnings("unused") // Python uses it
 public class FutureActionPack {
@@ -79,5 +82,28 @@ public class FutureActionPack {
 		ActionType(Consumer<EntityPlayerActionPack> packModifier) {
 			this.packModifier = packModifier;
 		}
+	}
+	public static class History {
+		/**
+		 * Map of ActionType : Number of steps active in a row
+		 */
+		public Map<ActionType, Integer> actionHistory;
+
+		public History() {
+			this.actionHistory = new HashMap<>();
+		}
+
+		@Contract("_->this")
+		public History step(FutureActionPack futureActionPack) {
+			for (ActionType actionType : ActionType.values()) {
+				if (futureActionPack.getActions().contains(actionType)) {
+					actionHistory.computeIfPresent(actionType, (action, value) -> value + 1);
+					actionHistory.putIfAbsent(actionType, 1);
+				}
+			}
+			return this;
+		}
+
+
 	}
 }

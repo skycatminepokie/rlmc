@@ -17,13 +17,13 @@ import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
 
-public class FightSkeletonEnvironment extends Environment<FutureActionPack, VisionSelfHistoryObservation> {
+public class FightSkeletonEnvironment extends Environment<FutureActionPack, BasicPlayerObservation> {
     protected final ServerWorld serverWorld;
     protected ServerPlayerEntity agent;
     protected BlockPos agentStartPos;
     protected BlockPos skeletonStartPos;
     protected ServerWorld world;
-    protected List<FutureActionPack> history = new ArrayList<>();
+    protected FutureActionPack.History history = new FutureActionPack.History();
     protected int historyLength;
     protected @Nullable SkeletonEntity skeleton;
     protected boolean justKilled;
@@ -41,7 +41,7 @@ public class FightSkeletonEnvironment extends Environment<FutureActionPack, Visi
     }
 
     @Override
-    protected ResetTuple<VisionSelfHistoryObservation> innerReset(@Nullable Integer seed, @Nullable Map<String, Object> options) {
+    protected ResetTuple<BasicPlayerObservation> innerReset(@Nullable Integer seed, @Nullable Map<String, Object> options) {
         // TODO: Kill off arrows and dropped items
         PlayerInventory inventory = agent.getInventory();
         inventory.clear();
@@ -58,12 +58,12 @@ public class FightSkeletonEnvironment extends Environment<FutureActionPack, Visi
         if (skeleton == null) {
             throw new NullPointerException("Skeleton was null, expected non-null");
         }
-        history.clear();
+        history = new FutureActionPack.History();
         agent.getStatHandler().setStat(agent, Stats.CUSTOM.getOrCreateStat(Stats.DAMAGE_DEALT), 0);
         agent.getStatHandler().setStat(agent, Stats.CUSTOM.getOrCreateStat(Stats.DAMAGE_TAKEN), 0);
 
 
-        return new ResetTuple<>(VisionSelfHistoryObservation.fromPlayer(agent, 3, 3, 10, Math.PI/2, history), new HashMap<>());
+        return new ResetTuple<>(BasicPlayerObservation.fromPlayer(agent, 3, 3, 10, Math.PI / 2, history), new HashMap<>());
     }
 
     protected void onAgentKilled(AgentCandidate agent) {
@@ -73,17 +73,14 @@ public class FightSkeletonEnvironment extends Environment<FutureActionPack, Visi
     }
 
     @Override
-    protected Pair<@Nullable FutureTask<?>, FutureTask<StepTuple<VisionSelfHistoryObservation>>> innerStep(FutureActionPack action) {
+    protected Pair<@Nullable FutureTask<?>, FutureTask<StepTuple<BasicPlayerObservation>>> innerStep(FutureActionPack action) {
         FutureTask<Boolean> preTick = new FutureTask<>(() -> {
             action.copyTo(((ServerPlayerInterface)agent).getActionPack());
-            history.add(action);
-            if (history.size() > historyLength) {
-                history.removeFirst();
-            }
+            history.step(action);
             return true;
         });
-        FutureTask<StepTuple<VisionSelfHistoryObservation>> postTick = new FutureTask<>(() -> {
-            VisionSelfHistoryObservation observation = VisionSelfHistoryObservation.fromPlayer(agent,  3, 3, 10, Math.PI/2, history);
+        FutureTask<StepTuple<BasicPlayerObservation>> postTick = new FutureTask<>(() -> {
+            BasicPlayerObservation observation = BasicPlayerObservation.fromPlayer(agent,  3, 3, 10, Math.PI / 2, history);
 
             int damageDealt = agent.getStatHandler().getStat(Stats.CUSTOM.getOrCreateStat(Stats.DAMAGE_DEALT));
             int damageTaken = agent.getStatHandler().getStat(Stats.CUSTOM.getOrCreateStat(Stats.DAMAGE_TAKEN));
