@@ -76,7 +76,7 @@ public abstract class BasicPlayerEnvironment extends Environment<FutureActionPac
     }
 
     /**
-     * Called when resetting at the beginning of the tick. History will be reset and the agent will be teleported after this.
+     * Called when resetting at the beginning of the tick. History, food, and health will be reset and the agent will be teleported after this.
      */
     protected abstract void innerPreReset(@Nullable Integer seed, @Nullable Map<String, Object> options);
 
@@ -85,6 +85,8 @@ public abstract class BasicPlayerEnvironment extends Environment<FutureActionPac
         innerPreReset(seed, options);
         history = new FutureActionPack.History();
         agent.teleport(getWorld(), getStartPos().getX(), getStartPos().getY(), getStartPos().getZ(), Set.of(), 0, 0);
+        agent.setHealth(initialHealth.get());
+        agent.getHungerManager().setFoodLevel(initialFoodLevel.get());
 
         BasicPlayerObservation observation = BasicPlayerObservation.fromPlayer(agent, xRaycasts, yRaycasts, 10, Math.PI / 2, history);
 

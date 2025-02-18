@@ -110,7 +110,7 @@ public class CommandManager implements CommandRegistrationCallback {
         @Nullable CompletableFuture<ServerPlayerEntity> agentFuture = createPlayerAgent(name, context.getSource().getServer(), Vec3d.of(agentPos), context.getSource().getWorld().getRegistryKey());
 		if (agentFuture != null) {
 			agentFuture.thenAcceptAsync((agent) -> {
-				FightSkeletonEnvironment environment = new FightSkeletonEnvironment(agent, context.getSource().getWorld(), agentPos, skeletonPos, historyLength);
+				FightSkeletonEnvironment environment = new FightSkeletonEnvironment(agent, Vec3d.of(agentPos), skeletonPos, historyLength);
 				Rlmc.getEnvironments().add(environment);
 				Rlmc.getPythonEntrypoint().connectEnvironment("fight_skeleton", environment);
 				new Thread(() -> Rlmc.getPythonEntrypoint().train(environment), "RLMC Skeleton Training Thread").start();
