@@ -19,5 +19,6 @@ EXPOSE 25565
 COPY . .
 RUN ["chmod", "+x", "./gradlew"]
 RUN ["chmod", "+x", "./start.sh"]
+RUN ["pip3", "install", "-e", "./python"]
 
 CMD ["./start.sh"]
