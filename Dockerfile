@@ -13,10 +13,11 @@ ADD ./python/requirements.txt /usr/src/app/python/requirements.txt
 RUN pip3 install -r ./python/requirements.txt
 
 # Prep the Minecraft server
-RUN ["echo", "eula=true", ">>", "run/eula"]
 EXPOSE 25565
 
 COPY . .
+RUN ["mkdir", "/usr/src/app/run"]
+RUN echo eula=true > /usr/src/app/run/eula.txt
 RUN ["chmod", "+x", "./gradlew"]
 RUN ["chmod", "+x", "./start.sh"]
 RUN ["pip3", "install", "-e", "./python"]
