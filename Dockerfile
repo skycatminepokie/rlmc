@@ -19,7 +19,7 @@ COPY . .
 RUN ["mkdir", "/usr/src/app/run"]
 RUN echo eula=true > /usr/src/app/run/eula.txt
 RUN ["chmod", "+x", "./gradlew"]
-RUN ["chmod", "+x", "./start.sh"]
+RUN ["chmod", "+x", "./dockerStart.sh"]
 RUN ["pip3", "install", "-e", "./python"]
 
-CMD ["./start.sh"]
+CMD ["./dockerStart.sh"]

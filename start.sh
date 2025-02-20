@@ -1,2 +1,8 @@
-#!/usr/bin/env sh
-python3 python/skycatdev/rlmc/entrypoint.py & ./gradlew runServer && fg
+#!/bin/bash
+set -e
+source .venv/bin/activate
+cd python
+python -m skycatdev.rlmc.entrypoint &
+cd ..
+./gradlew runServer
+fg
