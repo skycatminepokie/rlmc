@@ -36,7 +36,8 @@ class WrappedSkybridgeEnvironment(WrappedJavaEnv):
         self.action_space = MultiDiscrete([2, 2, 2, 2, 2, 2, 2, 2, 2, 9, 360, 180])
         self.block_space = block_hit_result.flat_space(self.raycasts)
         self.flat_entity_space, self.entity_space = entity_hit_result.space_of(
-            self.raycasts
+            self.raycasts,
+            self.java_view.com.skycatdev.rlmc.Rlmc.getEntityTypeMap().size(),
         )
         self.observation_space = Dict(
             {
@@ -70,7 +71,11 @@ class WrappedSkybridgeEnvironment(WrappedJavaEnv):
             WrappedEntityHitResult(hit_result, self.java_view)
             for hit_result in java_list_to_array(java_obs.entities())
         )
-        entities = entity_hit_result.to_dict(entity_hit_results)
+        entities = entity_hit_result.to_space_dict(
+            entity_hit_results,
+            self.java_view,
+            self.java_view.com.skycatdev.rlmc.Rlmc.getEntityTypeMap().size(),
+        )
         return {
             "blocks": np.array(  # todo: Use block_hit_result.to_array
                 tuple(
