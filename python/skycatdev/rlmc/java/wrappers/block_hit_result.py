@@ -27,15 +27,13 @@ class WrappedBlockHitResult(object):
             "side": self.get_side(),
         }
 
-    def to_array(self) -> np.ndarray:
-        return np.array(
-            [
-                self.get_block_pos().get_x(),
-                self.get_block_pos().get_y(),
-                self.get_block_pos().get_z(),
-                self.get_side(),
-            ]
-        )
+    def to_array(self) -> list[int]:
+        return [
+            self.get_block_pos().get_x(),
+            self.get_block_pos().get_y(),
+            self.get_block_pos().get_z(),
+            self.get_side(),
+        ]
 
 
 def flat_space(num_hit_results: int) -> Box:

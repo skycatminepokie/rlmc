@@ -73,16 +73,8 @@ class WrappedBasicPlayerEnvironment(WrappedJavaEnv):
             self.java_view.com.skycatdev.rlmc.Rlmc.getEntityTypeMap().size(),
         )
         return {
-            "blocks": np.array(  # todo: Use block_hit_result.to_array
-                tuple(
-                    [
-                        hit_result.get_block_pos().get_x(),
-                        hit_result.get_block_pos().get_y(),
-                        hit_result.get_block_pos().get_z(),
-                        hit_result.get_side(),
-                    ]
-                    for hit_result in block_hit_results
-                )
+            "blocks": np.array(
+                tuple(hit_result.to_array() for hit_result in block_hit_results)
             ),
             "x": [agent.getX()],
             "y": [agent.getY()],
