@@ -37,7 +37,6 @@ public class Rlmc implements ModInitializer {
         new Thread(() -> GATEWAY_SERVER.start(false), "RLMC Python Gateway Server Thread").start();
     }
 
-    @SuppressWarnings("unused") // Used by entity_hit_result.py
     public static BiMap<BlockState, Integer> getBlockStateMap() {
         if (BLOCK_STATE_MAP == null) {
             List<BlockState> blockStates = Registries.BLOCK.stream()
@@ -54,6 +53,7 @@ public class Rlmc implements ModInitializer {
         return BLOCK_STATE_MAP;
     }
 
+    @SuppressWarnings("unused") // Used by entity_hit_result.py
     public static BiMap<EntityType<?>, Integer> getEntityTypeMap() {
         if (ENTITY_TYPE_MAP == null) {
             List<EntityType<?>> entityTypes = Registries.ENTITY_TYPE.stream()

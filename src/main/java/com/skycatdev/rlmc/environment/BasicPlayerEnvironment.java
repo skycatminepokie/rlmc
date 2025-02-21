@@ -61,6 +61,11 @@ public abstract class BasicPlayerEnvironment extends Environment<FutureActionPac
 
     protected abstract HashMap<String, Object> getInfo(BasicPlayerObservation observation);
 
+    @SuppressWarnings("unused") // Used by wrapped_basic_player_environment.py
+    public int getRaycasts() {
+        return xRaycasts * yRaycasts;
+    }
+
     protected abstract int getReward(BasicPlayerObservation observation);
 
     protected BlockPos getStartBlockPos() {

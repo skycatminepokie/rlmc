@@ -6,8 +6,8 @@ from py4j.java_gateway import JavaGateway, JavaObject
 from stable_baselines3 import PPO
 from stable_baselines3.common.evaluation import evaluate_policy
 
-from skycatdev.rlmc.java.wrappers.skybridge_environment_wrapper import (
-    WrappedSkybridgeEnvironment,
+from skycatdev.rlmc.java.wrappers.wrapped_basic_player_environment import (
+    WrappedBasicPlayerEnvironment,
 )
 
 
@@ -17,12 +17,12 @@ class Entrypoint(object):
     # noinspection PyPep8Naming
     def connectEnvironment(self, environment: string, java_environment: JavaObject):
         if environment == "skybridge":
-            env = WrappedSkybridgeEnvironment(java_environment, get_gateway())
+            env = WrappedBasicPlayerEnvironment(java_environment, get_gateway())
             env = TimeLimit(env, max_episode_steps=200)
             self.envs[java_environment] = env
 
         elif environment == "fight_skeleton":
-            env = WrappedSkybridgeEnvironment(java_environment, get_gateway())
+            env = WrappedBasicPlayerEnvironment(java_environment, get_gateway())
             env = TimeLimit(env, max_episode_steps=400)
             self.envs[java_environment] = env
 

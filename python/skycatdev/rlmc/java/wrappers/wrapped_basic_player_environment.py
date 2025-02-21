@@ -1,7 +1,6 @@
 import numpy as np
 from gymnasium.core import ActType, ObsType
 from gymnasium.spaces import (
-    Text,
     Discrete,
     Box,
     Dict,
@@ -23,15 +22,12 @@ MAX_ID_LENGTH = 32767
 MAX_STACK_SIZE = 999
 
 
-class WrappedSkybridgeEnvironment(WrappedJavaEnv):
+class WrappedBasicPlayerEnvironment(WrappedJavaEnv):
     def __init__(self, java_env: JavaObject, java_gateway: JavaGateway):
         super().__init__(java_env, java_gateway)
-        self.raycasts = 9  # todo get from env
+        self.raycasts = self.java_env.getRaycasts()
         java_import(self.java_view, "com.skycatdev.rlmc.environment.FutureActionPack")
         java_import(self.java_view, "carpet.helpers.EntityPlayerActionPack")
-        item_space = Dict(
-            {"id": Text(MAX_ID_LENGTH), "count": Discrete(MAX_STACK_SIZE)}
-        )
         # attack, use, forward, left, backward, right, sprint, sneak, jump, hotbar yaw, pitch
         self.action_space = MultiDiscrete([2, 2, 2, 2, 2, 2, 2, 2, 2, 9, 360, 180])
         self.block_space = block_hit_result.flat_space(self.raycasts)
