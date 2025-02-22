@@ -30,7 +30,10 @@ class WrappedBasicPlayerEnvironment(WrappedJavaEnv):
         java_import(self.java_view, "carpet.helpers.EntityPlayerActionPack")
         # attack, use, forward, left, backward, right, sprint, sneak, jump, hotbar yaw, pitch
         self.action_space = MultiDiscrete([2, 2, 2, 2, 2, 2, 2, 2, 2, 9, 360, 180])
-        self.block_space = block_hit_result.flat_space(self.raycasts)
+        self.block_space = block_hit_result.flat_space(
+            self.raycasts,
+            self.java_view.com.skycatdev.rlmc.Rlmc.getBlockStateMap().size(),
+        )
         self.flat_entity_space, self.entity_space = entity_hit_result.space_of(
             self.raycasts,
             self.java_view.com.skycatdev.rlmc.Rlmc.getEntityTypeMap().size(),
@@ -74,7 +77,10 @@ class WrappedBasicPlayerEnvironment(WrappedJavaEnv):
         )
         return {
             "blocks": np.array(
-                tuple(hit_result.to_array() for hit_result in block_hit_results)
+                tuple(
+                    hit_result.to_array(self.java_view)
+                    for hit_result in block_hit_results
+                )
             ),
             "x": [agent.getX()],
             "y": [agent.getY()],

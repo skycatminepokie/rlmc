@@ -37,6 +37,7 @@ public class Rlmc implements ModInitializer {
         new Thread(() -> GATEWAY_SERVER.start(false), "RLMC Python Gateway Server Thread").start();
     }
 
+    @SuppressWarnings("unused") // Used by block_hit_result.py
     public static BiMap<BlockState, Integer> getBlockStateMap() {
         if (BLOCK_STATE_MAP == null) {
             List<BlockState> blockStates = Registries.BLOCK.stream()

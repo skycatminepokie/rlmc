@@ -76,6 +76,7 @@ public abstract class BasicPlayerEnvironment extends Environment<FutureActionPac
         return startPos.get();
     }
 
+    @SuppressWarnings("unused") // Used by wrapped_basic_player_environment.py
     protected ServerWorld getWorld() {
         return world.get();
     }

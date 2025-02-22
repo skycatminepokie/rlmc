@@ -12,10 +12,10 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import org.jetbrains.annotations.Nullable;
 
-public record BasicPlayerObservation(List<BlockHitResult> blocks, List<@Nullable EntityHitResult> entities,
+public record BasicPlayerObservation(List<BlockHitInfo> blocks, List<@Nullable EntityHitResult> entities,
                                      ServerPlayerEntity self, FutureActionPack.History history) {
     public static BasicPlayerObservation fromPlayer(ServerPlayerEntity player, int xRaycasts, int yRaycasts, double maxDistance, double fovRad, FutureActionPack.History history) {
-        List<BlockHitResult> blocks = new ArrayList<>();
+        List<BlockHitInfo> blocks = new ArrayList<>();
         List<@Nullable EntityHitResult> entities = new ArrayList<>();
         double deltaAngleX = fovRad / xRaycasts;
         double deltaAngleY = fovRad / yRaycasts;
@@ -27,7 +27,7 @@ public record BasicPlayerObservation(List<BlockHitResult> blocks, List<@Nullable
                 Vec3d max = pos.add(rot.x * maxDistance, rot.y * maxDistance, rot.z * maxDistance);
                 // Blocks (see Entity#raycast)
                 BlockHitResult blockHitResult = player.getServerWorld().raycast(new RaycastContext(pos, max, RaycastContext.ShapeType.VISUAL, RaycastContext.FluidHandling.ANY, player));
-                blocks.add(blockHitResult);
+                blocks.add(new BlockHitInfo(blockHitResult.getSide(), blockHitResult.getBlockPos(), player.getServerWorld().getBlockState(blockHitResult.getBlockPos())));
 
                 // Entities (see GameRenderer#findCrosshairTarget)
                 Box box = player.getBoundingBox().stretch(rot.multiply(maxDistance)).expand(1, 1, 1);

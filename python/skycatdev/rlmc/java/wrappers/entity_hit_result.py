@@ -1,7 +1,7 @@
 from typing import Any
 
 import numpy as np
-from gymnasium.spaces import Dict, Box, Text, flatten_space, Discrete
+from gymnasium.spaces import Dict, Box, flatten_space, Discrete
 from py4j.java_gateway import JavaObject, JVMView
 
 from skycatdev.rlmc.java.wrappers.block_pos import MAX_BLOCK_DISTANCE
