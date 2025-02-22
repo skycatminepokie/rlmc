@@ -17,7 +17,6 @@ import org.jetbrains.annotations.Nullable;
 public abstract class BasicPlayerEnvironment extends Environment<FutureActionPack, BasicPlayerObservation> {
     protected final int xRaycasts;
     protected final int yRaycasts;
-    protected Supplier<ServerWorld> world;
     protected ServerPlayerEntity agent;
     protected Supplier<Vec3d> startPos;
     protected Supplier<Float> initialHealth;
@@ -25,8 +24,7 @@ public abstract class BasicPlayerEnvironment extends Environment<FutureActionPac
     protected FutureActionPack.History history;
     protected boolean justKilled;
 
-    public BasicPlayerEnvironment(Supplier<ServerWorld> world, ServerPlayerEntity agent, Supplier<Vec3d> startPos, Supplier<Float> initialHealth, Supplier<Integer> initialFoodLevel, int xRaycasts, int yRaycasts) {
-        this.world = world;
+    public BasicPlayerEnvironment(ServerPlayerEntity agent, Supplier<Vec3d> startPos, Supplier<Float> initialHealth, Supplier<Integer> initialFoodLevel, int xRaycasts, int yRaycasts) {
         this.agent = agent;
         this.startPos = startPos;
         this.initialHealth = initialHealth;
@@ -39,8 +37,8 @@ public abstract class BasicPlayerEnvironment extends Environment<FutureActionPac
         ((AgentCandidate) agent).rlmc$setKilledTrigger(this::onAgentKilled);
     }
 
-    public BasicPlayerEnvironment(ServerWorld world, ServerPlayerEntity agent, Vec3d startPos, float initialHealth, int initialFoodLevel, int xRaycasts, int yRaycasts) {
-        this(() -> world, agent, () -> startPos, () -> initialHealth, () -> initialFoodLevel, xRaycasts, yRaycasts);
+    public BasicPlayerEnvironment(ServerPlayerEntity agent, Vec3d startPos, float initialHealth, int initialFoodLevel, int xRaycasts, int yRaycasts) {
+        this(agent, () -> startPos, () -> initialHealth, () -> initialFoodLevel, xRaycasts, yRaycasts);
     }
 
     protected boolean checkAndUpdateJustKilled() {
@@ -77,9 +75,7 @@ public abstract class BasicPlayerEnvironment extends Environment<FutureActionPac
     }
 
     @SuppressWarnings("unused") // Used by wrapped_basic_player_environment.py
-    protected ServerWorld getWorld() {
-        return world.get();
-    }
+    protected abstract ServerWorld getWorld();
 
     /**
      * Called when resetting at the beginning of the tick. History, food, and health will be reset and the agent will be teleported after this.

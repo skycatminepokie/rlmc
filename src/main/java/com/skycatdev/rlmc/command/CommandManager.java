@@ -15,7 +15,6 @@ import com.skycatdev.rlmc.Rlmc;
 import com.skycatdev.rlmc.environment.AgentCandidate;
 import com.skycatdev.rlmc.environment.FightSkeletonEnvironment;
 import com.skycatdev.rlmc.environment.SkybridgeEnvironment;
-import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.command.CommandRegistryAccess;
@@ -27,15 +26,9 @@ import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.Difficulty;
 import net.minecraft.world.GameMode;
-import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
-import net.minecraft.world.dimension.DimensionTypes;
 import org.jetbrains.annotations.Nullable;
-import xyz.nucleoid.fantasy.Fantasy;
-import xyz.nucleoid.fantasy.RuntimeWorldConfig;
-import xyz.nucleoid.fantasy.RuntimeWorldHandle;
 
 public class CommandManager implements CommandRegistrationCallback {
 
@@ -63,24 +56,13 @@ public class CommandManager implements CommandRegistrationCallback {
 
     private static int makeFightSkeletonEnvironment(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         String name = StringArgumentType.getString(context, "agent");
-        RuntimeWorldConfig worldConfig = new RuntimeWorldConfig()
-                .setDimensionType(DimensionTypes.OVERWORLD_CAVES)
-                .setDifficulty(Difficulty.HARD)
-                .setGameRule(GameRules.DO_DAYLIGHT_CYCLE, false)
-                .setGenerator(context.getSource().getServer().getOverworld().getChunkManager().getChunkGenerator())
-                .setSeed(new Random().nextLong()); // TODO: Use a singleton random
-        Fantasy fantasy = Fantasy.get(context.getSource().getServer());
-        RuntimeWorldHandle worldHandle = fantasy.openTemporaryWorld(worldConfig);
-        @Nullable CompletableFuture<ServerPlayerEntity> agentFuture = createPlayerAgent(name, context.getSource().getServer(), Vec3d.of(worldHandle.asWorld().getSpawnPos()), worldHandle.getRegistryKey());
+        @Nullable CompletableFuture<ServerPlayerEntity> agentFuture = createPlayerAgent(name, context.getSource().getServer(), Vec3d.of(context.getSource().getWorld().getSpawnPos()), context.getSource().getWorld().getRegistryKey());
         if (agentFuture != null) {
             agentFuture.thenAcceptAsync((agent) -> {
-                FightSkeletonEnvironment environment = new FightSkeletonEnvironment(agent, Vec3d.of(worldHandle.asWorld().getSpawnPos()), worldHandle.asWorld().getSpawnPos());
+                FightSkeletonEnvironment environment = new FightSkeletonEnvironment(agent, Vec3d.of(context.getSource().getWorld().getSpawnPos()), context.getSource().getWorld().getSpawnPos());
                 Rlmc.getEnvironments().add(environment);
                 Rlmc.getPythonEntrypoint().connectEnvironment("fight_skeleton", environment);
-                new Thread(() -> {
-                    Rlmc.getPythonEntrypoint().train(environment);
-                    worldHandle.delete();
-                }, "RLMC Skeleton Training Thread").start();
+                new Thread(() -> Rlmc.getPythonEntrypoint().train(environment), "RLMC Skeleton Training Thread").start();
             }, (runnable) -> new Thread(runnable).start());
             return Command.SINGLE_SUCCESS;
         }

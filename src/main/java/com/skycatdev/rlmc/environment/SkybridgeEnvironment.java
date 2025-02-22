@@ -6,17 +6,20 @@ import net.minecraft.block.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
 
 public class SkybridgeEnvironment extends BasicPlayerEnvironment {
+	private final ServerWorld world;
 	protected int distance;
 	protected int historyLength;
 
 	public SkybridgeEnvironment(ServerPlayerEntity agent, BlockPos startPos, int distance, int historyLength, int xRaycasts, int yRaycasts) {
-		super(agent.getServerWorld(), agent, Vec3d.of(startPos),20, 20, xRaycasts, yRaycasts);
+		super(agent, Vec3d.of(startPos),20, 20, xRaycasts, yRaycasts);
+		world = agent.getServerWorld();
 		this.distance = distance;
 		this.historyLength = historyLength;
     }
@@ -44,6 +47,11 @@ public class SkybridgeEnvironment extends BasicPlayerEnvironment {
 			reward++;
 		}
 		return reward;
+	}
+
+	@Override
+	protected ServerWorld getWorld() {
+		return world;
 	}
 
 	@Override
