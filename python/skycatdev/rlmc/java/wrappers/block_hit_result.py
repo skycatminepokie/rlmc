@@ -11,28 +11,30 @@ SPACE = Dict({"pos": block_pos.SPACE, "side": direction.SPACE})
 
 class WrappedBlockHitResult(object):
     def __init__(self, block_hit_result: JavaObject):
-        self.block_pos = BlockPos(block_hit_result.blockPos())
-        self.side = Direction.from_java(block_hit_result.side())
-        self.block_state = block_hit_result.blockState()
+        self._block_pos = BlockPos(block_hit_result.blockPos())
+        self._side = Direction.from_java(block_hit_result.side())
+        self._block_state = block_hit_result.blockState()
 
-    def get_block_pos(self) -> BlockPos:
-        return self.block_pos
+    @property
+    def block_pos(self) -> BlockPos:
+        return self._block_pos
 
-    def get_side(self) -> int:
-        return self.side
+    @property
+    def side(self) -> int:
+        return self._side
 
     def to_array(self, java_view: JVMView) -> list[int]:
         return [
-            self.get_block_pos().get_x(),
-            self.get_block_pos().get_y(),
-            self.get_block_pos().get_z(),
-            self.get_side(),
+            self._block_pos.get_x(),
+            self._block_pos.get_y(),
+            self._block_pos.get_z(),
+            self._side,
             self.get_state_id(java_view),
         ]
 
     def get_state_id(self, java_view: JVMView) -> int:
         return java_view.com.skycatdev.rlmc.Rlmc.getBlockStateMap().get(
-            self.block_state
+            self._block_state
         )
 
 
