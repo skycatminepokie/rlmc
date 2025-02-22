@@ -15,6 +15,7 @@ import com.skycatdev.rlmc.Rlmc;
 import com.skycatdev.rlmc.environment.AgentCandidate;
 import com.skycatdev.rlmc.environment.FightSkeletonEnvironment;
 import com.skycatdev.rlmc.environment.SkybridgeEnvironment;
+import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.command.CommandRegistryAccess;
@@ -66,7 +67,8 @@ public class CommandManager implements CommandRegistrationCallback {
                 .setDimensionType(DimensionTypes.OVERWORLD_CAVES)
                 .setDifficulty(Difficulty.HARD)
                 .setGameRule(GameRules.DO_DAYLIGHT_CYCLE, false)
-                .setGenerator(context.getSource().getServer().getOverworld().getChunkManager().getChunkGenerator());
+                .setGenerator(context.getSource().getServer().getOverworld().getChunkManager().getChunkGenerator())
+                .setSeed(new Random().nextLong()); // TODO: Use a singleton random
         Fantasy fantasy = Fantasy.get(context.getSource().getServer());
         RuntimeWorldHandle worldHandle = fantasy.openTemporaryWorld(worldConfig);
         @Nullable CompletableFuture<ServerPlayerEntity> agentFuture = createPlayerAgent(name, context.getSource().getServer(), Vec3d.of(worldHandle.asWorld().getSpawnPos()), worldHandle.getRegistryKey());
