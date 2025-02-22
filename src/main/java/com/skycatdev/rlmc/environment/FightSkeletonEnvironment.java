@@ -17,14 +17,12 @@ import org.jetbrains.annotations.Nullable;
 
 public class FightSkeletonEnvironment extends BasicPlayerEnvironment {
     protected BlockPos skeletonStartPos;
-    protected int historyLength;
     protected @Nullable SkeletonEntity skeleton;
     protected boolean justKilled;
 
-    public FightSkeletonEnvironment(ServerPlayerEntity agent, Vec3d agentStartPos, BlockPos skeletonStartPos, int historyLength) {
+    public FightSkeletonEnvironment(ServerPlayerEntity agent, Vec3d agentStartPos, BlockPos skeletonStartPos) {
         super(agent.getServerWorld(), agent, agentStartPos, 20, 20, 3, 3);
         this.skeletonStartPos = skeletonStartPos;
-        this.historyLength = historyLength;
         justKilled = false;
     }
 

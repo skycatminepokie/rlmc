@@ -26,138 +26,143 @@ import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.Difficulty;
 import net.minecraft.world.GameMode;
+import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
+import net.minecraft.world.dimension.DimensionTypes;
 import org.jetbrains.annotations.Nullable;
+import xyz.nucleoid.fantasy.Fantasy;
+import xyz.nucleoid.fantasy.RuntimeWorldConfig;
+import xyz.nucleoid.fantasy.RuntimeWorldHandle;
 
 public class CommandManager implements CommandRegistrationCallback {
-
-	@Override
-	public void register(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess registryAccess, RegistrationEnvironment registrationEnvironment) {
-		var environment = literal("environment")
-				.requires(source -> source.hasPermissionLevel(4))
-				.build();
-		var create = literal("create")
-				.requires(source -> source.hasPermissionLevel(4))
-				.build();
-
-		// spotless:off
-		environment.addChild(create);
-			appendSkybridge(create);
-			appendFightSkeleton(create);
-		// spotless:on
-
-		dispatcher.getRoot().addChild(environment);
-	}
-
-	private void appendSkybridge(LiteralCommandNode<ServerCommandSource> create) {
-		var skybridge = literal("skybridge")
-				.requires(source -> source.hasPermissionLevel(4))
-				.build();
-		var agent = argument("agent", GameProfileArgumentType.gameProfile())
-				.requires(source -> source.hasPermissionLevel(4))
-				.build();
-		var pos = argument("pos", BlockPosArgumentType.blockPos())
-				.requires(source -> source.hasPermissionLevel(4))
-				.build();
-		var distance = argument("distance", IntegerArgumentType.integer(1))
-				.requires(source -> source.hasPermissionLevel(4))
-				.build();
-		var historyLength = argument("historyLength", IntegerArgumentType.integer(0))
-				.requires(source -> source.hasPermissionLevel(4))
-				.executes(CommandManager::makeSkybridgeEnvironment)
-				.build();
-		// spotless:off
-		create.addChild(skybridge);
-			skybridge.addChild(agent);
-				agent.addChild(pos);
-					pos.addChild(distance);
-						distance.addChild(historyLength);
-		// spotless:on
-	}
-
-	private void appendFightSkeleton(LiteralCommandNode<ServerCommandSource> create) {
-		var fightSkeleton = literal("skeleton")
-				.requires(source -> source.hasPermissionLevel(4))
-				.build();
-		var agent = argument("agent", StringArgumentType.word())
-				.requires(source -> source.hasPermissionLevel(4))
-				.build();
-		var agentPos = argument("agent_pos", BlockPosArgumentType.blockPos())
-				.requires(source -> source.hasPermissionLevel(4))
-				.build();
-		var skeletonPos = argument("skeleton_pos", BlockPosArgumentType.blockPos())
-				.requires(source -> source.hasPermissionLevel(4))
-				.build();
-		var historyLength = argument("history_length", IntegerArgumentType.integer(0))
-				.requires(source -> source.hasPermissionLevel(4))
-				.executes(CommandManager::makeFightSkeletonEnvironment)
-				.build();
-		// spotless:off
-		create.addChild(fightSkeleton);
-			fightSkeleton.addChild(agent);
-				agent.addChild(agentPos);
-					agentPos.addChild(skeletonPos);
-						skeletonPos.addChild(historyLength);
-		// spotless:on
-	}
-
-	private static int makeFightSkeletonEnvironment(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
-		String name = StringArgumentType.getString(context, "agent");
-		BlockPos agentPos = BlockPosArgumentType.getLoadedBlockPos(context, context.getSource().getWorld(), "agent_pos");
-		BlockPos skeletonPos = BlockPosArgumentType.getLoadedBlockPos(context, context.getSource().getWorld(), "skeleton_pos");
-		int historyLength = IntegerArgumentType.getInteger(context, "history_length");
-        @Nullable CompletableFuture<ServerPlayerEntity> agentFuture = createPlayerAgent(name, context.getSource().getServer(), Vec3d.of(agentPos), context.getSource().getWorld().getRegistryKey());
-		if (agentFuture != null) {
-			agentFuture.thenAcceptAsync((agent) -> {
-				FightSkeletonEnvironment environment = new FightSkeletonEnvironment(agent, Vec3d.of(agentPos), skeletonPos, historyLength);
-				Rlmc.getEnvironments().add(environment);
-				Rlmc.getPythonEntrypoint().connectEnvironment("fight_skeleton", environment);
-				new Thread(() -> Rlmc.getPythonEntrypoint().train(environment), "RLMC Skeleton Training Thread").start();
-			}, (runnable) -> new Thread(runnable).start());
-			return Command.SINGLE_SUCCESS;
-		}
-		return -1;
-	}
 
     private static @Nullable CompletableFuture<ServerPlayerEntity> createPlayerAgent(String name, MinecraftServer server, Vec3d pos, RegistryKey<World> world) {
         return createPlayerAgent(name, server, pos, 0.0, 0.0, world, GameMode.SURVIVAL, false);
     }
 
     private static @Nullable CompletableFuture<ServerPlayerEntity> createPlayerAgent(String name, MinecraftServer server, Vec3d pos, double yaw, double pitch, RegistryKey<World> world, GameMode gamemode, boolean flying) {
-		if (EntityPlayerMPFake.createFake(name, server, pos, yaw, pitch, world, gamemode, flying)) {
-			CompletableFuture<ServerPlayerEntity> future = new CompletableFuture<>();
-			new Thread(() -> {
-					@Nullable ServerPlayerEntity player = server.getPlayerManager().getPlayer(name);
-					while (player == null) {
-						Thread.yield();
-						player = server.getPlayerManager().getPlayer(name);
-					}
-                	((AgentCandidate) player).rlmc$markAsAgent();
-					future.complete(player);
-			}, "RLMC Create Player Agent Thread").start();
-			return future;
-		} else {
-			return null;
-		}
-	}
+        if (EntityPlayerMPFake.createFake(name, server, pos, yaw, pitch, world, gamemode, flying)) {
+            CompletableFuture<ServerPlayerEntity> future = new CompletableFuture<>();
+            new Thread(() -> {
+                @Nullable ServerPlayerEntity player = server.getPlayerManager().getPlayer(name);
+                while (player == null) {
+                    Thread.yield();
+                    player = server.getPlayerManager().getPlayer(name);
+                }
+                ((AgentCandidate) player).rlmc$markAsAgent();
+                future.complete(player);
+            }, "RLMC Create Player Agent Thread").start();
+            return future;
+        } else {
+            return null;
+        }
+    }
 
-	private static int makeSkybridgeEnvironment(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
-		BlockPos pos = BlockPosArgumentType.getLoadedBlockPos(context, "pos");
-		int distance = IntegerArgumentType.getInteger(context, "distance");
-		int historyLength = IntegerArgumentType.getInteger(context, "historyLength");
-		@Nullable CompletableFuture<ServerPlayerEntity> agentFuture = createPlayerAgent(StringArgumentType.getString(context, "agent"), context.getSource().getServer(), Vec3d.of(pos), context.getSource().getWorld().getRegistryKey());
-		if (agentFuture != null) {
-			agentFuture.thenAcceptAsync((agent) -> {
-				SkybridgeEnvironment environment = new SkybridgeEnvironment(agent, pos, distance, historyLength, 3, 3);
-				Rlmc.getEnvironments().add(environment);
-				Rlmc.getPythonEntrypoint().connectEnvironment("skybridge", environment);
-				new Thread(() -> Rlmc.getPythonEntrypoint().train(environment), "RLMC Skybridge Training Thread").start();
-			}, (runnable) -> new Thread(runnable).start());
-			return Command.SINGLE_SUCCESS;
-		}
-		return -1;
-	}
+    private static int makeFightSkeletonEnvironment(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+        String name = StringArgumentType.getString(context, "agent");
+        RuntimeWorldConfig worldConfig = new RuntimeWorldConfig()
+                .setDimensionType(DimensionTypes.OVERWORLD_CAVES)
+                .setDifficulty(Difficulty.HARD)
+                .setGameRule(GameRules.DO_DAYLIGHT_CYCLE, false)
+                .setGenerator(context.getSource().getServer().getOverworld().getChunkManager().getChunkGenerator());
+        Fantasy fantasy = Fantasy.get(context.getSource().getServer());
+        RuntimeWorldHandle worldHandle = fantasy.openTemporaryWorld(worldConfig);
+        @Nullable CompletableFuture<ServerPlayerEntity> agentFuture = createPlayerAgent(name, context.getSource().getServer(), Vec3d.of(worldHandle.asWorld().getSpawnPos()), worldHandle.getRegistryKey());
+        if (agentFuture != null) {
+            agentFuture.thenAcceptAsync((agent) -> {
+                FightSkeletonEnvironment environment = new FightSkeletonEnvironment(agent, Vec3d.of(worldHandle.asWorld().getSpawnPos()), worldHandle.asWorld().getSpawnPos());
+                Rlmc.getEnvironments().add(environment);
+                Rlmc.getPythonEntrypoint().connectEnvironment("fight_skeleton", environment);
+                new Thread(() -> {
+                    Rlmc.getPythonEntrypoint().train(environment);
+                    worldHandle.delete();
+                }, "RLMC Skeleton Training Thread").start();
+            }, (runnable) -> new Thread(runnable).start());
+            return Command.SINGLE_SUCCESS;
+        }
+        return -1;
+    }
+
+    private static int makeSkybridgeEnvironment(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+        BlockPos pos = BlockPosArgumentType.getLoadedBlockPos(context, "pos");
+        int distance = IntegerArgumentType.getInteger(context, "distance");
+        int historyLength = IntegerArgumentType.getInteger(context, "historyLength");
+        @Nullable CompletableFuture<ServerPlayerEntity> agentFuture = createPlayerAgent(StringArgumentType.getString(context, "agent"), context.getSource().getServer(), Vec3d.of(pos), context.getSource().getWorld().getRegistryKey());
+        if (agentFuture != null) {
+            agentFuture.thenAcceptAsync((agent) -> {
+                SkybridgeEnvironment environment = new SkybridgeEnvironment(agent, pos, distance, historyLength, 3, 3);
+                Rlmc.getEnvironments().add(environment);
+                Rlmc.getPythonEntrypoint().connectEnvironment("skybridge", environment);
+                new Thread(() -> Rlmc.getPythonEntrypoint().train(environment), "RLMC Skybridge Training Thread").start();
+            }, (runnable) -> new Thread(runnable).start());
+            return Command.SINGLE_SUCCESS;
+        }
+        return -1;
+    }
+
+    private void appendFightSkeleton(LiteralCommandNode<ServerCommandSource> create) {
+        var fightSkeleton = literal("skeleton")
+                .requires(source -> source.hasPermissionLevel(4))
+                .build();
+        var agent = argument("agent", StringArgumentType.word())
+                .requires(source -> source.hasPermissionLevel(4))
+                .executes(CommandManager::makeFightSkeletonEnvironment)
+                .build();
+        // spotless:off
+        //@formatter:off
+        create.addChild(fightSkeleton);
+            fightSkeleton.addChild(agent);
+        //@formatter:on
+        // spotless:on
+    }
+
+    private void appendSkybridge(LiteralCommandNode<ServerCommandSource> create) {
+        var skybridge = literal("skybridge")
+                .requires(source -> source.hasPermissionLevel(4))
+                .build();
+        var agent = argument("agent", GameProfileArgumentType.gameProfile())
+                .requires(source -> source.hasPermissionLevel(4))
+                .build();
+        var pos = argument("pos", BlockPosArgumentType.blockPos())
+                .requires(source -> source.hasPermissionLevel(4))
+                .build();
+        var distance = argument("distance", IntegerArgumentType.integer(1))
+                .requires(source -> source.hasPermissionLevel(4))
+                .build();
+        var historyLength = argument("historyLength", IntegerArgumentType.integer(0))
+                .requires(source -> source.hasPermissionLevel(4))
+                .executes(CommandManager::makeSkybridgeEnvironment)
+                .build();
+        // spotless:off
+        //@formatter:off
+        create.addChild(skybridge);
+            skybridge.addChild(agent);
+                agent.addChild(pos);
+                    pos.addChild(distance);
+                        distance.addChild(historyLength);
+        //@formatter:on
+        // spotless:on
+    }
+
+    @Override
+    public void register(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess registryAccess, RegistrationEnvironment registrationEnvironment) {
+        var environment = literal("environment")
+                .requires(source -> source.hasPermissionLevel(4))
+                .build();
+        var create = literal("create")
+                .requires(source -> source.hasPermissionLevel(4))
+                .build();
+
+        // spotless:off
+        environment.addChild(create);
+        appendSkybridge(create);
+        appendFightSkeleton(create);
+        // spotless:on
+
+        dispatcher.getRoot().addChild(environment);
+    }
 
 
 }
