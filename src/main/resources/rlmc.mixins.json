@@ -4,7 +4,8 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "EntityPlayerMPFakeMixin",
-    "MinecraftServerMixin"
+    "MinecraftServerMixin",
+    "SpreadPlayersCommandAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

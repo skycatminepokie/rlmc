@@ -1,7 +1,8 @@
 /* Licensed MIT 2025 */
 package com.skycatdev.rlmc.environment;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -15,14 +16,22 @@ import org.jetbrains.annotations.Nullable;
 public class SkybridgeEnvironment extends BasicPlayerEnvironment {
 	private final ServerWorld world;
 	protected int distance;
+	protected Vec3d startPos;
 	protected int historyLength;
 
+
 	public SkybridgeEnvironment(ServerPlayerEntity agent, BlockPos startPos, int distance, int historyLength, int xRaycasts, int yRaycasts) {
-		super(agent, Vec3d.of(startPos),20, 20, xRaycasts, yRaycasts);
+		super(agent, 20, 20, xRaycasts, yRaycasts);
 		world = agent.getServerWorld();
 		this.distance = distance;
 		this.historyLength = historyLength;
+		this.startPos = Vec3d.of(startPos);
     }
+
+	@Override
+	protected Vec3d getStartPos() {
+		return startPos;
+	}
 
 	@Override
 	protected HashMap<String, Object> getInfo(BasicPlayerObservation observation) {

@@ -1,10 +1,8 @@
 /* Licensed MIT 2025 */
 package com.skycatdev.rlmc.environment;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Random;
+import com.skycatdev.rlmc.SpreadEntitiesHelper;
+import java.util.*;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.mob.SkeletonEntity;
@@ -15,6 +13,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.stat.Stats;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.GameRules;
@@ -27,11 +26,12 @@ import xyz.nucleoid.fantasy.RuntimeWorldHandle;
 public class FightSkeletonEnvironment extends BasicPlayerEnvironment {
     @Nullable private RuntimeWorldHandle worldHandle;
     protected BlockPos skeletonStartPos;
-    protected @Nullable SkeletonEntity skeleton;
+    @Nullable protected SkeletonEntity skeleton;
     protected boolean justKilled;
+    protected Vec3d startPos;
 
-    public FightSkeletonEnvironment(ServerPlayerEntity agent, Vec3d agentStartPos, BlockPos skeletonStartPos) {
-        super(agent, agentStartPos, 20, 20, 3, 3);
+    public FightSkeletonEnvironment(ServerPlayerEntity agent, BlockPos skeletonStartPos) {
+        super(agent, 20, 20, 3, 3);
         this.skeletonStartPos = skeletonStartPos;
         justKilled = false;
     }
@@ -49,6 +49,11 @@ public class FightSkeletonEnvironment extends BasicPlayerEnvironment {
     }
 
     @Override
+    protected Vec3d getStartPos() {
+        return startPos;
+    }
+
+    @Override
     protected ServerWorld getWorld() {
         return getOrCreateWorld();
     }
@@ -62,12 +67,16 @@ public class FightSkeletonEnvironment extends BasicPlayerEnvironment {
                     .setGenerator(Objects.requireNonNull(agent.getServer()).getOverworld().getChunkManager().getChunkGenerator())
                     .setSeed(new Random().nextLong()));
         }
+        worldHandle.asWorld().setTimeOfDay(0L);
         return worldHandle.asWorld();
     }
 
     @Override
     protected void innerPreReset(@Nullable Integer seed, @Nullable Map<String, Object> options) {
-        Objects.requireNonNull(worldHandle).delete();
+        if (worldHandle != null) {
+            worldHandle.delete();
+        }
+        worldHandle = null;
         PlayerInventory inventory = agent.getInventory();
         inventory.clear();
         inventory.offer(new ItemStack(Items.DIAMOND_SWORD), true);
@@ -76,13 +85,24 @@ public class FightSkeletonEnvironment extends BasicPlayerEnvironment {
         if (skeleton != null) {
             skeleton.discard();
         }
-        skeleton = EntityType.SKELETON.spawn(getOrCreateWorld(), skeletonStartPos, SpawnReason.COMMAND);
+        skeleton = EntityType.SKELETON.spawn(getOrCreateWorld(), BlockPos.ORIGIN, SpawnReason.COMMAND); // TODO: Move spread players usage to custom impl so I don't spawn this first
         if (skeleton == null) {
             throw new NullPointerException("Skeleton was null, expected non-null");
         }
         agent.getStatHandler().setStat(agent, Stats.CUSTOM.getOrCreateStat(Stats.DAMAGE_DEALT), 0);
         agent.getStatHandler().setStat(agent, Stats.CUSTOM.getOrCreateStat(Stats.DAMAGE_TAKEN), 0);
+        Vec3d spawnPos = Vec3d.of(getWorld().getSpawnPos());
+        SpreadEntitiesHelper.spreadEntities(getWorld(),
+                new Vec2f((float) spawnPos.getX(), (float) spawnPos.getZ()),
+                2.0f,
+                2f,
+                100,
+                false,
+                List.of(skeleton, agent));
+        startPos = agent.getPos(); // TODO: Move to an override of something like teleportToStart
     }
+
+
 
     @Override
     protected boolean isTerminated(BasicPlayerObservation observation) {

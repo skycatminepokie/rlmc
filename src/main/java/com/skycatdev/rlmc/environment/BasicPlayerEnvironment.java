@@ -24,9 +24,8 @@ public abstract class BasicPlayerEnvironment extends Environment<FutureActionPac
     protected FutureActionPack.History history;
     protected boolean justKilled;
 
-    public BasicPlayerEnvironment(ServerPlayerEntity agent, Supplier<Vec3d> startPos, Supplier<Float> initialHealth, Supplier<Integer> initialFoodLevel, int xRaycasts, int yRaycasts) {
+    public BasicPlayerEnvironment(ServerPlayerEntity agent, Supplier<Float> initialHealth, Supplier<Integer> initialFoodLevel, int xRaycasts, int yRaycasts) {
         this.agent = agent;
-        this.startPos = startPos;
         this.initialHealth = initialHealth;
         this.initialFoodLevel = initialFoodLevel;
         this.xRaycasts = xRaycasts;
@@ -37,8 +36,8 @@ public abstract class BasicPlayerEnvironment extends Environment<FutureActionPac
         ((AgentCandidate) agent).rlmc$setKilledTrigger(this::onAgentKilled);
     }
 
-    public BasicPlayerEnvironment(ServerPlayerEntity agent, Vec3d startPos, float initialHealth, int initialFoodLevel, int xRaycasts, int yRaycasts) {
-        this(agent, () -> startPos, () -> initialHealth, () -> initialFoodLevel, xRaycasts, yRaycasts);
+    public BasicPlayerEnvironment(ServerPlayerEntity agent, float initialHealth, int initialFoodLevel, int xRaycasts, int yRaycasts) {
+        this(agent, () -> initialHealth, () -> initialFoodLevel, xRaycasts, yRaycasts);
     }
 
     protected boolean checkAndUpdateJustKilled() {
@@ -67,12 +66,10 @@ public abstract class BasicPlayerEnvironment extends Environment<FutureActionPac
     protected abstract int getReward(BasicPlayerObservation observation);
 
     protected BlockPos getStartBlockPos() {
-        return BlockPos.ofFloored(startPos.get());
+        return BlockPos.ofFloored(getStartPos());
     }
 
-    protected Vec3d getStartPos() {
-        return startPos.get();
-    }
+    protected abstract Vec3d getStartPos();
 
     @SuppressWarnings("unused") // Used by wrapped_basic_player_environment.py
     protected abstract ServerWorld getWorld();

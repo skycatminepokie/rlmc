@@ -45,6 +45,7 @@ spotless {
 }
 
 loom {
+	accessWidenerPath = file("src/main/resources/rlmc.accesswidener")
 	splitEnvironmentSourceSets()
 
 	mods {
