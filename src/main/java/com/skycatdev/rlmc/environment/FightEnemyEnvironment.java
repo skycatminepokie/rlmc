@@ -88,8 +88,8 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment {
                     .setGameRule(GameRules.DO_DAYLIGHT_CYCLE, false)
                     .setGenerator(Objects.requireNonNull(agent.getServer()).getOverworld().getChunkManager().getChunkGenerator())
                     .setSeed(new Random().nextLong()));
+            worldHandle.asWorld().setTimeOfDay(24000L);
         }
-        worldHandle.asWorld().setTimeOfDay(0L);
         return worldHandle.asWorld();
     }
 
