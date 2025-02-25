@@ -21,7 +21,7 @@ class Entrypoint(object):
             env = TimeLimit(env, max_episode_steps=200)
             self.envs[java_environment] = env
 
-        elif environment == "fight_skeleton":
+        elif environment == "fight_enemy":
             env = WrappedBasicPlayerEnvironment(java_environment, get_gateway())
             env = TimeLimit(env, max_episode_steps=400)
             self.envs[java_environment] = env

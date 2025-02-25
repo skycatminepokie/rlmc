@@ -12,7 +12,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.skycatdev.rlmc.Rlmc;
 import com.skycatdev.rlmc.environment.BasicPlayerEnvironment;
-import com.skycatdev.rlmc.environment.FightSkeletonEnvironment;
+import com.skycatdev.rlmc.environment.FightEnemyEnvironment;
 import com.skycatdev.rlmc.environment.SkybridgeEnvironment;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -21,6 +21,11 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.command.argument.BlockPosArgumentType;
 import net.minecraft.command.argument.GameProfileArgumentType;
+import net.minecraft.command.argument.RegistryEntryReferenceArgumentType;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -47,8 +52,8 @@ public class CommandManager implements CommandRegistrationCallback {
         return -1;
     }
 
-    private static int trainFightSkeletonEnvironment(String name, MinecraftServer server, int episodes, String savePath, @Nullable String loadPath) throws CommandSyntaxException {
-        @Nullable Future<FightSkeletonEnvironment> environment = FightSkeletonEnvironment.make(name, server);
+    private static int trainFightEnemyEnvironment(MinecraftServer server, String name, EntityType<? extends LivingEntity> entityType, int episodes, String savePath, @Nullable String loadPath) throws CommandSyntaxException {
+        @Nullable Future<FightEnemyEnvironment> environment = FightEnemyEnvironment.make(name, server, entityType);
         if (environment == null) {
             return -1;
         }
@@ -61,48 +66,54 @@ public class CommandManager implements CommandRegistrationCallback {
                 }
                 environment.get().close();
             } catch (InterruptedException | ExecutionException e) {
-                Rlmc.LOGGER.error("Skeleton training environment had an error!", e);
+                Rlmc.LOGGER.error("Enemy training environment had an error!", e);
             }
-        }, "RLMC Skeleton Training Thread").start();
+        }, "RLMC Enemy Training Thread").start();
         return Command.SINGLE_SUCCESS;
     }
 
-    private static int trainFightSkeletonEnvironment(String name, MinecraftServer server, int episodes, String savePath) throws CommandSyntaxException {
-        return trainFightSkeletonEnvironment(name, server, episodes, savePath, null);
+    private static int trainFightEnemyEnvironment(MinecraftServer server, String name, EntityType<? extends LivingEntity> entityType, int episodes, String savePath) throws CommandSyntaxException {
+        return trainFightEnemyEnvironment(server, name, entityType, episodes, savePath, null);
     }
 
-    private void appendFightSkeleton(LiteralCommandNode<ServerCommandSource> create) {
-        var fightSkeleton = literal("skeleton")
+    private void appendFightEnemy(LiteralCommandNode<ServerCommandSource> create, CommandRegistryAccess registryAccess) {
+        var fightEnemy = literal("enemy")
                 .requires(source -> source.hasPermissionLevel(4))
                 .build();
         var agent = argument("agent", StringArgumentType.word())
                 .requires(source -> source.hasPermissionLevel(4))
                 .build();
+        var entityType = argument("entityType", RegistryEntryReferenceArgumentType.registryEntry(registryAccess, RegistryKeys.ENTITY_TYPE))
+                .requires(source -> source.hasPermissionLevel(4))
+                .build();
         var episodes = argument("episodes", IntegerArgumentType.integer(1))
                 .requires(source -> source.hasPermissionLevel(4))
                 .build();
+        @SuppressWarnings("unchecked") // Just let it fail, it's a command
         var savePath = argument("savePath", StringArgumentType.string())
                 .requires(source -> source.hasPermissionLevel(4))
-                .executes((context) -> trainFightSkeletonEnvironment(StringArgumentType.getString(context, "agent"),
-                        context.getSource().getServer(),
+                .executes((context) -> trainFightEnemyEnvironment(context.getSource().getServer(),
+                        StringArgumentType.getString(context, "agent"),
+                        (EntityType<? extends LivingEntity>) Registries.ENTITY_TYPE.get(RegistryEntryReferenceArgumentType.getEntityType(context, "entityType").registryKey().getValue()),
                         IntegerArgumentType.getInteger(context, "episodes"),
                         StringArgumentType.getString(context, "savePath")))
                 .build();
+        @SuppressWarnings("unchecked") // Just let it fail, it's a command
         var loadPath = argument("loadPath", StringArgumentType.string())
                 .requires(source -> source.hasPermissionLevel(4))
-                .executes((context) -> trainFightSkeletonEnvironment(StringArgumentType.getString(context, "agent"),
-                        context.getSource().getServer(),
+                .executes((context) -> trainFightEnemyEnvironment(context.getSource().getServer(), StringArgumentType.getString(context, "agent"),
+                        (EntityType<? extends LivingEntity>) Registries.ENTITY_TYPE.get(RegistryEntryReferenceArgumentType.getEntityType(context, "entityType").registryKey().getValue()),
                         IntegerArgumentType.getInteger(context, "episodes"),
-                        StringArgumentType.getString(context, "savePath"),
-                        StringArgumentType.getString(context, "loadPath")))
+                        StringArgumentType.getString(context, "savePath"), StringArgumentType.getString(context, "loadPath")))
                 .build();
         // spotless:off
         //@formatter:off
-        create.addChild(fightSkeleton);
-            fightSkeleton.addChild(agent);
-                agent.addChild(episodes);
-                    episodes.addChild(savePath);
-                        savePath.addChild(loadPath);
+        create.addChild(fightEnemy);
+            fightEnemy.addChild(agent);
+                agent.addChild(entityType);
+                    entityType.addChild(episodes);
+                        episodes.addChild(savePath);
+                            savePath.addChild(loadPath);
         //@formatter:on
         // spotless:on
     }
@@ -148,7 +159,7 @@ public class CommandManager implements CommandRegistrationCallback {
         //@formatter:off
         environment.addChild(train);
             appendSkybridge(train);
-                appendFightSkeleton(train);
+            appendFightEnemy(train, registryAccess);
         //@formatter:on
         // spotless:on
 

@@ -8,8 +8,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.function.Function;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.mob.SkeletonEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -28,24 +28,26 @@ import xyz.nucleoid.fantasy.Fantasy;
 import xyz.nucleoid.fantasy.RuntimeWorldConfig;
 import xyz.nucleoid.fantasy.RuntimeWorldHandle;
 
-public class FightSkeletonEnvironment extends BasicPlayerEnvironment {
+public class FightEnemyEnvironment extends BasicPlayerEnvironment {
     @Nullable private RuntimeWorldHandle worldHandle;
-    @Nullable protected SkeletonEntity skeleton;
+    @Nullable protected LivingEntity enemy;
     protected boolean justKilled;
     @Nullable protected Vec3d startPos;
+    protected EntityType<? extends LivingEntity> enemyType;
 
-    public FightSkeletonEnvironment(ServerPlayerEntity agent) {
+    public FightEnemyEnvironment(ServerPlayerEntity agent, EntityType<? extends LivingEntity> enemyType) {
         super(agent, 20, 20, 3, 3);
         justKilled = false;
+        this.enemyType = enemyType;
     }
 
-    public static @Nullable Future<FightSkeletonEnvironment> make(String agentName, MinecraftServer server) {
+    public static @Nullable Future<FightEnemyEnvironment> make(String agentName, MinecraftServer server, EntityType<? extends LivingEntity> entityType) {
         @Nullable CompletableFuture<ServerPlayerEntity> agentFuture = createPlayerAgent(agentName, server, Vec3d.ZERO, server.getOverworld().getRegistryKey());
         if (agentFuture != null) {
-            Function<ServerPlayerEntity, FightSkeletonEnvironment> environmentFuture = agent -> {
-                FightSkeletonEnvironment environment = new FightSkeletonEnvironment(agent);
+            Function<ServerPlayerEntity, FightEnemyEnvironment> environmentFuture = agent -> {
+                FightEnemyEnvironment environment = new FightEnemyEnvironment(agent, entityType);
                 Rlmc.getEnvironments().add(environment);
-                Rlmc.getPythonEntrypoint().connectEnvironment("fight_skeleton", environment);
+                Rlmc.getPythonEntrypoint().connectEnvironment("fight_enemy", environment);
                 return environment;
             };
             return agentFuture.thenApplyAsync(environmentFuture, (runnable) -> new Thread(runnable).start());
@@ -102,11 +104,11 @@ public class FightSkeletonEnvironment extends BasicPlayerEnvironment {
         inventory.offer(new ItemStack(Items.DIAMOND_SWORD), true);
         inventory.offer(new ItemStack(Items.DIAMOND_AXE), true);
         inventory.setStack(PlayerInventory.OFF_HAND_SLOT, new ItemStack(Items.SHIELD));
-        if (skeleton != null) {
-            skeleton.discard();
+        if (enemy != null) {
+            enemy.discard();
         }
-        skeleton = EntityType.SKELETON.spawn(getOrCreateWorld(), BlockPos.ORIGIN, SpawnReason.COMMAND); // TODO: Move spread players usage to custom impl so I don't spawn this first
-        if (skeleton == null) {
+        enemy = enemyType.spawn(getOrCreateWorld(), BlockPos.ORIGIN, SpawnReason.COMMAND); // TODO: Move spread players usage to custom impl so I don't spawn this first
+        if (enemy == null) {
             throw new NullPointerException("Skeleton was null, expected non-null");
         }
         agent.getStatHandler().setStat(agent, Stats.CUSTOM.getOrCreateStat(Stats.DAMAGE_DEALT), 0);
@@ -118,7 +120,7 @@ public class FightSkeletonEnvironment extends BasicPlayerEnvironment {
                 2f,
                 100,
                 false,
-                List.of(skeleton, agent));
+                List.of(enemy, agent));
         startPos = agent.getPos(); // TODO: Move to an override of something like teleportToStart
     }
 
@@ -126,10 +128,10 @@ public class FightSkeletonEnvironment extends BasicPlayerEnvironment {
 
     @Override
     protected boolean isTerminated(BasicPlayerObservation observation) {
-        if (skeleton == null) {
+        if (enemy == null) {
             throw new RuntimeException("Skeleton should not have been null");
         }
-        return checkAndUpdateJustKilled() || skeleton.isDead();
+        return checkAndUpdateJustKilled() || enemy.isDead();
     }
 
     @Override

@@ -114,6 +114,7 @@ public abstract class BasicPlayerEnvironment extends Environment<FutureActionPac
         agent.teleport(getWorld(), getStartPos().getX(), getStartPos().getY(), getStartPos().getZ(), Set.of(), 0, 0);
         agent.setHealth(initialHealth.get());
         agent.getHungerManager().setFoodLevel(initialFoodLevel.get());
+        agent.setAir(20);
 
         BasicPlayerObservation observation = BasicPlayerObservation.fromPlayer(agent, xRaycasts, yRaycasts, 10, Math.PI / 2, history);
 
