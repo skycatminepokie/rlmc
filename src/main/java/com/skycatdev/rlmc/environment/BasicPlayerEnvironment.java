@@ -2,16 +2,22 @@
 package com.skycatdev.rlmc.environment;
 
 import carpet.fakes.ServerPlayerInterface;
+import carpet.patches.EntityPlayerMPFake;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.FutureTask;
 import java.util.function.Supplier;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.GameMode;
+import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 public abstract class BasicPlayerEnvironment extends Environment<FutureActionPack, BasicPlayerObservation> {
@@ -38,6 +44,28 @@ public abstract class BasicPlayerEnvironment extends Environment<FutureActionPac
 
     public BasicPlayerEnvironment(ServerPlayerEntity agent, float initialHealth, int initialFoodLevel, int xRaycasts, int yRaycasts) {
         this(agent, () -> initialHealth, () -> initialFoodLevel, xRaycasts, yRaycasts);
+    }
+
+    public static @Nullable CompletableFuture<ServerPlayerEntity> createPlayerAgent(String name, MinecraftServer server, Vec3d pos, RegistryKey<World> world) {
+        return createPlayerAgent(name, server, pos, 0.0, 0.0, world, GameMode.SURVIVAL, false);
+    }
+
+    private static @Nullable CompletableFuture<ServerPlayerEntity> createPlayerAgent(String name, MinecraftServer server, Vec3d pos, double yaw, double pitch, RegistryKey<World> world, GameMode gamemode, boolean flying) {
+        if (EntityPlayerMPFake.createFake(name, server, pos, yaw, pitch, world, gamemode, flying)) {
+            CompletableFuture<ServerPlayerEntity> future = new CompletableFuture<>();
+            new Thread(() -> {
+                @Nullable ServerPlayerEntity player = server.getPlayerManager().getPlayer(name);
+                while (player == null) {
+                    Thread.yield();
+                    player = server.getPlayerManager().getPlayer(name);
+                }
+                ((AgentCandidate) player).rlmc$markAsAgent();
+                future.complete(player);
+            }, "RLMC Create Player Agent Thread").start();
+            return future;
+        } else {
+            return null;
+        }
     }
 
     protected boolean checkAndUpdateJustKilled() {

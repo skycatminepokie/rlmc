@@ -1,14 +1,19 @@
 /* Licensed MIT 2025 */
 package com.skycatdev.rlmc.environment;
 
+import com.skycatdev.rlmc.Rlmc;
 import com.skycatdev.rlmc.SpreadEntitiesHelper;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
+import java.util.function.Function;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.mob.SkeletonEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.stat.Stats;
@@ -25,15 +30,27 @@ import xyz.nucleoid.fantasy.RuntimeWorldHandle;
 
 public class FightSkeletonEnvironment extends BasicPlayerEnvironment {
     @Nullable private RuntimeWorldHandle worldHandle;
-    protected BlockPos skeletonStartPos;
     @Nullable protected SkeletonEntity skeleton;
     protected boolean justKilled;
-    protected Vec3d startPos;
+    @Nullable protected Vec3d startPos;
 
-    public FightSkeletonEnvironment(ServerPlayerEntity agent, BlockPos skeletonStartPos) {
+    public FightSkeletonEnvironment(ServerPlayerEntity agent) {
         super(agent, 20, 20, 3, 3);
-        this.skeletonStartPos = skeletonStartPos;
         justKilled = false;
+    }
+
+    public static @Nullable Future<FightSkeletonEnvironment> make(String agentName, MinecraftServer server) {
+        @Nullable CompletableFuture<ServerPlayerEntity> agentFuture = createPlayerAgent(agentName, server, Vec3d.ZERO, server.getOverworld().getRegistryKey());
+        if (agentFuture != null) {
+            Function<ServerPlayerEntity, FightSkeletonEnvironment> environmentFuture = agent -> {
+                FightSkeletonEnvironment environment = new FightSkeletonEnvironment(agent);
+                Rlmc.getEnvironments().add(environment);
+                Rlmc.getPythonEntrypoint().connectEnvironment("fight_skeleton", environment);
+                return environment;
+            };
+            return agentFuture.thenApplyAsync(environmentFuture, (runnable) -> new Thread(runnable).start());
+        }
+        return null;
     }
 
     @Override
@@ -50,6 +67,9 @@ public class FightSkeletonEnvironment extends BasicPlayerEnvironment {
 
     @Override
     protected Vec3d getStartPos() {
+        if (startPos == null) {
+            throw new IllegalStateException("Something called getStartPos before we were ready!");
+        }
         return startPos;
     }
 
