@@ -5,6 +5,7 @@
   "mixins": [
     "EntityPlayerMPFakeMixin",
     "MinecraftServerMixin",
+    "MobEntityMixin",
     "SpreadPlayersCommandAccessor"
   ],
   "injectors": {

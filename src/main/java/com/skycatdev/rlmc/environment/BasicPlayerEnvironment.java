@@ -24,7 +24,6 @@ public abstract class BasicPlayerEnvironment extends Environment<FutureActionPac
     protected final int xRaycasts;
     protected final int yRaycasts;
     protected ServerPlayerEntity agent;
-    protected Supplier<Vec3d> startPos;
     protected Supplier<Float> initialHealth;
     protected Supplier<Integer> initialFoodLevel;
     protected FutureActionPack.History history;
@@ -38,8 +37,8 @@ public abstract class BasicPlayerEnvironment extends Environment<FutureActionPac
         this.yRaycasts = yRaycasts;
         this.history = new FutureActionPack.History();
         this.justKilled = false;
-        ((AgentCandidate) agent).rlmc$markAsAgent();
-        ((AgentCandidate) agent).rlmc$setKilledTrigger(this::onAgentKilled);
+        ((PlayerAgentCandidate) agent).rlmc$markAsAgent();
+        ((PlayerAgentCandidate) agent).rlmc$setKilledTrigger(this::onAgentKilled);
     }
 
     public BasicPlayerEnvironment(ServerPlayerEntity agent, float initialHealth, int initialFoodLevel, int xRaycasts, int yRaycasts) {
@@ -59,7 +58,7 @@ public abstract class BasicPlayerEnvironment extends Environment<FutureActionPac
                     Thread.yield();
                     player = server.getPlayerManager().getPlayer(name);
                 }
-                ((AgentCandidate) player).rlmc$markAsAgent();
+                ((PlayerAgentCandidate) player).rlmc$markAsAgent();
                 future.complete(player);
             }, "RLMC Create Player Agent Thread").start();
             return future;
@@ -80,7 +79,7 @@ public abstract class BasicPlayerEnvironment extends Environment<FutureActionPac
     @Override
     public void close() {
         super.close();
-        ((AgentCandidate) agent).rlmc$unmarkAsAgent();
+        ((PlayerAgentCandidate) agent).rlmc$unmarkAsAgent();
         agent.kill();
     }
 
@@ -141,7 +140,7 @@ public abstract class BasicPlayerEnvironment extends Environment<FutureActionPac
 
     protected abstract boolean isTruncated(BasicPlayerObservation observation);
 
-    protected void onAgentKilled(AgentCandidate agent) {
+    protected void onAgentKilled(PlayerAgentCandidate agent) {
         //noinspection EqualsBetweenInconvertibleTypes mixins go brrr
         assert (agent == this.agent);
         justKilled = true;

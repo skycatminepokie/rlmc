@@ -2,7 +2,7 @@
 package com.skycatdev.rlmc.mixin;
 
 import carpet.patches.EntityPlayerMPFake;
-import com.skycatdev.rlmc.environment.AgentCandidate;
+import com.skycatdev.rlmc.environment.PlayerAgentCandidate;
 import java.util.function.Consumer;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
@@ -14,11 +14,11 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(EntityPlayerMPFake.class)
-public abstract class EntityPlayerMPFakeMixin implements AgentCandidate {
+public abstract class EntityPlayerMPFakeMixin implements PlayerAgentCandidate {
     @Shadow public abstract void kill();
 
     @Unique protected boolean rlmc$isAgent = false;
-    @Unique @Nullable protected Consumer<AgentCandidate> rlmc$onKilledTrigger;
+    @Unique @Nullable protected Consumer<PlayerAgentCandidate> rlmc$onKilledTrigger;
 
     @Inject(method = "kill(Lnet/minecraft/text/Text;)V", at = @At(value = "INVOKE", target = "Lcarpet/patches/EntityPlayerMPFake;shakeOff()V", shift = At.Shift.AFTER), cancellable = true)
     private void rlmc$stopAgentKill(Text reason, CallbackInfo ci) {
@@ -41,7 +41,7 @@ public abstract class EntityPlayerMPFakeMixin implements AgentCandidate {
     }
 
     @Override
-    public void rlmc$setKilledTrigger(Consumer<AgentCandidate> trigger) {
+    public void rlmc$setKilledTrigger(Consumer<PlayerAgentCandidate> trigger) {
         rlmc$onKilledTrigger = trigger;
     }
 
