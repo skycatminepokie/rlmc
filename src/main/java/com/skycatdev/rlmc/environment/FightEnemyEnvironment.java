@@ -83,7 +83,7 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment {
     protected ServerWorld getOrCreateWorld() {
         if (worldHandle == null) {
             worldHandle = Fantasy.get(Objects.requireNonNull(agent.getServer())).openTemporaryWorld(new RuntimeWorldConfig()
-                    .setDimensionType(DimensionTypes.OVERWORLD_CAVES)
+                    .setDimensionType(DimensionTypes.OVERWORLD)
                     .setDifficulty(Difficulty.HARD)
                     .setGameRule(GameRules.DO_DAYLIGHT_CYCLE, false)
                     .setGenerator(Objects.requireNonNull(agent.getServer()).getOverworld().getChunkManager().getChunkGenerator())
