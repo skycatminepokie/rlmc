@@ -23,7 +23,7 @@ import net.minecraft.command.argument.BlockPosArgumentType;
 import net.minecraft.command.argument.GameProfileArgumentType;
 import net.minecraft.command.argument.RegistryEntryReferenceArgumentType;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.server.MinecraftServer;
@@ -36,7 +36,7 @@ import org.jetbrains.annotations.Nullable;
 
 public class CommandManager implements CommandRegistrationCallback {
 
-    private static int evaluateFightEnemyEnvironment(MinecraftServer server, String name, EntityType<? extends LivingEntity> entityType, int episodes, String loadPath, ServerCommandSource source) {
+    private static int evaluateFightEnemyEnvironment(MinecraftServer server, String name, EntityType<? extends MobEntity> entityType, int episodes, String loadPath, ServerCommandSource source) {
         @Nullable Future<FightEnemyEnvironment> environment = FightEnemyEnvironment.makeAndConnect(name, server, entityType);
         if (environment == null) {
             return -1;
@@ -69,7 +69,7 @@ public class CommandManager implements CommandRegistrationCallback {
         return -1;
     }
 
-    private static int trainFightEnemyEnvironment(MinecraftServer server, String name, EntityType<? extends LivingEntity> entityType, int episodes, String savePath, @Nullable String loadPath) throws CommandSyntaxException {
+    private static int trainFightEnemyEnvironment(MinecraftServer server, String name, EntityType<? extends MobEntity> entityType, int episodes, String savePath, @Nullable String loadPath) throws CommandSyntaxException {
         @Nullable Future<FightEnemyEnvironment> environment = FightEnemyEnvironment.makeAndConnect(name, server, entityType);
         if (environment == null) {
             return -1;
@@ -88,7 +88,7 @@ public class CommandManager implements CommandRegistrationCallback {
         return Command.SINGLE_SUCCESS;
     }
 
-    private static int trainFightEnemyEnvironment(MinecraftServer server, String name, EntityType<? extends LivingEntity> entityType, int episodes, String savePath) throws CommandSyntaxException {
+    private static int trainFightEnemyEnvironment(MinecraftServer server, String name, EntityType<? extends MobEntity> entityType, int episodes, String savePath) throws CommandSyntaxException {
         return trainFightEnemyEnvironment(server, name, entityType, episodes, savePath, null);
     }
 
@@ -109,7 +109,7 @@ public class CommandManager implements CommandRegistrationCallback {
         var loadPath = argument("loadPath", StringArgumentType.string())
                 .requires(source -> source.hasPermissionLevel(4))
                 .executes((context) -> evaluateFightEnemyEnvironment(context.getSource().getServer(), StringArgumentType.getString(context, "agent"),
-                        (EntityType<? extends LivingEntity>) Registries.ENTITY_TYPE.get(RegistryEntryReferenceArgumentType.getEntityType(context, "entityType").registryKey().getValue()),
+                        (EntityType<? extends MobEntity>) Registries.ENTITY_TYPE.get(RegistryEntryReferenceArgumentType.getEntityType(context, "entityType").registryKey().getValue()),
                         IntegerArgumentType.getInteger(context, "episodes"),
                         StringArgumentType.getString(context, "loadPath"), context.getSource()))
                 .build();
@@ -142,7 +142,7 @@ public class CommandManager implements CommandRegistrationCallback {
                 .requires(source -> source.hasPermissionLevel(4))
                 .executes((context) -> trainFightEnemyEnvironment(context.getSource().getServer(),
                         StringArgumentType.getString(context, "agent"),
-                        (EntityType<? extends LivingEntity>) Registries.ENTITY_TYPE.get(RegistryEntryReferenceArgumentType.getEntityType(context, "entityType").registryKey().getValue()),
+                        (EntityType<? extends MobEntity>) Registries.ENTITY_TYPE.get(RegistryEntryReferenceArgumentType.getEntityType(context, "entityType").registryKey().getValue()),
                         IntegerArgumentType.getInteger(context, "episodes"),
                         StringArgumentType.getString(context, "savePath")))
                 .build();
@@ -150,7 +150,7 @@ public class CommandManager implements CommandRegistrationCallback {
         var loadPath = argument("loadPath", StringArgumentType.string())
                 .requires(source -> source.hasPermissionLevel(4))
                 .executes((context) -> trainFightEnemyEnvironment(context.getSource().getServer(), StringArgumentType.getString(context, "agent"),
-                        (EntityType<? extends LivingEntity>) Registries.ENTITY_TYPE.get(RegistryEntryReferenceArgumentType.getEntityType(context, "entityType").registryKey().getValue()),
+                        (EntityType<? extends MobEntity>) Registries.ENTITY_TYPE.get(RegistryEntryReferenceArgumentType.getEntityType(context, "entityType").registryKey().getValue()),
                         IntegerArgumentType.getInteger(context, "episodes"),
                         StringArgumentType.getString(context, "savePath"), StringArgumentType.getString(context, "loadPath")))
                 .build();

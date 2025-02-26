@@ -8,8 +8,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.function.Function;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.SpawnReason;
+import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -30,18 +30,18 @@ import xyz.nucleoid.fantasy.RuntimeWorldHandle;
 
 public class FightEnemyEnvironment extends BasicPlayerEnvironment {
     @Nullable private RuntimeWorldHandle worldHandle;
-    @Nullable protected LivingEntity enemy;
+    @Nullable protected MobEntity enemy;
     protected boolean justKilled;
     @Nullable protected Vec3d startPos;
-    protected EntityType<? extends LivingEntity> enemyType;
+    protected EntityType<? extends MobEntity> enemyType;
 
-    public FightEnemyEnvironment(ServerPlayerEntity agent, EntityType<? extends LivingEntity> enemyType) {
+    public FightEnemyEnvironment(ServerPlayerEntity agent, EntityType<? extends MobEntity> enemyType) {
         super(agent, 20, 20, 3, 3);
         justKilled = false;
         this.enemyType = enemyType;
     }
 
-    public static @Nullable Future<FightEnemyEnvironment> makeAndConnect(String agentName, MinecraftServer server, EntityType<? extends LivingEntity> entityType) {
+    public static @Nullable Future<FightEnemyEnvironment> makeAndConnect(String agentName, MinecraftServer server, EntityType<? extends MobEntity> entityType) {
         @Nullable CompletableFuture<ServerPlayerEntity> agentFuture = createPlayerAgent(agentName, server, Vec3d.ZERO, server.getOverworld().getRegistryKey());
         if (agentFuture != null) {
             Function<ServerPlayerEntity, FightEnemyEnvironment> environmentFuture = agent -> {
