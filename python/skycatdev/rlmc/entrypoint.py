@@ -1,5 +1,6 @@
 import logging
 import string
+from typing import List
 
 from gymnasium.wrappers import TimeLimit
 from py4j.java_gateway import JavaGateway, JavaObject
@@ -42,6 +43,12 @@ class Entrypoint(object):
         agent.learn(episodes)
         agent.save(save_path)
         self.envs[environment].close()
+
+    def evaluate(self, environment: JavaObject, episodes: int, load_path: str) -> str:
+        agent = PPO.load(load_path, self.envs[environment], force_reset=True, verbose=1)
+        mean, std = evaluate_policy(agent, self.envs[environment], episodes, False)
+        self.envs[environment].close()
+        return f"Mean: {mean}, Std: {std}"
 
     class Java:
         implements = ["com.skycatdev.rlmc.PythonEntrypoint"]

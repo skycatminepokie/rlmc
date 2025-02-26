@@ -41,7 +41,7 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment {
         this.enemyType = enemyType;
     }
 
-    public static @Nullable Future<FightEnemyEnvironment> make(String agentName, MinecraftServer server, EntityType<? extends LivingEntity> entityType) {
+    public static @Nullable Future<FightEnemyEnvironment> makeAndConnect(String agentName, MinecraftServer server, EntityType<? extends LivingEntity> entityType) {
         @Nullable CompletableFuture<ServerPlayerEntity> agentFuture = createPlayerAgent(agentName, server, Vec3d.ZERO, server.getOverworld().getRegistryKey());
         if (agentFuture != null) {
             Function<ServerPlayerEntity, FightEnemyEnvironment> environmentFuture = agent -> {
