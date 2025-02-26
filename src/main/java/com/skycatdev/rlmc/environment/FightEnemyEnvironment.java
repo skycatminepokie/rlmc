@@ -46,7 +46,7 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment {
         if (agentFuture != null) {
             Function<ServerPlayerEntity, FightEnemyEnvironment> environmentFuture = agent -> {
                 FightEnemyEnvironment environment = new FightEnemyEnvironment(agent, entityType);
-                Rlmc.getEnvironments().add(environment);
+                Rlmc.addEnvironment(environment);
                 Rlmc.getPythonEntrypoint().connectEnvironment("fight_enemy", environment);
                 return environment;
             };

@@ -46,7 +46,7 @@ public abstract class Environment<A, O> {
     public void close() {
         synchronized (closedLock) {
             closed = true;
-            Rlmc.getEnvironments().remove(this);
+            Rlmc.removeEnvironment(this);
         }
         new Thread(() -> {
             try {

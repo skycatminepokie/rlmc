@@ -60,7 +60,7 @@ public class CommandManager implements CommandRegistrationCallback {
         if (agentFuture != null) {
             agentFuture.thenAcceptAsync((agent) -> {
                 SkybridgeEnvironment environment = new SkybridgeEnvironment(agent, pos, distance, historyLength, 3, 3);
-                Rlmc.getEnvironments().add(environment);
+                Rlmc.addEnvironment(environment);
                 Rlmc.getPythonEntrypoint().connectEnvironment("skybridge", environment);
                 new Thread(() -> Rlmc.getPythonEntrypoint().train(environment, 1000, "trained_skybridge_agent"), "RLMC Skybridge Training Thread").start();
             }, (runnable) -> new Thread(runnable).start());

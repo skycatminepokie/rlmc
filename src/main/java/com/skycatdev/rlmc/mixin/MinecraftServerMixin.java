@@ -15,15 +15,11 @@ public abstract class MinecraftServerMixin {
 
     @Inject(method = "tick", at = @At("HEAD"))
     protected void rlmc$preTick(BooleanSupplier shouldKeepTicking, CallbackInfo ci) {
-        for (Environment<?, ?> environment : Rlmc.getEnvironments()) {
-            environment.preTick();
-        }
+        Rlmc.forEachEnvironment(Environment::preTick);
     }
 
     @Inject(method = "tick", at = @At("RETURN"))
     protected void rlmc$postTick(BooleanSupplier shouldKeepTicking, CallbackInfo ci) {
-        for (Environment<?, ?> environment : Rlmc.getEnvironments()) {
-            environment.postTick();
-        }
+        Rlmc.forEachEnvironment(Environment::postTick);
     }
 }

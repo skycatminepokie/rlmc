@@ -5,10 +5,8 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.skycatdev.rlmc.command.CommandManager;
 import com.skycatdev.rlmc.environment.Environment;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
+import java.util.function.Consumer;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.block.Block;
@@ -28,7 +26,10 @@ public class Rlmc implements ModInitializer {
     public static final String MOD_ID = "rl-agents";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
     private static final GatewayServer GATEWAY_SERVER = new GatewayServer();
-    private static final List<Environment<?, ?>> ENVIRONMENTS = new ArrayList<>();
+    /**
+     * Synchronize on this before iterating!
+     */
+    private static final List<Environment<?, ?>> ENVIRONMENTS = Collections.synchronizedList(new ArrayList<>());
     private static @Nullable BiMap<EntityType<?>, Integer> ENTITY_TYPE_MAP = null;
     private static @Nullable BiMap<Item, Integer> ITEM_MAP = null;
     private static @Nullable BiMap<BlockState, Integer> BLOCK_STATE_MAP = null;
@@ -69,8 +70,18 @@ public class Rlmc implements ModInitializer {
         return ENTITY_TYPE_MAP;
     }
 
-    public static List<Environment<?, ?>> getEnvironments() {
-        return ENVIRONMENTS;
+    public static boolean removeEnvironment(Environment<?, ?> environment) {
+        return ENVIRONMENTS.remove(environment);
+    }
+
+    public static boolean addEnvironment(Environment<?, ?> environment) {
+        return ENVIRONMENTS.add(environment);
+    }
+
+    public static void forEachEnvironment(Consumer<? super Environment<?, ?>> consumer) {
+        synchronized (ENVIRONMENTS) {
+            ENVIRONMENTS.forEach(consumer);
+        }
     }
 
     public static BiMap<Item, Integer> getItemMap() {
