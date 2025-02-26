@@ -2,6 +2,7 @@
 package com.skycatdev.rlmc.environment;
 
 import com.skycatdev.rlmc.Rlmc;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
@@ -47,6 +48,14 @@ public abstract class Environment<A, O> {
             closed = true;
             Rlmc.getEnvironments().remove(this);
         }
+        new Thread(() -> {
+            try {
+                queue.offer(new Pair<>(null, null), 1, TimeUnit.SECONDS);
+            } catch (InterruptedException ignored) {
+                // We're just trying to flush it
+            }
+            queue.drainTo(new ArrayList<>());
+        }).start();
     }
 
     /**
