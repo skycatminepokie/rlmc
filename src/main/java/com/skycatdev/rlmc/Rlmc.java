@@ -6,6 +6,7 @@ import com.google.common.collect.HashBiMap;
 import com.skycatdev.rlmc.command.CommandManager;
 import com.skycatdev.rlmc.environment.Environment;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -29,7 +30,7 @@ public class Rlmc implements ModInitializer {
     /**
      * Synchronize on this before iterating!
      */
-    private static final List<Environment<?, ?>> ENVIRONMENTS = Collections.synchronizedList(new ArrayList<>());
+    private static final List<Environment<?, ?>> ENVIRONMENTS = new CopyOnWriteArrayList<>();
     private static @Nullable BiMap<EntityType<?>, Integer> ENTITY_TYPE_MAP = null;
     private static @Nullable BiMap<Item, Integer> ITEM_MAP = null;
     private static @Nullable BiMap<BlockState, Integer> BLOCK_STATE_MAP = null;
@@ -79,9 +80,7 @@ public class Rlmc implements ModInitializer {
     }
 
     public static void forEachEnvironment(Consumer<? super Environment<?, ?>> consumer) {
-        synchronized (ENVIRONMENTS) {
             ENVIRONMENTS.forEach(consumer);
-        }
     }
 
     public static BiMap<Item, Integer> getItemMap() {

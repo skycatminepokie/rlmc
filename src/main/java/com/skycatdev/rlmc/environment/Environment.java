@@ -55,7 +55,7 @@ public abstract class Environment<A, O> {
                 // We're just trying to flush it
             }
             queue.drainTo(new ArrayList<>());
-        }).start();
+        }, "RLMC Closing thread").start();
     }
 
     /**
