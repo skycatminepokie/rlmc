@@ -103,7 +103,6 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment {
         inventory.clear();
         inventory.offer(new ItemStack(Items.DIAMOND_SWORD), true);
         inventory.offer(new ItemStack(Items.DIAMOND_AXE), true);
-        inventory.setStack(PlayerInventory.OFF_HAND_SLOT, new ItemStack(Items.SHIELD));
         if (enemy != null) {
             enemy.discard();
         }

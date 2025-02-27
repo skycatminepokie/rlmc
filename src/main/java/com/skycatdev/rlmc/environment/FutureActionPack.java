@@ -25,7 +25,7 @@ public class FutureActionPack {
 	}
 
 	public void copyTo(EntityPlayerActionPack pack) {
-		pack.stopAll();
+		pack.stopAll(); // TODO Cannot actually do continuous actions because of this call
 		for (ActionType actionType : actions) {
 			actionType.packModifier.accept(pack);
 		}
@@ -67,15 +67,15 @@ public class FutureActionPack {
 
 	@SuppressWarnings("unused") // Python uses it
 	public enum ActionType {
-		ATTACK(pack -> pack.start(EntityPlayerActionPack.ActionType.ATTACK, EntityPlayerActionPack.Action.continuous())),
-		USE(pack -> pack.start(EntityPlayerActionPack.ActionType.USE, EntityPlayerActionPack.Action.continuous())),
+		ATTACK(pack -> pack.start(EntityPlayerActionPack.ActionType.ATTACK, EntityPlayerActionPack.Action.once())),
+		USE(pack -> pack.start(EntityPlayerActionPack.ActionType.USE, EntityPlayerActionPack.Action.once())),
 		FORWARD(pack -> pack.setForward(1)),
 		LEFT(pack -> pack.setStrafing(1)),
 		BACKWARD(pack -> pack.setForward(-1)),
 		RIGHT(pack -> pack.setStrafing(-1)),
 		SPRINT(pack -> pack.setSprinting(true)),
 		SNEAK(pack -> pack.setSneaking(true)),
-		JUMP(pack -> pack.start(EntityPlayerActionPack.ActionType.JUMP, EntityPlayerActionPack.Action.continuous()));
+		JUMP(pack -> pack.start(EntityPlayerActionPack.ActionType.JUMP, EntityPlayerActionPack.Action.once()));
 
 		private final Consumer<EntityPlayerActionPack> packModifier;
 
