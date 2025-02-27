@@ -13,7 +13,7 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
 
-public class SkybridgeEnvironment extends BasicPlayerEnvironment {
+public class SkybridgeEnvironment extends BasicPlayerEnvironment<BasicPlayerObservation> {
 	private final ServerWorld world;
 	protected int distance;
 	protected Vec3d startPos;
@@ -73,5 +73,10 @@ public class SkybridgeEnvironment extends BasicPlayerEnvironment {
 		for (int i = 0; i < 36; i++) {
 			agent.getInventory().offer(new ItemStack(Items.STONE, 64), true);
 		}
+	}
+
+	@Override
+	protected BasicPlayerObservation getObservation() {
+		return BasicPlayerObservation.fromPlayer(agent, xRaycasts, yRaycasts, 10, Math.PI / 2, history);
 	}
 }

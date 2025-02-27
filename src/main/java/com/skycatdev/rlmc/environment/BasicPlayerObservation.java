@@ -3,6 +3,7 @@ package com.skycatdev.rlmc.environment;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import net.minecraft.entity.projectile.ProjectileUtil;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.hit.BlockHitResult;
@@ -12,8 +13,20 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import org.jetbrains.annotations.Nullable;
 
-public record BasicPlayerObservation(List<BlockHitInfo> blocks, List<@Nullable EntityHitResult> entities,
-                                     ServerPlayerEntity self, FutureActionPack.History history) {
+public class BasicPlayerObservation {
+    private final List<BlockHitInfo> blocks;
+    private final List<@Nullable EntityHitResult> entities;
+    private final ServerPlayerEntity self;
+    private final FutureActionPack.History history;
+
+    public BasicPlayerObservation(List<BlockHitInfo> blocks, List<@Nullable EntityHitResult> entities,
+                                  ServerPlayerEntity self, FutureActionPack.History history) {
+        this.blocks = blocks;
+        this.entities = entities;
+        this.self = self;
+        this.history = history;
+    }
+
     public static BasicPlayerObservation fromPlayer(ServerPlayerEntity player, int xRaycasts, int yRaycasts, double maxDistance, double fovRad, FutureActionPack.History history) {
         List<BlockHitInfo> blocks = new ArrayList<>();
         List<@Nullable EntityHitResult> entities = new ArrayList<>();
@@ -38,4 +51,46 @@ public record BasicPlayerObservation(List<BlockHitInfo> blocks, List<@Nullable E
         }
         return new BasicPlayerObservation(blocks, entities, player, history);
     }
+
+    public List<BlockHitInfo> blocks() {
+        return blocks;
+    }
+
+    public List<@Nullable EntityHitResult> entities() {
+        return entities;
+    }
+
+    public ServerPlayerEntity self() {
+        return self;
+    }
+
+    public FutureActionPack.History history() {
+        return history;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) return true;
+        if (obj == null || obj.getClass() != this.getClass()) return false;
+        var that = (BasicPlayerObservation) obj;
+        return Objects.equals(this.blocks, that.blocks) &&
+               Objects.equals(this.entities, that.entities) &&
+               Objects.equals(this.self, that.self) &&
+               Objects.equals(this.history, that.history);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(blocks, entities, self, history);
+    }
+
+    @Override
+    public String toString() {
+        return "BasicPlayerObservation[" +
+               "blocks=" + blocks + ", " +
+               "entities=" + entities + ", " +
+               "self=" + self + ", " +
+               "history=" + history + ']';
+    }
+
 }

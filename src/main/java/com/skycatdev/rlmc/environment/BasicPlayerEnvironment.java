@@ -20,7 +20,7 @@ import net.minecraft.world.GameMode;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class BasicPlayerEnvironment extends Environment<FutureActionPack, BasicPlayerObservation> {
+public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> extends Environment<FutureActionPack,O> {
     protected final int xRaycasts;
     protected final int yRaycasts;
     protected ServerPlayerEntity agent;
@@ -107,7 +107,7 @@ public abstract class BasicPlayerEnvironment extends Environment<FutureActionPac
     protected abstract void innerPreReset(@Nullable Integer seed, @Nullable Map<String, Object> options);
 
     @Override
-    protected ResetTuple<BasicPlayerObservation> innerReset(@Nullable Integer seed, @Nullable Map<String, Object> options) {
+    protected ResetTuple<O> innerReset(@Nullable Integer seed, @Nullable Map<String, Object> options) {
         innerPreReset(seed, options);
         history = new FutureActionPack.History();
         agent.teleport(getWorld(), getStartPos().getX(), getStartPos().getY(), getStartPos().getZ(), Set.of(), 0, 0);
@@ -116,24 +116,24 @@ public abstract class BasicPlayerEnvironment extends Environment<FutureActionPac
         agent.setAir(20);
         agent.extinguish();
 
-        BasicPlayerObservation observation = BasicPlayerObservation.fromPlayer(agent, xRaycasts, yRaycasts, 10, Math.PI / 2, history);
 
-        return new ResetTuple<>(observation, new HashMap<>());
+        return new ResetTuple<O>(getObservation(), new HashMap<>());
     }
 
+    protected abstract O getObservation();
+
     @Override
-    protected Pair<@Nullable FutureTask<?>, FutureTask<StepTuple<BasicPlayerObservation>>> innerStep(FutureActionPack action) {
+    protected Pair<@Nullable FutureTask<?>, FutureTask<StepTuple<O>>> innerStep(FutureActionPack action) {
         FutureTask<Boolean> preTick = new FutureTask<>(() -> {
             action.copyTo(((ServerPlayerInterface) agent).getActionPack());
             history.step(action);
             return true;
         });
-        FutureTask<StepTuple<BasicPlayerObservation>> postTick = new FutureTask<>(() -> {
-            BasicPlayerObservation observation = BasicPlayerObservation.fromPlayer(agent, xRaycasts, yRaycasts, 10, Math.PI / 2, history);
-
+        FutureTask<StepTuple<O>> postTick = new FutureTask<>(() -> {
+            O observation = getObservation();
             return new StepTuple<>(observation, getReward(observation), isTerminated(observation), isTruncated(observation), getInfo(observation));
         });
-        return new Pair<>(preTick, postTick);
+        return new Pair<@Nullable FutureTask<?>, FutureTask<StepTuple<O>>>(preTick, postTick);
     }
 
     protected abstract boolean isTerminated(BasicPlayerObservation observation);

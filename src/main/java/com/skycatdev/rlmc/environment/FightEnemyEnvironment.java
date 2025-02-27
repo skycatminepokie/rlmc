@@ -17,6 +17,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.stat.Stats;
+import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
@@ -28,7 +29,7 @@ import xyz.nucleoid.fantasy.Fantasy;
 import xyz.nucleoid.fantasy.RuntimeWorldConfig;
 import xyz.nucleoid.fantasy.RuntimeWorldHandle;
 
-public class FightEnemyEnvironment extends BasicPlayerEnvironment {
+public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvironment.Observation> {
     @Nullable private RuntimeWorldHandle worldHandle;
     @Nullable protected MobEntity enemy;
     protected boolean justKilled;
@@ -123,6 +124,10 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment {
         startPos = agent.getPos(); // TODO: Move to an override of something like teleportToStart
     }
 
+    @Override
+    protected Observation getObservation() {
+        return Observation.fromBasic(BasicPlayerObservation.fromPlayer(agent, xRaycasts, yRaycasts, 10, Math.PI / 2, history), Objects.requireNonNull(enemy));
+    }
 
 
     @Override
@@ -143,5 +148,24 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment {
     public void close() {
         super.close();
         worldHandle.delete();
+    }
+
+    public static class Observation extends BasicPlayerObservation {
+        public final Vec3d vecToEnemy;
+
+        public Observation(List<BlockHitInfo> blocks, List<@Nullable EntityHitResult> entities, ServerPlayerEntity self, FutureActionPack.History history, Vec3d vecToEnemy) {
+            super(blocks, entities, self, history);
+            this.vecToEnemy = vecToEnemy;
+        }
+
+        public static Observation fromBasic(BasicPlayerObservation basic, MobEntity entity) {
+            return new Observation(
+                    basic.blocks(),
+                    basic.entities(),
+                    basic.self(),
+                    basic.history(),
+                    entity.getEyePos().subtract(basic.self().getEyePos())
+            );
+        }
     }
 }
