@@ -16,16 +16,17 @@ from skycatdev.rlmc.java.wrappers.block_hit_result import WrappedBlockHitResult
 from skycatdev.rlmc.java.wrappers.block_pos import MAX_BLOCK_DISTANCE
 from skycatdev.rlmc.java.wrappers.entity_hit_result import WrappedEntityHitResult
 from skycatdev.rlmc.java.wrappers.java_environment_wrapper import WrappedJavaEnv
+from skycatdev.rlmc.java.wrappers.vec3d import Vec3d
 
 MAX_ID_LENGTH = 32767
-
 MAX_STACK_SIZE = 999
 
 
-class WrappedBasicPlayerEnvironment(WrappedJavaEnv):
+class WrappedFightEnemyEnvironment(WrappedJavaEnv):
     def __init__(self, java_env: JavaObject, java_gateway: JavaGateway):
         super().__init__(java_env, java_gateway)
         self.raycasts = self.java_env.getRaycasts()
+        self.max_enemy_distance = self.java_env.getMaxEnemyDistance()
         java_import(self.java_view, "com.skycatdev.rlmc.environment.FutureActionPack")
         java_import(self.java_view, "carpet.helpers.EntityPlayerActionPack")
         # attack, use, forward, left, backward, right, sprint, sneak, jump, hotbar yaw, pitch
@@ -48,6 +49,12 @@ class WrappedBasicPlayerEnvironment(WrappedJavaEnv):
                 "pitch": Box(-90, 90, dtype=np.float32, shape=(1,)),  # TODO: Normalize
                 "hotbar": Discrete(9),
                 "entities": self.flat_entity_space,
+                "enemy_vector": Box(
+                    -self.max_enemy_distance,
+                    self.max_enemy_distance,
+                    shape=(3,),
+                    dtype=np.float32,
+                ),
                 # "inventory" : Dict({
                 #     "main" : Sequence(item_space),
                 #     "armor" : Sequence(item_space),
@@ -75,6 +82,7 @@ class WrappedBasicPlayerEnvironment(WrappedJavaEnv):
             self.java_view,
             self.java_view.com.skycatdev.rlmc.Rlmc.getEntityTypeMap().size(),
         )
+        enemy = Vec3d(java_obs.getVecToEnemy())
         return {
             "blocks": np.array(
                 tuple(
@@ -97,6 +105,7 @@ class WrappedBasicPlayerEnvironment(WrappedJavaEnv):
             ],
             "hotbar": agent.getInventory().selectedSlot,
             "entities": flatten(self.entity_space, entities),
+            "enemy_vector": [enemy.x, enemy.y, enemy.z],
             # "inventory" : {
             #     "main": java_list_to_array(agent.getInventory().main),
             #     "armor": java_list_to_array(agent.getInventory().armor),

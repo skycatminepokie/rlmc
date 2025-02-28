@@ -30,11 +30,12 @@ import xyz.nucleoid.fantasy.RuntimeWorldConfig;
 import xyz.nucleoid.fantasy.RuntimeWorldHandle;
 
 public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvironment.Observation> {
-    @Nullable private RuntimeWorldHandle worldHandle;
+    public final int maxEnemyDistance = 300;
     @Nullable protected MobEntity enemy;
     protected boolean justKilled;
     @Nullable protected Vec3d startPos;
     protected EntityType<? extends MobEntity> enemyType;
+    @Nullable private RuntimeWorldHandle worldHandle;
 
     public FightEnemyEnvironment(ServerPlayerEntity agent, EntityType<? extends MobEntity> enemyType) {
         super(agent, 20, 20, 3, 3);
@@ -57,8 +58,36 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvi
     }
 
     @Override
+    public void close() {
+        super.close();
+        worldHandle.delete();
+    }
+
+    @Override
     protected HashMap<String, Object> getInfo(BasicPlayerObservation observation) {
         return new HashMap<>();
+    }
+
+    public int getMaxEnemyDistance() {
+        return maxEnemyDistance;
+    }
+
+    @Override
+    protected Observation getObservation() {
+        return Observation.fromBasic(BasicPlayerObservation.fromPlayer(agent, xRaycasts, yRaycasts, 10, Math.PI / 2, history), Objects.requireNonNull(enemy), maxEnemyDistance);
+    }
+
+    protected ServerWorld getOrCreateWorld() {
+        if (worldHandle == null) {
+            worldHandle = Fantasy.get(Objects.requireNonNull(agent.getServer())).openTemporaryWorld(new RuntimeWorldConfig()
+                    .setDimensionType(DimensionTypes.OVERWORLD)
+                    .setDifficulty(Difficulty.HARD)
+                    .setGameRule(GameRules.DO_DAYLIGHT_CYCLE, false)
+                    .setGenerator(Objects.requireNonNull(agent.getServer()).getOverworld().getChunkManager().getChunkGenerator())
+                    .setSeed(new Random().nextLong()));
+            worldHandle.asWorld().setTimeOfDay(24000L);
+        }
+        return worldHandle.asWorld();
     }
 
     @Override
@@ -79,19 +108,6 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvi
     @Override
     protected ServerWorld getWorld() {
         return getOrCreateWorld();
-    }
-
-    protected ServerWorld getOrCreateWorld() {
-        if (worldHandle == null) {
-            worldHandle = Fantasy.get(Objects.requireNonNull(agent.getServer())).openTemporaryWorld(new RuntimeWorldConfig()
-                    .setDimensionType(DimensionTypes.OVERWORLD)
-                    .setDifficulty(Difficulty.HARD)
-                    .setGameRule(GameRules.DO_DAYLIGHT_CYCLE, false)
-                    .setGenerator(Objects.requireNonNull(agent.getServer()).getOverworld().getChunkManager().getChunkGenerator())
-                    .setSeed(new Random().nextLong()));
-            worldHandle.asWorld().setTimeOfDay(24000L);
-        }
-        return worldHandle.asWorld();
     }
 
     @Override
@@ -125,12 +141,6 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvi
     }
 
     @Override
-    protected Observation getObservation() {
-        return Observation.fromBasic(BasicPlayerObservation.fromPlayer(agent, xRaycasts, yRaycasts, 10, Math.PI / 2, history), Objects.requireNonNull(enemy));
-    }
-
-
-    @Override
     protected boolean isTerminated(BasicPlayerObservation observation) {
         if (enemy == null) {
             throw new RuntimeException("Skeleton should not have been null");
@@ -143,13 +153,6 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvi
         return agent.getServerWorld() != getOrCreateWorld();
     }
 
-
-    @Override
-    public void close() {
-        super.close();
-        worldHandle.delete();
-    }
-
     public static class Observation extends BasicPlayerObservation {
         public final Vec3d vecToEnemy;
 
@@ -158,14 +161,23 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvi
             this.vecToEnemy = vecToEnemy;
         }
 
-        public static Observation fromBasic(BasicPlayerObservation basic, MobEntity entity) {
+        public static Observation fromBasic(BasicPlayerObservation basic, MobEntity entity, int maxEnemyDistance) {
+            Vec3d vecToEnemy = entity.getEyePos().subtract(basic.self().getEyePos());
+            Vec3d clamped = new Vec3d(Math.clamp(vecToEnemy.getX(), -maxEnemyDistance, maxEnemyDistance),
+                    Math.clamp(vecToEnemy.getY(), -maxEnemyDistance, maxEnemyDistance),
+                    Math.clamp(vecToEnemy.getZ(), -maxEnemyDistance, maxEnemyDistance));
             return new Observation(
                     basic.blocks(),
                     basic.entities(),
                     basic.self(),
                     basic.history(),
-                    entity.getEyePos().subtract(basic.self().getEyePos())
+                    clamped
             );
+        }
+
+        @SuppressWarnings("unused") // Used by wrapped_fight_enemy_environment.py
+        public Vec3d getVecToEnemy() {
+            return vecToEnemy;
         }
     }
 }
