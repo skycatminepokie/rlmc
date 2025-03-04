@@ -60,7 +60,7 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvi
     @Override
     public void close() {
         super.close();
-        worldHandle.delete();
+        Objects.requireNonNull(worldHandle).delete();
     }
 
     @Override
@@ -68,6 +68,8 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvi
         return new HashMap<>();
     }
 
+
+    @SuppressWarnings("unused") // used by wrapped_fight_enemy_environment.py
     public int getMaxEnemyDistance() {
         return maxEnemyDistance;
     }
@@ -123,7 +125,7 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvi
         if (enemy != null) {
             enemy.discard();
         }
-        enemy = enemyType.spawn(getOrCreateWorld(), BlockPos.ORIGIN, SpawnReason.COMMAND); // TODO: Move spread players usage to custom impl so I don't spawn this first
+        enemy = enemyType.spawn(getOrCreateWorld(), BlockPos.ORIGIN, SpawnReason.COMMAND); // TODO: Move spread players usage to custom impl so I don't waste stuff and things
         if (enemy == null) {
             throw new NullPointerException("Skeleton was null, expected non-null");
         }
@@ -137,7 +139,7 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvi
                 100,
                 false,
                 List.of(enemy, agent));
-        startPos = agent.getPos(); // TODO: Move to an override of something like teleportToStart
+        startPos = enemy.getPos(); // TODO: Move to an override of something like teleportToStart
     }
 
     @Override

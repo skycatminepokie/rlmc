@@ -83,9 +83,11 @@ public class FutureActionPack {
 			this.packModifier = packModifier;
 		}
 	}
+
 	public static class History {
 		/**
-		 * Map of ActionType : Number of steps active in a row
+		 * Map of ActionType : Number of steps active in a row.
+		 * A negative number indicates it has been inactive for that many steps.
 		 */
 		public Map<ActionType, Integer> actionHistory;
 
@@ -99,6 +101,9 @@ public class FutureActionPack {
 				if (futureActionPack.getActions().contains(actionType)) {
 					actionHistory.computeIfPresent(actionType, (action, value) -> value + 1);
 					actionHistory.putIfAbsent(actionType, 1);
+				} else {
+					actionHistory.computeIfPresent(actionType, (action, value) -> value - 1);
+					actionHistory.putIfAbsent(actionType, -1);
 				}
 			}
 			return this;
