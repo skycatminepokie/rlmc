@@ -30,7 +30,11 @@ class WrappedFightEnemyEnvironment(WrappedJavaEnv):
         java_import(self.java_view, "com.skycatdev.rlmc.environment.FutureActionPack")
         java_import(self.java_view, "carpet.helpers.EntityPlayerActionPack")
         # attack, use, forward, left, backward, right, sprint, sneak, jump, hotbar yaw, pitch
-        self.action_space = MultiDiscrete([2, 2, 2, 2, 2, 2, 2, 2, 2, 9, 360, 180])
+        self.action_space = Box(
+            np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -180, 90]),
+            np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 8, 180, 90]),
+            dtype=np.int64,
+        )
         self.block_space = block_hit_result.flat_space(
             self.raycasts,
             self.java_view.com.skycatdev.rlmc.Rlmc.getBlockStateMap().size(),
