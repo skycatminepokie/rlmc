@@ -4,7 +4,6 @@ from gymnasium.spaces import (
     Discrete,
     Box,
     Dict,
-    MultiDiscrete,
     flatten,
 )
 from py4j.java_collections import JavaList, JavaMap

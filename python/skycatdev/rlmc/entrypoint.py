@@ -1,6 +1,5 @@
 import logging
 import string
-from typing import List
 
 from gymnasium.wrappers import TimeLimit
 from py4j.java_gateway import JavaGateway, JavaObject
