@@ -194,7 +194,7 @@ class WrappedBasicPlayerObservationEnvironment(WrappedJavaEnv):
         else:
             action_pack.remove(self.java_view.FutureActionPack.ActionType.JUMP)
 
-        action_pack.setHotbar(action[9].item())
+        action_pack.setHotbar(int(action[9].item()))
 
         action_pack.setYaw(float(action[10]))
         action_pack.setPitch(float(action[11]))
