@@ -54,8 +54,8 @@ class WrappedBasicPlayerObservationEnvironment(WrappedJavaEnv):
                 "x": Box(-MAX_BLOCK_DISTANCE, MAX_BLOCK_DISTANCE, shape=(1,)),
                 "y": Box(-MAX_BLOCK_DISTANCE, MAX_BLOCK_DISTANCE, shape=(1,)),
                 "z": Box(-MAX_BLOCK_DISTANCE, MAX_BLOCK_DISTANCE, shape=(1,)),
-                "yaw": Box(-180, 180, dtype=np.float32, shape=(1,)),  # TODO: Normalize
-                "pitch": Box(-90, 90, dtype=np.float32, shape=(1,)),  # TODO: Normalize
+                "yaw": Box(-1, 1, dtype=np.float32, shape=(1,)),
+                "pitch": Box(-1, 1, dtype=np.float32, shape=(1,)),
                 "hotbar": Discrete(9),
                 "entities": self.flat_entity_space,
                 # "inventory" : Dict({
@@ -227,7 +227,7 @@ class WrappedBasicPlayerObservationEnvironment(WrappedJavaEnv):
                 python_action[8] = 1
 
         python_action[9] = action.getHotbar()
-        python_action[11] = int(action.getYaw())
-        python_action[12] = int(action.getPitch())
+        python_action[11] = int(action.getYaw() * 180)
+        python_action[12] = int(action.getPitch() * 90)
 
         return python_action
