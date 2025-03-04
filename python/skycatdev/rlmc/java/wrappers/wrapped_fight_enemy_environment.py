@@ -7,7 +7,7 @@ from gymnasium.spaces import (
     MultiDiscrete,
     flatten,
 )
-from py4j.java_collections import JavaList
+from py4j.java_collections import JavaList, JavaMap
 from py4j.java_gateway import JavaObject, JavaGateway, java_import
 
 from skycatdev.rlmc.java.utils import java_list_to_array
@@ -111,9 +111,7 @@ class WrappedFightEnemyEnvironment(WrappedJavaEnv):
             #     "armor": java_list_to_array(agent.getInventory().armor),
             #     "offhand": java_list_to_array(agent.getInventory.offHand),
             # },
-            # "history" : [
-            #     self.action_to_python(e) for e in java_list_to_array(java_obs.history)
-            # ],
+            "history": self.history_to_python(java_obs),
         }
 
     def action_to_java(self, action: ActType) -> JavaObject:
@@ -202,3 +200,32 @@ class WrappedFightEnemyEnvironment(WrappedJavaEnv):
         python_action[12] = int(action.getPitch())
 
         return python_action
+
+    def history_to_python(self, java_obs):
+        history_map = java_obs.history().getActionHistory()
+        assert isinstance(history_map, JavaMap)
+        attack = history_map.get(self.java_view.FutureActionPack.ActionType.ATTACK)
+        use = history_map.get(self.java_view.FutureActionPack.ActionType.USE)
+        forward = history_map.get(self.java_view.FutureActionPack.ActionType.FORWARD)
+        left = history_map.get(self.java_view.FutureActionPack.ActionType.LEFT)
+        backward = history_map.get(self.java_view.FutureActionPack.ActionType.BACKWARD)
+        right = history_map.get(self.java_view.FutureActionPack.ActionType.RIGHT)
+        sprint = history_map.get(self.java_view.FutureActionPack.ActionType.SPRINT)
+        sneak = history_map.get(self.java_view.FutureActionPack.ActionType.SNEAK)
+        jump = history_map.get(self.java_view.FutureActionPack.ActionType.JUMP)
+        history = np.array(
+            [
+                attack if attack is not None else 0,
+                use if use is not None else 0,
+                forward if forward is not None else 0,
+                left if left is not None else 0,
+                backward if backward is not None else 0,
+                right if right is not None else 0,
+                sprint if sprint is not None else 0,
+                sneak if sneak is not None else 0,
+                jump if jump is not None else 0,
+                java_obs.history().getYaw(),
+                java_obs.history().getPitch(),
+            ]
+        )
+        return history
