@@ -188,7 +188,7 @@ class WrappedBasicPlayerObservationEnvironment(WrappedJavaEnv):
         if round(action[7]) == 1:
             action_pack.add(self.java_view.FutureActionPack.ActionType.SNEAK)
         else:
-            action_pack.add(self.java_view.FutureActionPack.ActionType.SNEAK)
+            action_pack.remove(self.java_view.FutureActionPack.ActionType.SNEAK)
 
         if round(action[8]) == 1:
             action_pack.add(self.java_view.FutureActionPack.ActionType.JUMP)
