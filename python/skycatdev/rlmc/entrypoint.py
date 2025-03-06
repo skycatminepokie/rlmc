@@ -1,5 +1,7 @@
 import logging
 import string
+import sys
+from typing import override
 
 from gymnasium.wrappers import TimeLimit
 from py4j.java_gateway import JavaGateway, JavaObject
@@ -57,11 +59,49 @@ class Entrypoint(object):
         implements = ["com.skycatdev.rlmc.PythonEntrypoint"]
 
 
-logging.basicConfig(level=logging.INFO)
-
 gateway = JavaGateway(
     start_callback_server=True, python_server_entry_point=Entrypoint(), auto_field=True
 )
+
+
+class Log4jHandler(logging.Handler):
+    @override
+    def emit(self, record):
+        if record.name.startswith("py4j"):
+            return  # otherwise py4j causes infinite recursion
+        message = self.format(record)
+        try:
+            gateway.jvm.com.skycatdev.rlmc.Rlmc.pythonLog(record.levelname, message)
+        except RecursionError as e:
+            print(e, file=sys.stderr)
+            print(
+                "RecursionError caught while printing, please report. Printing message via stdout.",
+                file=sys.stderr,
+            )
+            print(message)
+
+
+class Log4jStream:
+    def write(self, message):
+        message = message.strip()
+        if message:
+            gateway.jvm.com.skycatdev.rlmc.Rlmc.pythonLog(
+                "INFO", f"STDOUT/ERR: {message}"
+            )
+
+    def flush(self):
+        pass
+
+
+base_logger = logging.getLogger()
+base_logger.setLevel(logging.DEBUG)
+log4j_handler = Log4jHandler()
+log4j_handler.setFormatter(logging.Formatter("%(message)s"))
+base_logger.addHandler(log4j_handler)
+
+sys.stdout = Log4jStream()
+sys.stderr = Log4jStream()
+
 print("Gateway started")
 
 

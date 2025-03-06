@@ -26,6 +26,7 @@ import py4j.Py4JServerConnection;
 public class Rlmc implements ModInitializer {
     public static final String MOD_ID = "rlmc";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+    public static final Logger PYTHON_LOGGER = LoggerFactory.getLogger(MOD_ID + "_python");
     private static final GatewayServer GATEWAY_SERVER = new GatewayServer();
     /**
      * Synchronize on this before iterating!
@@ -37,6 +38,14 @@ public class Rlmc implements ModInitializer {
 
     static {
         new Thread(() -> GATEWAY_SERVER.start(false), "RLMC Python Gateway Server Thread").start();
+    }
+
+    public static boolean addEnvironment(Environment<?, ?> environment) {
+        return ENVIRONMENTS.add(environment);
+    }
+
+    public static void forEachEnvironment(Consumer<? super Environment<?, ?>> consumer) {
+        ENVIRONMENTS.forEach(consumer);
     }
 
     @SuppressWarnings("unused") // Used by block_hit_result.py
@@ -71,18 +80,6 @@ public class Rlmc implements ModInitializer {
         return ENTITY_TYPE_MAP;
     }
 
-    public static boolean removeEnvironment(Environment<?, ?> environment) {
-        return ENVIRONMENTS.remove(environment);
-    }
-
-    public static boolean addEnvironment(Environment<?, ?> environment) {
-        return ENVIRONMENTS.add(environment);
-    }
-
-    public static void forEachEnvironment(Consumer<? super Environment<?, ?>> consumer) {
-            ENVIRONMENTS.forEach(consumer);
-    }
-
     public static BiMap<Item, Integer> getItemMap() {
         if (ITEM_MAP == null) {
             List<Item> items = Registries.ITEM.stream()
@@ -99,6 +96,29 @@ public class Rlmc implements ModInitializer {
 
     public static PythonEntrypoint getPythonEntrypoint() {
         return (PythonEntrypoint) GATEWAY_SERVER.getPythonServerEntryPoint(new Class[]{PythonEntrypoint.class});
+    }
+
+    public static void pythonLog(String level, String message) {
+        switch (level.toUpperCase()) {
+            case "DEBUG":
+                PYTHON_LOGGER.debug(message);
+                break;
+            case "INFO":
+                PYTHON_LOGGER.info(message);
+                break;
+            case "WARN":
+                PYTHON_LOGGER.warn(message);
+                break;
+            case "ERROR":
+                PYTHON_LOGGER.error(message);
+                break;
+            default:
+                PYTHON_LOGGER.info(message);
+        }
+    }
+
+    public static boolean removeEnvironment(Environment<?, ?> environment) {
+        return ENVIRONMENTS.remove(environment);
     }
 
     @Override
