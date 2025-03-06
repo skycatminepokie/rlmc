@@ -28,10 +28,10 @@ class WrappedBasicPlayerObservationEnvironment(WrappedJavaEnv):
         java_import(self.java_view, "com.skycatdev.rlmc.environment.FutureActionPack")
         java_import(self.java_view, "carpet.helpers.EntityPlayerActionPack")
         # attack, use, forward, left, backward, right, sprint, sneak, jump, hotbar yaw, pitch
-        self.action_space = self.action_space = Box(
-            np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -180, -90]),
-            np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 8, 180, 90]),
-            dtype=np.int64,
+        self.action_space = Box(
+            np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1]),
+            np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]),
+            dtype=np.float32,
         )
         self.block_space = block_hit_result.flat_space(
             self.raycasts,
@@ -43,9 +43,9 @@ class WrappedBasicPlayerObservationEnvironment(WrappedJavaEnv):
         )
         # Attack, use, forward, left, backward, right, sprint, sneak, jump, yaw, pitch
         self.history_space = Box(
-            np.append(np.tile(-1200, 9), np.array([-180, -90])),
-            np.append(np.tile(1200, 9), np.array([180, 90])),
-            dtype=np.int64,
+            np.append(np.tile(-1200, 9), np.array([-1, -1])),
+            np.append(np.tile(1200, 9), np.array([1, 1])),
+            dtype=np.float32,
             shape=(11,),
         )
         self.observation_space = Dict(
@@ -100,11 +100,13 @@ class WrappedBasicPlayerObservationEnvironment(WrappedJavaEnv):
                 self.java_view.net.minecraft.util.math.MathHelper.wrapDegrees(
                     agent.getYaw()
                 )
+                / 180
             ],
             "pitch": [
                 self.java_view.net.minecraft.util.math.MathHelper.wrapDegrees(
                     agent.getPitch()
                 )
+                / 90
             ],
             "hotbar": agent.getInventory().selectedSlot,
             "entities": flatten(self.entity_space, entities),
@@ -139,8 +141,8 @@ class WrappedBasicPlayerObservationEnvironment(WrappedJavaEnv):
                 sprint if sprint is not None else 0,
                 sneak if sneak is not None else 0,
                 jump if jump is not None else 0,
-                java_obs.history().getYaw(),
-                java_obs.history().getPitch(),
+                java_obs.history().getYaw() / 180,
+                java_obs.history().getPitch() / 90,
             ]
         )
         return history
@@ -148,55 +150,55 @@ class WrappedBasicPlayerObservationEnvironment(WrappedJavaEnv):
     def action_to_java(self, action: ActType) -> JavaObject:
         action_pack = self.java_view.FutureActionPack()
 
-        if action[0] == 1:
+        if round(action[0]) == 1:
             action_pack.add(self.java_view.FutureActionPack.ActionType.ATTACK)
         else:
             action_pack.remove(self.java_view.FutureActionPack.ActionType.ATTACK)
 
-        if action[1] == 1:
+        if round(action[1]) == 1:
             action_pack.add(self.java_view.FutureActionPack.ActionType.USE)
         else:
             action_pack.remove(self.java_view.FutureActionPack.ActionType.USE)
 
-        if action[2] == 1:
+        if round(action[2]) == 1:
             action_pack.add(self.java_view.FutureActionPack.ActionType.FORWARD)
         else:
             action_pack.remove(self.java_view.FutureActionPack.ActionType.FORWARD)
 
-        if action[3] == 1:
+        if round(action[3]) == 1:
             action_pack.add(self.java_view.FutureActionPack.ActionType.LEFT)
         else:
             action_pack.remove(self.java_view.FutureActionPack.ActionType.LEFT)
 
-        if action[4] == 1:
+        if round(action[4]) == 1:
             action_pack.add(self.java_view.FutureActionPack.ActionType.BACKWARD)
         else:
             action_pack.remove(self.java_view.FutureActionPack.ActionType.BACKWARD)
 
-        if action[5] == 1:
+        if round(action[5]) == 1:
             action_pack.add(self.java_view.FutureActionPack.ActionType.RIGHT)
         else:
             action_pack.remove(self.java_view.FutureActionPack.ActionType.RIGHT)
 
-        if action[6] == 1:
+        if round(action[6]) == 1:
             action_pack.add(self.java_view.FutureActionPack.ActionType.SPRINT)
         else:
             action_pack.remove(self.java_view.FutureActionPack.ActionType.SPRINT)
 
-        if action[7] == 1:
+        if round(action[7]) == 1:
             action_pack.add(self.java_view.FutureActionPack.ActionType.SNEAK)
         else:
             action_pack.add(self.java_view.FutureActionPack.ActionType.SNEAK)
 
-        if action[8] == 1:
+        if round(action[8]) == 1:
             action_pack.add(self.java_view.FutureActionPack.ActionType.JUMP)
         else:
             action_pack.remove(self.java_view.FutureActionPack.ActionType.JUMP)
 
-        action_pack.setHotbar(int(action[9].item()))
+        action_pack.setHotbar(round(action[9].item() * 8))
 
-        action_pack.setYaw(float(action[10]))
-        action_pack.setPitch(float(action[11]))
+        action_pack.setYaw(float(action[10] * 180))
+        action_pack.setPitch(float(action[11] * 90))
 
         return action_pack
 
@@ -227,7 +229,7 @@ class WrappedBasicPlayerObservationEnvironment(WrappedJavaEnv):
                 python_action[8] = 1
 
         python_action[9] = action.getHotbar()
-        python_action[11] = int(action.getYaw() * 180)
-        python_action[12] = int(action.getPitch() * 90)
+        python_action[11] = int(action.getYaw())
+        python_action[12] = int(action.getPitch())
 
         return python_action
