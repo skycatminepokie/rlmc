@@ -4,7 +4,7 @@ import sys
 from typing import override
 
 from gymnasium.wrappers import TimeLimit
-from py4j.java_gateway import JavaGateway, JavaObject
+from py4j.java_gateway import JavaGateway, JavaObject, server_connection_started
 from stable_baselines3 import PPO
 from stable_baselines3.common.evaluation import evaluate_policy
 
@@ -93,14 +93,20 @@ class Log4jStream:
         pass
 
 
-base_logger = logging.getLogger()
-base_logger.setLevel(logging.DEBUG)
-log4j_handler = Log4jHandler()
-log4j_handler.setFormatter(logging.Formatter("%(message)s"))
-base_logger.addHandler(log4j_handler)
+def connection_started(sender, **kwargs):
+    base_logger = logging.getLogger()
+    base_logger.setLevel(logging.DEBUG)
+    log4j_handler = Log4jHandler()
+    log4j_handler.setFormatter(logging.Formatter("%(message)s"))
+    base_logger.addHandler(log4j_handler)
 
-sys.stdout = Log4jStream()
-sys.stderr = Log4jStream()
+    sys.stdout = Log4jStream()
+    sys.stderr = Log4jStream()
+
+
+server_connection_started.connect(
+    connection_started, sender=gateway.get_callback_server()
+)
 
 print("Gateway started")
 
