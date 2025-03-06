@@ -24,7 +24,7 @@ import py4j.GatewayServerListener;
 import py4j.Py4JServerConnection;
 
 public class Rlmc implements ModInitializer {
-    public static final String MOD_ID = "rl-agents";
+    public static final String MOD_ID = "rlmc";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
     private static final GatewayServer GATEWAY_SERVER = new GatewayServer();
     /**
