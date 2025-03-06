@@ -103,9 +103,6 @@ public class Rlmc implements ModInitializer {
             case "DEBUG":
                 PYTHON_LOGGER.debug(message);
                 break;
-            case "INFO":
-                PYTHON_LOGGER.info(message);
-                break;
             case "WARN":
                 PYTHON_LOGGER.warn(message);
                 break;
