@@ -7,6 +7,7 @@ from gymnasium.wrappers import TimeLimit
 from py4j.java_gateway import JavaGateway, JavaObject, server_connection_started
 from stable_baselines3 import PPO
 from stable_baselines3.common.evaluation import evaluate_policy
+from stable_baselines3.common.monitor import Monitor
 
 from skycatdev.rlmc.java.wrappers.wrapped_basic_player_observation_environment import (
     WrappedBasicPlayerObservationEnvironment,
@@ -22,6 +23,7 @@ class Entrypoint(object):
             env = WrappedBasicPlayerObservationEnvironment(
                 java_environment, get_gateway()
             )
+            env = Monitor(env)
             env = TimeLimit(env, max_episode_steps=200)
             self.envs[java_environment] = env
 
@@ -29,6 +31,7 @@ class Entrypoint(object):
             env = WrappedBasicPlayerObservationEnvironment(
                 java_environment, get_gateway()
             )
+            env = Monitor(env)
             env = TimeLimit(env, max_episode_steps=400)
             self.envs[java_environment] = env
 
@@ -44,7 +47,12 @@ class Entrypoint(object):
                 load_path, self.envs[environment], force_reset=True, verbose=1
             )
         else:
-            agent = PPO("MultiInputPolicy", self.envs[environment], verbose=1)
+            agent = PPO(
+                "MultiInputPolicy",
+                self.envs[environment],
+                verbose=1,
+                tensorboard_log="./tensorboard_log/",
+            )
         agent.learn(episodes)
         agent.save(save_path)
         self.envs[environment].close()
