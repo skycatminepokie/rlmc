@@ -36,7 +36,7 @@ class Entrypoint(object):
             env = TimeLimit(env, max_episode_steps=400)
             env = Monitor(env)
             env = DummyVecEnv([lambda: env])
-            env = VecNormalize(env, norm_reward=True)
+            env = VecNormalize(env, norm_reward=True, norm_obs=False)
             self.envs[java_environment] = env
 
     def train(

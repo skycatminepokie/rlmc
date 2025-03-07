@@ -94,6 +94,8 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvi
     protected int getReward(BasicPlayerObservation observation) {
         int damageDealt = agent.getStatHandler().getStat(Stats.CUSTOM.getOrCreateStat(Stats.DAMAGE_DEALT));
         int damageTaken = agent.getStatHandler().getStat(Stats.CUSTOM.getOrCreateStat(Stats.DAMAGE_TAKEN));
+        agent.getStatHandler().setStat(agent, Stats.CUSTOM.getOrCreateStat(Stats.DAMAGE_DEALT), 0);
+        agent.getStatHandler().setStat(agent, Stats.CUSTOM.getOrCreateStat(Stats.DAMAGE_TAKEN), 0);
         return damageDealt - damageTaken;
     }
 
