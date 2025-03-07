@@ -8,6 +8,7 @@ from py4j.java_gateway import JavaGateway, JavaObject, server_connection_started
 from stable_baselines3 import PPO
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.monitor import Monitor
+from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 
 from skycatdev.rlmc.java.wrappers.wrapped_basic_player_observation_environment import (
     WrappedBasicPlayerObservationEnvironment,
@@ -32,8 +33,10 @@ class Entrypoint(object):
 
         elif environment == "fight_enemy":
             env = WrappedFightEnemyEnvironment(java_environment, get_gateway())
-            env = Monitor(env)
             env = TimeLimit(env, max_episode_steps=400)
+            env = Monitor(env)
+            env = DummyVecEnv([lambda: env])
+            env = VecNormalize(env, norm_reward=True)
             self.envs[java_environment] = env
 
     def train(
