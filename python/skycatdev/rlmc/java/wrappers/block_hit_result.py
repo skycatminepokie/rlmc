@@ -23,11 +23,11 @@ class WrappedBlockHitResult(object):
     def side(self) -> int:
         return self._side
 
-    def to_array(self, java_view: JVMView) -> list[int]:
+    def to_array(self, java_view: JVMView, observer_pos: BlockPos) -> list[int]:
         return [
-            self._block_pos.get_x(),
-            self._block_pos.get_y(),
-            self._block_pos.get_z(),
+            self._block_pos.get_x() - observer_pos.get_x(),
+            self._block_pos.get_y() - observer_pos.get_y(),
+            self._block_pos.get_z() - observer_pos.get_z(),
             self._side,
             self.get_state_id(java_view),
         ]
@@ -38,19 +38,19 @@ class WrappedBlockHitResult(object):
         )
 
 
-def flat_space(num_hit_results: int, num_block_states: int) -> Box:
+def flat_space(num_hit_results: int, num_block_states: int, max_distance: int) -> Box:
     # Block x, y, z, direction, num of results
     assert num_hit_results > 0, "num_hit_results must be an integer greater than zero"
     return Box(
         low=np.tile(
-            [-MAX_BLOCK_DISTANCE, -MAX_BLOCK_DISTANCE, -MAX_BLOCK_DISTANCE, 0, 0],
+            [-max_distance, -max_distance, -max_distance, 0, 0],
             (num_hit_results, 1),
         ),
         high=np.tile(
             [
-                MAX_BLOCK_DISTANCE,
-                MAX_BLOCK_DISTANCE,
-                MAX_BLOCK_DISTANCE,
+                max_distance,
+                max_distance,
+                max_distance,
                 5,
                 num_block_states - 1,
             ],

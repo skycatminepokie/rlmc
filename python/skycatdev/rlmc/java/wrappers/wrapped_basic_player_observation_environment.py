@@ -12,7 +12,7 @@ from py4j.java_gateway import JavaObject, JavaGateway, java_import
 from skycatdev.rlmc.java.utils import java_list_to_array
 from skycatdev.rlmc.java.wrappers import block_hit_result, entity_hit_result
 from skycatdev.rlmc.java.wrappers.block_hit_result import WrappedBlockHitResult
-from skycatdev.rlmc.java.wrappers.block_pos import MAX_BLOCK_DISTANCE
+from skycatdev.rlmc.java.wrappers.block_pos import MAX_BLOCK_DISTANCE, BlockPos
 from skycatdev.rlmc.java.wrappers.entity_hit_result import WrappedEntityHitResult
 from skycatdev.rlmc.java.wrappers.java_environment_wrapper import WrappedJavaEnv
 
@@ -25,6 +25,7 @@ class WrappedBasicPlayerObservationEnvironment(WrappedJavaEnv):
     def __init__(self, java_env: JavaObject, java_gateway: JavaGateway):
         super().__init__(java_env, java_gateway)
         self.raycasts = self.java_env.getRaycasts()
+        self.raycast_distance = self.java_env.getRaycastDistance()
         java_import(self.java_view, "com.skycatdev.rlmc.environment.FutureActionPack")
         java_import(self.java_view, "carpet.helpers.EntityPlayerActionPack")
         # attack, use, forward, left, backward, right, sprint, sneak, jump, hotbar yaw, pitch
@@ -36,6 +37,7 @@ class WrappedBasicPlayerObservationEnvironment(WrappedJavaEnv):
         self.block_space = block_hit_result.flat_space(
             self.raycasts,
             self.java_view.com.skycatdev.rlmc.Rlmc.getBlockStateMap().size(),
+            self.raycast_distance,
         )
         self.flat_entity_space, self.entity_space = entity_hit_result.space_of(
             self.raycasts,
@@ -89,7 +91,7 @@ class WrappedBasicPlayerObservationEnvironment(WrappedJavaEnv):
         return {
             "blocks": np.array(
                 tuple(
-                    hit_result.to_array(self.java_view)
+                    hit_result.to_array(self.java_view, BlockPos(agent.getBlockPos()))
                     for hit_result in block_hit_results
                 )
             ),

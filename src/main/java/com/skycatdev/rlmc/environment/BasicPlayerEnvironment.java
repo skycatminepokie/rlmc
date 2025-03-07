@@ -20,9 +20,10 @@ import net.minecraft.world.GameMode;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> extends Environment<FutureActionPack,O> {
+public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> extends Environment<FutureActionPack, O> {
     protected final int xRaycasts;
     protected final int yRaycasts;
+    private final int getRaycastDistance = 10; // TODO: Make this a ctor param
     protected ServerPlayerEntity agent;
     protected Supplier<Float> initialHealth;
     protected Supplier<Integer> initialFoodLevel;
@@ -85,6 +86,12 @@ public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> e
 
     protected abstract HashMap<String, Object> getInfo(BasicPlayerObservation observation);
 
+    public int getRaycastDistance() {
+        return getRaycastDistance;
+    }
+
+    protected abstract O getObservation();
+
     @SuppressWarnings("unused") // Used by wrapped_basic_player_environment.py
     public int getRaycasts() {
         return xRaycasts * yRaycasts;
@@ -117,10 +124,8 @@ public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> e
         agent.extinguish();
 
 
-        return new ResetTuple<O>(getObservation(), new HashMap<>());
+        return new ResetTuple<>(getObservation(), new HashMap<>());
     }
-
-    protected abstract O getObservation();
 
     @Override
     protected Pair<@Nullable FutureTask<?>, FutureTask<StepTuple<O>>> innerStep(FutureActionPack action) {

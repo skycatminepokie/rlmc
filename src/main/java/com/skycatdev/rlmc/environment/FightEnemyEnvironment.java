@@ -76,7 +76,7 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvi
 
     @Override
     protected Observation getObservation() {
-        return Observation.fromBasic(BasicPlayerObservation.fromPlayer(agent, xRaycasts, yRaycasts, 10, Math.PI / 2, history), Objects.requireNonNull(enemy), maxEnemyDistance);
+        return Observation.fromBasic(BasicPlayerObservation.fromPlayer(agent, xRaycasts, yRaycasts, getRaycastDistance(), Math.PI / 2, history), Objects.requireNonNull(enemy), maxEnemyDistance);
     }
 
     protected ServerWorld getOrCreateWorld() {
