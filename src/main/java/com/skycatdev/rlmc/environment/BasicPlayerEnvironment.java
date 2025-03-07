@@ -122,6 +122,7 @@ public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> e
         agent.getHungerManager().setFoodLevel(initialFoodLevel.get());
         agent.setAir(20);
         agent.extinguish();
+        agent.fallDistance = 0;
 
 
         return new ResetTuple<>(getObservation(), new HashMap<>());
