@@ -138,6 +138,7 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvi
                 false,
                 List.of(enemy, agent));
         startPos = enemy.getPos(); // TODO: Move to an override of something like teleportToStart
+        // TODO: Allow for use of a structure
     }
 
     @Override

@@ -12,6 +12,9 @@ from stable_baselines3.common.monitor import Monitor
 from skycatdev.rlmc.java.wrappers.wrapped_basic_player_observation_environment import (
     WrappedBasicPlayerObservationEnvironment,
 )
+from skycatdev.rlmc.java.wrappers.wrapped_fight_enemy_environment import (
+    WrappedFightEnemyEnvironment,
+)
 
 
 class Entrypoint(object):
@@ -28,9 +31,7 @@ class Entrypoint(object):
             self.envs[java_environment] = env
 
         elif environment == "fight_enemy":
-            env = WrappedBasicPlayerObservationEnvironment(
-                java_environment, get_gateway()
-            )
+            env = WrappedFightEnemyEnvironment(java_environment, get_gateway())
             env = Monitor(env)
             env = TimeLimit(env, max_episode_steps=400)
             self.envs[java_environment] = env
