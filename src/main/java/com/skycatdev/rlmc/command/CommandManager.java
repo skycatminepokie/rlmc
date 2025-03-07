@@ -59,7 +59,7 @@ public class CommandManager implements CommandRegistrationCallback {
         @Nullable CompletableFuture<ServerPlayerEntity> agentFuture = BasicPlayerEnvironment.createPlayerAgent(StringArgumentType.getString(context, "agent"), context.getSource().getServer(), Vec3d.of(pos), context.getSource().getWorld().getRegistryKey());
         if (agentFuture != null) {
             agentFuture.thenAcceptAsync((agent) -> {
-                SkybridgeEnvironment environment = new SkybridgeEnvironment(agent, pos, distance, historyLength, 3, 3);
+                SkybridgeEnvironment environment = new SkybridgeEnvironment(agent, pos, distance, 3, 3);
                 Rlmc.addEnvironment(environment);
                 Rlmc.getPythonEntrypoint().connectEnvironment("skybridge", environment);
                 new Thread(() -> Rlmc.getPythonEntrypoint().train(environment, 1000, "trained_skybridge_agent"), "RLMC Skybridge Training Thread").start();

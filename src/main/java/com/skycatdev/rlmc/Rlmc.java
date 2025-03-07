@@ -98,6 +98,7 @@ public class Rlmc implements ModInitializer {
         return (PythonEntrypoint) GATEWAY_SERVER.getPythonServerEntryPoint(new Class[]{PythonEntrypoint.class});
     }
 
+    @SuppressWarnings("unused") // Used by entrypoint.py
     public static void pythonLog(String level, String message) {
         switch (level.toUpperCase()) {
             case "DEBUG":

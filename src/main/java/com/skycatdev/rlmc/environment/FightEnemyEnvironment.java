@@ -32,14 +32,12 @@ import xyz.nucleoid.fantasy.RuntimeWorldHandle;
 public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvironment.Observation> {
     public final int maxEnemyDistance = 300;
     @Nullable protected MobEntity enemy;
-    protected boolean justKilled;
     @Nullable protected Vec3d startPos;
     protected EntityType<? extends MobEntity> enemyType;
     @Nullable private RuntimeWorldHandle worldHandle;
 
     public FightEnemyEnvironment(ServerPlayerEntity agent, EntityType<? extends MobEntity> enemyType) {
         super(agent, 20, 20, 3, 3);
-        justKilled = false;
         this.enemyType = enemyType;
     }
 

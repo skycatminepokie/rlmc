@@ -1,9 +1,8 @@
 import numpy as np
-from gymnasium.spaces import Dict, Box
+from gymnasium.spaces import Box
 from py4j.java_gateway import JavaObject, JVMView
 
-from skycatdev.rlmc.java.wrappers import block_pos, direction
-from skycatdev.rlmc.java.wrappers.block_pos import BlockPos, MAX_BLOCK_DISTANCE
+from skycatdev.rlmc.java.wrappers.block_pos import BlockPos
 from skycatdev.rlmc.java.wrappers.direction import Direction
 
 

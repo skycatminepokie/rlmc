@@ -68,7 +68,7 @@ class Log4jHandler(logging.Handler):
     @override
     def emit(self, record):
         if record.name.startswith("py4j"):
-            return  # otherwise py4j causes infinite recursion
+            return  # otherwise Py4j causes infinite recursion
         message = self.format(record)
         try:
             gateway.jvm.com.skycatdev.rlmc.Rlmc.pythonLog(record.levelname, message)
@@ -93,6 +93,8 @@ class Log4jStream:
         pass
 
 
+# Pretty sure you need the parameters for the connection
+# noinspection PyUnusedLocal
 def connection_started(sender, **kwargs):
     base_logger = logging.getLogger()
     base_logger.setLevel(logging.DEBUG)

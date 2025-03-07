@@ -17,14 +17,12 @@ public class SkybridgeEnvironment extends BasicPlayerEnvironment<BasicPlayerObse
 	private final ServerWorld world;
 	protected int distance;
 	protected Vec3d startPos;
-	protected int historyLength;
 
 
-	public SkybridgeEnvironment(ServerPlayerEntity agent, BlockPos startPos, int distance, int historyLength, int xRaycasts, int yRaycasts) {
+	public SkybridgeEnvironment(ServerPlayerEntity agent, BlockPos startPos, int distance, int xRaycasts, int yRaycasts) {
 		super(agent, 20, 20, xRaycasts, yRaycasts);
 		world = agent.getServerWorld();
 		this.distance = distance;
-		this.historyLength = historyLength;
 		this.startPos = Vec3d.of(startPos);
     }
 
