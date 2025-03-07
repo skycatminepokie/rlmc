@@ -6,8 +6,6 @@ from skycatdev.rlmc.java.wrappers import block_pos, direction
 from skycatdev.rlmc.java.wrappers.block_pos import BlockPos, MAX_BLOCK_DISTANCE
 from skycatdev.rlmc.java.wrappers.direction import Direction
 
-SPACE = Dict({"pos": block_pos.SPACE, "side": direction.SPACE})
-
 
 class WrappedBlockHitResult(object):
     def __init__(self, block_hit_result: JavaObject):
