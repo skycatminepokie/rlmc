@@ -13,8 +13,8 @@ from skycatdev.rlmc.java.wrappers.wrapped_basic_player_observation_environment i
 
 class WrappedFightEnemyEnvironment(WrappedBasicPlayerObservationEnvironment):
     def __init__(self, java_env: JavaObject, java_gateway: JavaGateway):
+        self.max_enemy_distance = java_env.getMaxEnemyDistance()
         super().__init__(java_env, java_gateway)
-        self.max_enemy_distance = self.java_env.getMaxEnemyDistance()
 
     @override
     def make_observation_space(self) -> Space:
@@ -28,5 +28,5 @@ class WrappedFightEnemyEnvironment(WrappedBasicPlayerObservationEnvironment):
         basic_obs = super().obs_to_python(java_obs)
         assert isinstance(basic_obs, dict)
         enemy = Vec3d(java_obs.getVecToEnemy())
-        basic_obs["enemy"] = enemy
+        basic_obs["enemy"] = enemy.to_array()
         return basic_obs

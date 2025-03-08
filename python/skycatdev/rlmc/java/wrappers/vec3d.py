@@ -49,5 +49,5 @@ class Vec3d:
 
 def space(max_x: float, max_y: float, max_z: float) -> Box:
     return Box(
-        np.array([-max_x, -max_y, -max_z]), np.array([max_x, max_y, max_z]), (0, 3)
+        np.array([-max_x, -max_y, -max_z]), np.array([max_x, max_y, max_z]), (3,)
     )
