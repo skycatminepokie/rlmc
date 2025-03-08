@@ -5,7 +5,7 @@ from typing import override
 
 from gymnasium.wrappers import TimeLimit
 from py4j.java_gateway import JavaGateway, JavaObject, server_connection_started
-from stable_baselines3 import PPO
+from stable_baselines3 import PPO, A2C
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
@@ -51,13 +51,14 @@ class Entrypoint(object):
                 load_path, self.envs[environment], force_reset=True, verbose=1
             )
         else:
-            agent = PPO(
+            agent = A2C(
                 "MultiInputPolicy",
                 self.envs[environment],
                 verbose=1,
                 tensorboard_log="./tensorboard_log/",
+                ent_coef=0.7,
             )
-        agent.learn(episodes)
+        agent.learn(episodes, tb_log_name=save_path)
         agent.save(save_path)
         self.envs[environment].close()
 
