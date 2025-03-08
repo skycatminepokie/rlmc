@@ -17,6 +17,8 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.stat.Stats;
+import net.minecraft.structure.StructurePlacementData;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec2f;
@@ -35,17 +37,23 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvi
     @Nullable protected Vec3d startPos;
     protected EntityType<? extends MobEntity> enemyType;
     @Nullable private RuntimeWorldHandle worldHandle;
+    @Nullable private Identifier structure = null;
 
     public FightEnemyEnvironment(ServerPlayerEntity agent, EntityType<? extends MobEntity> enemyType) {
         super(agent, 20, 20, 3, 3);
         this.enemyType = enemyType;
     }
 
+    public FightEnemyEnvironment(ServerPlayerEntity agent, EntityType<? extends MobEntity> enemyType, Identifier structure) {
+        this(agent, enemyType);
+        this.structure = structure;
+    }
+
     public static @Nullable Future<FightEnemyEnvironment> makeAndConnect(String agentName, MinecraftServer server, EntityType<? extends MobEntity> entityType) {
         @Nullable CompletableFuture<ServerPlayerEntity> agentFuture = createPlayerAgent(agentName, server, Vec3d.ZERO, server.getOverworld().getRegistryKey());
         if (agentFuture != null) {
             Function<ServerPlayerEntity, FightEnemyEnvironment> environmentFuture = agent -> {
-                FightEnemyEnvironment environment = new FightEnemyEnvironment(agent, entityType);
+                FightEnemyEnvironment environment = new FightEnemyEnvironment(agent, entityType, Identifier.of(Rlmc.MOD_ID, "fight_enemy_box"));
                 Rlmc.addEnvironment(environment);
                 Rlmc.getPythonEntrypoint().connectEnvironment("fight_enemy", environment);
                 return environment;
@@ -140,7 +148,14 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvi
                 false,
                 List.of(enemy, agent));
         startPos = enemy.getPos(); // TODO: Move to an override of something like teleportToStart
-        // TODO: Allow for use of a structure
+        if (structure != null) {
+            var optTemplate = getWorld().getStructureTemplateManager().getTemplate(structure);
+            if (optTemplate.isPresent()) {
+                optTemplate.get().place(getWorld(), BlockPos.ofFloored(Objects.requireNonNull(startPos).subtract(6, 1, 6)), BlockPos.ofFloored(startPos), new StructurePlacementData(), net.minecraft.util.math.random.Random.create(), 0);
+            } else {
+                Rlmc.LOGGER.warn("Tried to place non-existent structure {}, skipping.", structure);
+            }
+        }
     }
 
     @Override
