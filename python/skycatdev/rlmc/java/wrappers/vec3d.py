@@ -1,3 +1,5 @@
+import numpy
+from gymnasium.spaces import Box
 import numpy as np
 from py4j.java_gateway import JavaObject
 
@@ -43,3 +45,9 @@ class Vec3d:
 
     def to_array(self) -> np.ndarray:
         return np.array([self.x, self.y, self.z])
+
+
+def space(max_x: float, max_y: float, max_z: float) -> Box:
+    return Box(
+        np.array([-max_x, -max_y, -max_z]), np.array([max_x, max_y, max_z]), (0, 3)
+    )

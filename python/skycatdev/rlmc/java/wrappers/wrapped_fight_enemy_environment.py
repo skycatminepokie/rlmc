@@ -1,6 +1,10 @@
+from gymnasium import Space
 from gymnasium.core import ObsType
+from gymnasium.spaces import Dict
 from py4j.java_gateway import JavaObject, JavaGateway
+from typing_extensions import override
 
+from skycatdev.rlmc.java.wrappers import vec3d
 from skycatdev.rlmc.java.wrappers.vec3d import Vec3d
 from skycatdev.rlmc.java.wrappers.wrapped_basic_player_observation_environment import (
     WrappedBasicPlayerObservationEnvironment,
@@ -12,6 +16,14 @@ class WrappedFightEnemyEnvironment(WrappedBasicPlayerObservationEnvironment):
         super().__init__(java_env, java_gateway)
         self.max_enemy_distance = self.java_env.getMaxEnemyDistance()
 
+    @override
+    def make_observation_space(self) -> Space:
+        self.observation_dict["enemy"] = vec3d.space(
+            self.max_enemy_distance, self.max_enemy_distance, self.max_enemy_distance
+        )
+        return Dict(self.observation_dict)
+
+    @override
     def obs_to_python(self, java_obs: JavaObject) -> ObsType:
         basic_obs = super().obs_to_python(java_obs)
         assert isinstance(basic_obs, dict)

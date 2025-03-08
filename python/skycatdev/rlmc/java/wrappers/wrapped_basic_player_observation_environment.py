@@ -1,4 +1,5 @@
 import numpy as np
+from gymnasium import Space
 from gymnasium.core import ActType, ObsType
 from gymnasium.spaces import (
     Discrete,
@@ -50,24 +51,23 @@ class WrappedBasicPlayerObservationEnvironment(WrappedJavaEnv):
             dtype=np.float32,
             shape=(11,),
         )
-        self.observation_space = Dict(
-            {
-                "blocks": self.block_space,
-                "x": Box(-MAX_BLOCK_DISTANCE, MAX_BLOCK_DISTANCE, shape=(1,)),
-                "y": Box(-MAX_BLOCK_DISTANCE, MAX_BLOCK_DISTANCE, shape=(1,)),
-                "z": Box(-MAX_BLOCK_DISTANCE, MAX_BLOCK_DISTANCE, shape=(1,)),
-                "yaw": Box(-1, 1, dtype=np.float32, shape=(1,)),
-                "pitch": Box(-1, 1, dtype=np.float32, shape=(1,)),
-                "hotbar": Discrete(9),
-                "entities": self.flat_entity_space,
-                # "inventory" : Dict({
-                #     "main" : Sequence(item_space),
-                #     "armor" : Sequence(item_space),
-                #     "offhand":item_space,
-                # }),
-                "history": self.history_space,
-            }
-        )
+        self.observation_dict = {
+            "blocks": self.block_space,
+            "x": Box(-MAX_BLOCK_DISTANCE, MAX_BLOCK_DISTANCE, shape=(1,)),
+            "y": Box(-MAX_BLOCK_DISTANCE, MAX_BLOCK_DISTANCE, shape=(1,)),
+            "z": Box(-MAX_BLOCK_DISTANCE, MAX_BLOCK_DISTANCE, shape=(1,)),
+            "yaw": Box(-1, 1, dtype=np.float32, shape=(1,)),
+            "pitch": Box(-1, 1, dtype=np.float32, shape=(1,)),
+            "hotbar": Discrete(9),
+            "entities": self.flat_entity_space,
+            # "inventory" : Dict({
+            #     "main" : Sequence(item_space),
+            #     "armor" : Sequence(item_space),
+            #     "offhand":item_space,
+            # }),
+            "history": self.history_space,
+        }
+        self.observation_space = self.make_observation_space()
 
     def obs_to_python(self, java_obs: JavaObject) -> ObsType:
         assert isinstance(
@@ -235,3 +235,6 @@ class WrappedBasicPlayerObservationEnvironment(WrappedJavaEnv):
         python_action[12] = int(action.getPitch())
 
         return python_action
+
+    def make_observation_space(self) -> Space:
+        return Dict(self.observation_dict)
