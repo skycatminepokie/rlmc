@@ -6,8 +6,11 @@ from typing import override
 from gymnasium.wrappers import TimeLimit
 from py4j.java_gateway import JavaGateway, JavaObject, server_connection_started
 from stable_baselines3 import PPO, A2C
+from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.evaluation import evaluate_policy
+from stable_baselines3.common.logger import HParam
 from stable_baselines3.common.monitor import Monitor
+from stable_baselines3.common.on_policy_algorithm import OnPolicyAlgorithm
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 
 from skycatdev.rlmc.java.wrappers.wrapped_basic_player_observation_environment import (
@@ -16,6 +19,37 @@ from skycatdev.rlmc.java.wrappers.wrapped_basic_player_observation_environment i
 from skycatdev.rlmc.java.wrappers.wrapped_fight_enemy_environment import (
     WrappedFightEnemyEnvironment,
 )
+
+
+class HParamCallback(
+    BaseCallback
+):  # from https://stable-baselines3.readthedocs.io/en/master/guide/tensorboard.html
+    """
+    Saves the hyperparameters and metrics at the start of the training, and logs them to TensorBoard.
+    """
+
+    def _on_training_start(self) -> None:
+        hparam_dict = {
+            "algorithm": self.model.__class__.__name__,
+            "learning rate": self.model.learning_rate,
+        }
+        if isinstance(self.model, OnPolicyAlgorithm):
+            hparam_dict["entropy coefficient"] = self.model.ent_coef
+            hparam_dict["gamma"] = self.model.gamma
+        # define the metrics that will appear in the `HPARAMS` Tensorboard tab by referencing their tag
+        # Tensorboard will find & display metrics from the `SCALARS` tab
+        metric_dict = {
+            "rollout/ep_len_mean": 0,
+            "train/value_loss": 0.0,
+        }
+        self.logger.record(
+            "hparams",
+            HParam(hparam_dict, metric_dict),
+            exclude=("stdout", "log", "json", "csv"),
+        )
+
+    def _on_step(self) -> bool:
+        return True
 
 
 class Entrypoint(object):
@@ -47,7 +81,7 @@ class Entrypoint(object):
         load_path: str | None = None,
     ):
         if load_path is not None:
-            agent = PPO.load(
+            agent = A2C.load(
                 load_path, self.envs[environment], force_reset=True, verbose=1
             )
         else:
@@ -58,12 +92,13 @@ class Entrypoint(object):
                 tensorboard_log="./tensorboard_log/",
                 ent_coef=0.7,
             )
-        agent.learn(episodes, tb_log_name=save_path)
+
+        agent.learn(episodes, tb_log_name=save_path, callback=HParamCallback())
         agent.save(save_path)
         self.envs[environment].close()
 
     def evaluate(self, environment: JavaObject, episodes: int, load_path: str) -> str:
-        agent = PPO.load(load_path, self.envs[environment], force_reset=True, verbose=1)
+        agent = A2C.load(load_path, self.envs[environment], force_reset=True, verbose=1)
         mean, std = evaluate_policy(agent, self.envs[environment], episodes, False)
         self.envs[environment].close()
         return f"Mean: {mean}, Std: {std}"
