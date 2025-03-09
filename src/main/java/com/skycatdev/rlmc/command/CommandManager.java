@@ -211,12 +211,33 @@ public class CommandManager implements CommandRegistrationCallback {
         environment.addChild(train); // TODO: Use /environment <environment> <action> <arguments>
             appendTrainSkybridge(train);
             appendTrainFightEnemy(train, registryAccess);
+            appendTrainGoNorth(train);
         environment.addChild(evaluate);
             appendEvaluateFightEnemy(evaluate, registryAccess);
         //@formatter:on
         // spotless:on
 
         dispatcher.getRoot().addChild(environment);
+    }
+
+    private void appendTrainGoNorth(LiteralCommandNode<ServerCommandSource> train) {
+        var goNorth = literal("go_north")
+                .requires(source -> source.hasPermissionLevel(4))
+                .build();
+        var agent = argument("agent", StringArgumentType.word())
+                .requires(source -> source.hasPermissionLevel(4))
+                .build();
+        var episodes = makeTrainingSettingsNode(((context, trainingSettings) -> {
+            //noinspection unchecked It's a command, let it fail
+            return trainFightEnemyEnvironment(context.getSource().getServer(), StringArgumentType.getString(context, "agent"), (EntityType<? extends MobEntity>) Registries.ENTITY_TYPE.get(RegistryEntryReferenceArgumentType.getEntityType(context, "entityType").registryKey()), trainingSettings);
+        }));
+        // spotless:off
+        //@formatter:off
+        train.addChild(goNorth);
+            goNorth.addChild(agent);
+                agent.addChild(episodes);
+        //@formatter:on
+        // spotless:on
     }
 
     private static CommandNode<ServerCommandSource> makeTrainingSettingsNode(EnvironmentCommandExecutor executes) {

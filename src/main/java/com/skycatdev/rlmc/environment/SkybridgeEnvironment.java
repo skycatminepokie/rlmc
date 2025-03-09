@@ -47,7 +47,7 @@ public class SkybridgeEnvironment extends BasicPlayerEnvironment<BasicPlayerObse
 	}
 
 	@Override
-	protected int getReward(BasicPlayerObservation observation) {
+	protected double getReward(BasicPlayerObservation observation) {
 		int reward = 0;
 		BlockPos.Mutable blockPos = new BlockPos.Mutable(getStartPos().getX(), getStartPos().getY(), getStartPos().getZ());
 		while (!getWorld().getBlockState(blockPos.move(Direction.NORTH)).isAir()) {

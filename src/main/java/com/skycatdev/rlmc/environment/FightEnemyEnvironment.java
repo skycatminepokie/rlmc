@@ -15,7 +15,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
 import net.minecraft.stat.Stats;
 import net.minecraft.structure.StructurePlacementData;
 import net.minecraft.util.Identifier;
@@ -23,20 +22,13 @@ import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.Difficulty;
-import net.minecraft.world.GameRules;
-import net.minecraft.world.dimension.DimensionTypes;
 import org.jetbrains.annotations.Nullable;
-import xyz.nucleoid.fantasy.Fantasy;
-import xyz.nucleoid.fantasy.RuntimeWorldConfig;
-import xyz.nucleoid.fantasy.RuntimeWorldHandle;
 
 public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvironment.Observation> {
     public final int maxEnemyDistance = 300;
     @Nullable protected MobEntity enemy;
     @Nullable protected Vec3d startPos;
     protected EntityType<? extends MobEntity> enemyType;
-    @Nullable private RuntimeWorldHandle worldHandle;
     @Nullable private Identifier structure = null;
 
     public FightEnemyEnvironment(ServerPlayerEntity agent, EntityType<? extends MobEntity> enemyType) {
@@ -85,21 +77,8 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvi
         return Observation.fromBasic(BasicPlayerObservation.fromPlayer(agent, xRaycasts, yRaycasts, getRaycastDistance(), Math.PI / 2, history), Objects.requireNonNull(enemy), maxEnemyDistance);
     }
 
-    protected ServerWorld getOrCreateWorld() {
-        if (worldHandle == null) {
-            worldHandle = Fantasy.get(Objects.requireNonNull(agent.getServer())).openTemporaryWorld(new RuntimeWorldConfig()
-                    .setDimensionType(DimensionTypes.OVERWORLD)
-                    .setDifficulty(Difficulty.HARD)
-                    .setGameRule(GameRules.DO_DAYLIGHT_CYCLE, false)
-                    .setGenerator(Objects.requireNonNull(agent.getServer()).getOverworld().getChunkManager().getChunkGenerator())
-                    .setSeed(new Random().nextLong()));
-            worldHandle.asWorld().setTimeOfDay(24000L);
-        }
-        return worldHandle.asWorld();
-    }
-
     @Override
-    protected int getReward(BasicPlayerObservation observation) {
+    protected double getReward(BasicPlayerObservation observation) {
         int damageDealt = agent.getStatHandler().getStat(Stats.CUSTOM.getOrCreateStat(Stats.DAMAGE_DEALT));
         int damageTaken = agent.getStatHandler().getStat(Stats.CUSTOM.getOrCreateStat(Stats.DAMAGE_TAKEN));
         agent.getStatHandler().setStat(agent, Stats.CUSTOM.getOrCreateStat(Stats.DAMAGE_DEALT), 0);
@@ -116,16 +95,8 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvi
     }
 
     @Override
-    protected ServerWorld getWorld() {
-        return getOrCreateWorld();
-    }
-
-    @Override
     protected void innerPreReset(@Nullable Integer seed, @Nullable Map<String, Object> options) {
-        if (worldHandle != null) {
-            worldHandle.delete();
-        }
-        worldHandle = null;
+        deleteCurrentWorld();
         PlayerInventory inventory = agent.getInventory();
         inventory.clear();
         inventory.offer(new ItemStack(Items.DIAMOND_SWORD), true);
@@ -133,7 +104,7 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvi
         if (enemy != null) {
             enemy.discard();
         }
-        enemy = enemyType.spawn(getOrCreateWorld(), BlockPos.ORIGIN, SpawnReason.COMMAND); // TODO: Move spread players usage to custom impl so I don't waste stuff and things
+        enemy = enemyType.spawn(getWorld(), BlockPos.ORIGIN, SpawnReason.COMMAND); // TODO: Move spread players usage to custom impl so I don't waste stuff and things
         if (enemy == null) {
             throw new NullPointerException("Skeleton was null, expected non-null");
         }
@@ -168,7 +139,7 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvi
 
     @Override
     protected boolean isTruncated(BasicPlayerObservation observation) {
-        return agent.getServerWorld() != getOrCreateWorld();
+        return agent.getServerWorld() != getWorld();
     }
 
     public static class Observation extends BasicPlayerObservation {

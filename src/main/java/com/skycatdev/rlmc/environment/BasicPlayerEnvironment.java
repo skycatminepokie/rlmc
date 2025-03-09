@@ -3,9 +3,7 @@ package com.skycatdev.rlmc.environment;
 
 import carpet.fakes.ServerPlayerInterface;
 import carpet.patches.EntityPlayerMPFake;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.FutureTask;
 import java.util.function.Supplier;
@@ -16,9 +14,15 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.Difficulty;
 import net.minecraft.world.GameMode;
+import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
+import net.minecraft.world.dimension.DimensionTypes;
 import org.jetbrains.annotations.Nullable;
+import xyz.nucleoid.fantasy.Fantasy;
+import xyz.nucleoid.fantasy.RuntimeWorldConfig;
+import xyz.nucleoid.fantasy.RuntimeWorldHandle;
 
 public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> extends Environment<FutureActionPack, O> {
     protected final int xRaycasts;
@@ -29,6 +33,7 @@ public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> e
     protected Supplier<Integer> initialFoodLevel;
     protected FutureActionPack.History history;
     protected boolean justKilled;
+    @Nullable protected RuntimeWorldHandle worldHandle;
 
     public BasicPlayerEnvironment(ServerPlayerEntity agent, Supplier<Float> initialHealth, Supplier<Integer> initialFoodLevel, int xRaycasts, int yRaycasts) {
         this.agent = agent;
@@ -97,7 +102,7 @@ public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> e
         return xRaycasts * yRaycasts;
     }
 
-    protected abstract int getReward(BasicPlayerObservation observation);
+    protected abstract double getReward(BasicPlayerObservation observation);
 
     protected BlockPos getStartBlockPos() {
         return BlockPos.ofFloored(getStartPos());
@@ -105,8 +110,25 @@ public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> e
 
     protected abstract Vec3d getStartPos();
 
+    protected void deleteCurrentWorld() {
+        if (worldHandle != null) {
+            worldHandle.delete();
+        }
+    }
+
     @SuppressWarnings("unused") // Used by wrapped_basic_player_environment.py
-    protected abstract ServerWorld getWorld();
+    protected ServerWorld getWorld() {
+        if (worldHandle == null) {
+            worldHandle = Fantasy.get(Objects.requireNonNull(agent.getServer())).openTemporaryWorld(new RuntimeWorldConfig()
+                    .setDimensionType(DimensionTypes.OVERWORLD)
+                    .setDifficulty(Difficulty.HARD)
+                    .setGameRule(GameRules.DO_DAYLIGHT_CYCLE, false)
+                    .setGenerator(Objects.requireNonNull(agent.getServer()).getOverworld().getChunkManager().getChunkGenerator())
+                    .setSeed(new Random().nextLong()));
+            worldHandle.asWorld().setTimeOfDay(24000L);
+        }
+        return worldHandle.asWorld();
+    };
 
     /**
      * Called when resetting at the beginning of the tick. History, food, and health will be reset and the agent will be teleported after this.
