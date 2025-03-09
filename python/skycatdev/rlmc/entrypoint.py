@@ -117,17 +117,35 @@ class Entrypoint(object):
         algorithm: OnPolicyAlgorithm
         if load_path is not None:
             if algorithm_str == "A2C":
-                algorithm = A2C.load(load_path, self.envs[environment])
+                algorithm = A2C.load(
+                    load_path,
+                    self.envs[environment],
+                    tensorboard_log="./tensorboard_log/",
+                )
             elif algorithm_str == "PPO":
-                algorithm = PPO.load(load_path, self.envs[environment])
+                algorithm = PPO.load(
+                    load_path,
+                    self.envs[environment],
+                    tensorboard_log="./tensorboard_log/",
+                )
             else:
                 warnings.warn("Tried to load algorithm with invalid name. Aborting.")
                 return
         else:
             if algorithm_str == "A2C":
-                algorithm = A2C("MultiInputPolicy", self.envs[environment], **kwargs)
+                algorithm = A2C(
+                    "MultiInputPolicy",
+                    self.envs[environment],
+                    tensorboard_log="./tensorboard_log/",
+                    **kwargs,
+                )
             elif algorithm_str == "PPO":
-                algorithm = PPO("MultiInputPolicy", self.envs[environment], **kwargs)
+                algorithm = PPO(
+                    "MultiInputPolicy",
+                    self.envs[environment],
+                    tensorboard_log="./tensorboard_log/",
+                    **kwargs,
+                )
             else:
                 warnings.warn("Tried to create algorithm with invalid name. Aborting.")
                 return
