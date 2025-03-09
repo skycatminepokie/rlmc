@@ -7,8 +7,6 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.function.Function;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
@@ -19,7 +17,7 @@ import org.jetbrains.annotations.Nullable;
 public class GoNorthEnvironment extends BasicPlayerEnvironment<BasicPlayerObservation> {
     private double prevX;
 
-    public static @Nullable Future<GoNorthEnvironment> makeAndConnect(String agentName, MinecraftServer server, EntityType<? extends MobEntity> entityType) {
+    public static @Nullable Future<GoNorthEnvironment> makeAndConnect(String agentName, MinecraftServer server) {
         @Nullable CompletableFuture<ServerPlayerEntity> agentFuture = createPlayerAgent(agentName, server, Vec3d.ZERO, server.getOverworld().getRegistryKey());
         if (agentFuture != null) {
             Function<ServerPlayerEntity, GoNorthEnvironment> environmentFuture = agent -> {
