@@ -113,6 +113,7 @@ public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> e
     protected void deleteCurrentWorld() {
         if (worldHandle != null) {
             worldHandle.delete();
+            worldHandle = null;
         }
     }
 
