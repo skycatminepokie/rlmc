@@ -14,10 +14,7 @@ import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.skycatdev.rlmc.Rlmc;
 import com.skycatdev.rlmc.TrainingSettings;
-import com.skycatdev.rlmc.environment.BasicPlayerEnvironment;
-import com.skycatdev.rlmc.environment.FightEnemyEnvironment;
-import com.skycatdev.rlmc.environment.GoNorthEnvironment;
-import com.skycatdev.rlmc.environment.SkybridgeEnvironment;
+import com.skycatdev.rlmc.environment.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -42,6 +39,10 @@ import org.jetbrains.annotations.Nullable;
 public class CommandManager implements CommandRegistrationCallback {
     private static int evaluateFightEnemyEnvironment(MinecraftServer server, String name, EntityType<? extends MobEntity> entityType, int episodes, String loadPath, ServerCommandSource source) {
         @Nullable Future<FightEnemyEnvironment> environment = FightEnemyEnvironment.makeAndConnect(name, server, entityType);
+        return evaluateEnvironment(episodes, loadPath, source, environment);
+    }
+
+    private static <E extends Environment<?, ?>> int evaluateEnvironment(int episodes, String loadPath, ServerCommandSource source, @Nullable Future<E> environment) {
         if (environment == null) {
             return -1;
         }
@@ -50,9 +51,9 @@ public class CommandManager implements CommandRegistrationCallback {
                 String evalResults = Rlmc.getPythonEntrypoint().evaluate(environment.get(), episodes, loadPath);
                 source.sendFeedback(() -> Text.of(evalResults), false); // TODO: Translate
             } catch (InterruptedException | ExecutionException e) {
-                Rlmc.LOGGER.error("Enemy evaluation environment had an error!", e);
+                Rlmc.LOGGER.error("Evaluation had an error!", e);
             }
-        }, "RLMC Enemy Evaluation Thread").start();
+        }, "RLMC Evaluation Thread").start();
         return Command.SINGLE_SUCCESS;
     }
 
@@ -140,29 +141,6 @@ public class CommandManager implements CommandRegistrationCallback {
         return episodes;
     }
 
-    private static int trainFightEnemyEnvironment(MinecraftServer server, String name, EntityType<? extends MobEntity> entityType, int episodes, String savePath, @Nullable String loadPath) throws CommandSyntaxException {
-        @Nullable Future<FightEnemyEnvironment> environment = FightEnemyEnvironment.makeAndConnect(name, server, entityType);
-        if (environment == null) {
-            return -1;
-        }
-        new Thread(() -> {
-            try {
-                if (loadPath != null) {
-                    Rlmc.getPythonEntrypoint().train(environment.get(), episodes, savePath, loadPath);
-                } else {
-                    Rlmc.getPythonEntrypoint().train(environment.get(), episodes, savePath);
-                }
-            } catch (InterruptedException | ExecutionException e) {
-                Rlmc.LOGGER.error("Enemy training environment had an error!", e);
-            }
-        }, "RLMC Enemy Training Thread").start();
-        return Command.SINGLE_SUCCESS;
-    }
-
-    private static int trainFightEnemyEnvironment(MinecraftServer server, String name, EntityType<? extends MobEntity> entityType, int episodes, String savePath) throws CommandSyntaxException {
-        return trainFightEnemyEnvironment(server, name, entityType, episodes, savePath, null);
-    }
-
     private static int trainFightEnemyEnvironment(MinecraftServer server, String name, EntityType<? extends MobEntity> entityType, TrainingSettings trainingSettings) {
         @Nullable Future<FightEnemyEnvironment> environment = FightEnemyEnvironment.makeAndConnect(name, server, entityType);
         if (environment == null) {
@@ -225,47 +203,6 @@ public class CommandManager implements CommandRegistrationCallback {
         // spotless:on
     }
 
-    private void appendTrainFightEnemy(LiteralCommandNode<ServerCommandSource> create, CommandRegistryAccess registryAccess) {
-        var fightEnemy = literal("enemy")
-                .requires(source -> source.hasPermissionLevel(4))
-                .build();
-        var agent = argument("agent", StringArgumentType.word())
-                .requires(source -> source.hasPermissionLevel(4))
-                .build();
-        var entityType = argument("entityType", RegistryEntryReferenceArgumentType.registryEntry(registryAccess, RegistryKeys.ENTITY_TYPE))
-                .requires(source -> source.hasPermissionLevel(4))
-                .build();
-        var episodes = makeTrainingSettingsNode(((context, trainingSettings) -> {
-            //noinspection unchecked It's a command, let it fail
-            return trainFightEnemyEnvironment(context.getSource().getServer(), StringArgumentType.getString(context, "agent"), (EntityType<? extends MobEntity>) Registries.ENTITY_TYPE.get(RegistryEntryReferenceArgumentType.getEntityType(context, "entityType").registryKey()), trainingSettings);
-        }));
-        // spotless:off
-        //@formatter:off
-        create.addChild(fightEnemy);
-            fightEnemy.addChild(agent);
-                agent.addChild(entityType);
-                    entityType.addChild(episodes);
-        //@formatter:on
-        // spotless:on
-    }
-
-    private void appendTrainGoNorth(LiteralCommandNode<ServerCommandSource> train) {
-        var goNorth = literal("go_north")
-                .requires(source -> source.hasPermissionLevel(4))
-                .build();
-        var agent = argument("agent", StringArgumentType.word())
-                .requires(source -> source.hasPermissionLevel(4))
-                .build();
-        var episodes = makeTrainingSettingsNode((context, trainingSettings) -> trainGoNorthEnvironment(context.getSource().getServer(), StringArgumentType.getString(context, "agent"), trainingSettings));
-        // spotless:off
-        //@formatter:off
-        train.addChild(goNorth);
-            goNorth.addChild(agent);
-                agent.addChild(episodes);
-        //@formatter:on
-        // spotless:on
-    }
-
     private void appendTrainSkybridge(LiteralCommandNode<ServerCommandSource> create) {
         var skybridge = literal("skybridge")
                 .requires(source -> source.hasPermissionLevel(4))
@@ -305,13 +242,39 @@ public class CommandManager implements CommandRegistrationCallback {
         var evaluate = literal("evaluate")
                 .requires(source -> source.hasPermissionLevel(4))
                 .build();
+        var goNorth = literal("go_north")
+                .requires(source -> source.hasPermissionLevel(4))
+                .build();
+        var goNorthAgent = argument("agent", StringArgumentType.word())
+                .requires(source -> source.hasPermissionLevel(4))
+                .build();
+        var goNorthSettings = makeTrainingSettingsNode((context, trainingSettings) -> trainGoNorthEnvironment(context.getSource().getServer(), StringArgumentType.getString(context, "agent"), trainingSettings));
+        var fightEnemy = literal("enemy")
+                .requires(source -> source.hasPermissionLevel(4))
+                .build();
+        var fightEnemyAgent = argument("agent", StringArgumentType.word())
+                .requires(source -> source.hasPermissionLevel(4))
+                .build();
+        var fightEnemyEntityType = argument("entityType", RegistryEntryReferenceArgumentType.registryEntry(registryAccess, RegistryKeys.ENTITY_TYPE))
+                .requires(source -> source.hasPermissionLevel(4))
+                .build();
+        var fightEnemySettings = makeTrainingSettingsNode(((context, trainingSettings) -> {
+            //noinspection unchecked It's a command, let it fail
+            return trainFightEnemyEnvironment(context.getSource().getServer(), StringArgumentType.getString(context, "agent"), (EntityType<? extends MobEntity>) Registries.ENTITY_TYPE.get(RegistryEntryReferenceArgumentType.getEntityType(context, "entityType").registryKey()), trainingSettings);
+        }));
+
 
         // spotless:off
         //@formatter:off
         environment.addChild(train); // TODO: Use /environment <environment> <action> <arguments>
             appendTrainSkybridge(train);
-            appendTrainFightEnemy(train, registryAccess);
-            appendTrainGoNorth(train);
+            train.addChild(fightEnemy);
+                fightEnemy.addChild(fightEnemyAgent);
+                    fightEnemyAgent.addChild(fightEnemyEntityType);
+                        fightEnemyEntityType.addChild(fightEnemySettings);
+            train.addChild(goNorth);
+                goNorth.addChild(goNorthAgent);
+                    goNorthAgent.addChild(goNorthSettings);
         environment.addChild(evaluate);
             appendEvaluateFightEnemy(evaluate, registryAccess);
         //@formatter:on
