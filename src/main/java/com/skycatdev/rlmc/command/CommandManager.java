@@ -115,6 +115,8 @@ public class CommandManager implements CommandRegistrationCallback {
                     return executor.execute(context, ts);
                 })
                 .build();
+        var load = literal("load")
+                .build();
         var loadPath = argument("loadPath", StringArgumentType.string())
                 .executes(context -> {
                     EnvironmentExecutionSettings ts = new EnvironmentExecutionSettings(IntegerArgumentType.getInteger(context, "episodes"), StringArgumentType.getString(context, "algorithm"));
@@ -153,7 +155,8 @@ public class CommandManager implements CommandRegistrationCallback {
         // spotless:off
         episodes.addChild(algorithm);
             algorithm.addChild(savePath);
-                savePath.addChild(loadPath);
+                savePath.addChild(load);
+                    savePath.addChild(loadPath);
                 savePath.addChild(entCoef);
                     entCoef.addChild(learningRate);
         // spotless:on
