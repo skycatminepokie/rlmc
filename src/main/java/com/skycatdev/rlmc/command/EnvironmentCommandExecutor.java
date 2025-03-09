@@ -3,10 +3,10 @@ package com.skycatdev.rlmc.command;
 
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.skycatdev.rlmc.TrainingSettings;
+import com.skycatdev.rlmc.EnvironmentExecutionSettings;
 import net.minecraft.server.command.ServerCommandSource;
 
 @FunctionalInterface
 public interface EnvironmentCommandExecutor {
-    int execute(CommandContext<ServerCommandSource> context, TrainingSettings trainingSettings) throws CommandSyntaxException;
+    int execute(CommandContext<ServerCommandSource> context, EnvironmentExecutionSettings environmentExecutionSettings) throws CommandSyntaxException;
 }
