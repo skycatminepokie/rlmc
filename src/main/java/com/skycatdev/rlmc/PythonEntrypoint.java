@@ -25,5 +25,6 @@ public interface PythonEntrypoint {
      * @param loadPath The path to load from. Paths are handled by Python, so beware!
      */
     void train(Environment<?, ?> environment, int episodes, String savePath, String loadPath);
+    void trainKwargs(Environment<?, ?> environment, TrainingSettings trainingSettings);
     String evaluate(Environment<?, ?> environment, int episodes, String loadPath);
 }

@@ -1,9 +1,11 @@
 import logging
 import string
 import sys
+import warnings
 from typing import override
 
 from gymnasium.wrappers import TimeLimit
+from py4j.java_collections import JavaMap
 from py4j.java_gateway import JavaGateway, JavaObject, server_connection_started
 from stable_baselines3 import PPO, A2C
 from stable_baselines3.common.callbacks import BaseCallback
@@ -102,6 +104,44 @@ class Entrypoint(object):
         mean, std = evaluate_policy(agent, self.envs[environment], episodes, False)
         self.envs[environment].close()
         return f"Mean: {mean}, Std: {std}"
+
+    # noinspection PyPep8Naming
+    def trainKwargs(self, environment: JavaObject, training_settings: JavaObject):
+        save_path: str | None = training_settings.getSavePath()
+        load_path: str | None = training_settings.getLoadPath()
+        episodes: int = training_settings.getEpisodes()
+        tensorboard_log_name: str | None = training_settings.getTensorboardLogName()
+        kwargs_map: JavaMap = training_settings.getAlgorithmArgs()
+        kwargs = dict(kwargs_map)
+        algorithm_str: str = training_settings.getAlgorithm()
+        algorithm: OnPolicyAlgorithm
+        if load_path is not None:
+            if algorithm_str == "A2C":
+                algorithm = A2C.load(load_path, self.envs[environment])
+            elif algorithm_str == "PPO":
+                algorithm = PPO.load(load_path, self.envs[environment])
+            else:
+                warnings.warn("Tried to load algorithm with invalid name. Aborting.")
+                return
+        else:
+            if algorithm_str == "A2C":
+                algorithm = A2C("MultiInputPolicy", self.envs[environment], **kwargs)
+            elif algorithm_str == "PPO":
+                algorithm = PPO("MultiInputPolicy", self.envs[environment], **kwargs)
+            else:
+                warnings.warn("Tried to create algorithm with invalid name. Aborting.")
+                return
+        if training_settings.getTensorboardLogName() is None:
+            algorithm.learn(
+                episodes, tb_log_name=tensorboard_log_name, callback=HParamCallback()
+            )
+        else:
+            algorithm.learn(episodes, callback=HParamCallback())
+
+        if save_path is not None:
+            algorithm.save(save_path)
+
+        self.envs[environment].close()
 
     class Java:
         implements = ["com.skycatdev.rlmc.PythonEntrypoint"]
