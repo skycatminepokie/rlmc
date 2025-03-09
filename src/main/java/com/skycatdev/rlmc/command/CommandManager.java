@@ -229,7 +229,7 @@ public class CommandManager implements CommandRegistrationCallback {
                     return executes.execute(context, ts);
                 })
                 .build();
-        var savePath = argument("savePath", StringArgumentType.word())
+        var savePath = argument("savePath", StringArgumentType.string())
                 .suggests((context, builder) -> CommandSource.suggestMatching(new String[]{"none"}, builder))
                 .executes(context -> {
                     TrainingSettings ts = new TrainingSettings(IntegerArgumentType.getInteger(context, "episodes"), StringArgumentType.getString(context, "algorithm"));
@@ -240,7 +240,7 @@ public class CommandManager implements CommandRegistrationCallback {
                     return executes.execute(context, ts);
                 })
                 .build();
-        var loadPath = argument("loadPath", StringArgumentType.word())
+        var loadPath = argument("loadPath", StringArgumentType.string())
                 .executes(context -> {
                     TrainingSettings ts = new TrainingSettings(IntegerArgumentType.getInteger(context, "episodes"), StringArgumentType.getString(context, "algorithm"));
                     String savePathArg = StringArgumentType.getString(context, "savePath");
