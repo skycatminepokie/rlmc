@@ -149,12 +149,12 @@ class Entrypoint(object):
             else:
                 warnings.warn("Tried to create algorithm with invalid name. Aborting.")
                 return
-        if training_settings.getTensorboardLogName() is None:
+        if tensorboard_log_name is None:
+            algorithm.learn(episodes, callback=HParamCallback())
+        else:
             algorithm.learn(
                 episodes, tb_log_name=tensorboard_log_name, callback=HParamCallback()
             )
-        else:
-            algorithm.learn(episodes, callback=HParamCallback())
 
         if save_path is not None:
             algorithm.save(save_path)
