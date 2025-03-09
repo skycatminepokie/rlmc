@@ -5,12 +5,15 @@ import static net.minecraft.server.command.CommandManager.*;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.skycatdev.rlmc.Rlmc;
+import com.skycatdev.rlmc.TrainingSettings;
 import com.skycatdev.rlmc.environment.BasicPlayerEnvironment;
 import com.skycatdev.rlmc.environment.FightEnemyEnvironment;
 import com.skycatdev.rlmc.environment.SkybridgeEnvironment;
@@ -19,6 +22,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.command.CommandRegistryAccess;
+import net.minecraft.command.CommandSource;
 import net.minecraft.command.argument.BlockPosArgumentType;
 import net.minecraft.command.argument.GameProfileArgumentType;
 import net.minecraft.command.argument.RegistryEntryReferenceArgumentType;
@@ -35,7 +39,6 @@ import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
 
 public class CommandManager implements CommandRegistrationCallback {
-
     private static int evaluateFightEnemyEnvironment(MinecraftServer server, String name, EntityType<? extends MobEntity> entityType, int episodes, String loadPath, ServerCommandSource source) {
         @Nullable Future<FightEnemyEnvironment> environment = FightEnemyEnvironment.makeAndConnect(name, server, entityType);
         if (environment == null) {
@@ -67,6 +70,21 @@ public class CommandManager implements CommandRegistrationCallback {
             return Command.SINGLE_SUCCESS;
         }
         return -1;
+    }
+
+    private static int trainFightEnemyEnvironment(MinecraftServer server, String name, EntityType<? extends MobEntity> entityType, TrainingSettings trainingSettings) {
+        @Nullable Future<FightEnemyEnvironment> environment = FightEnemyEnvironment.makeAndConnect(name, server, entityType);
+        if (environment == null) {
+            return -1;
+        }
+        new Thread(() -> {
+            try {
+                Rlmc.getPythonEntrypoint().trainKwargs(environment.get(), trainingSettings);
+            } catch (InterruptedException | ExecutionException e) {
+                Rlmc.LOGGER.error("Enemy training environment had an error!", e);
+            }
+        }, "RLMC Enemy Training Thread").start();
+        return Command.SINGLE_SUCCESS;
     }
 
     private static int trainFightEnemyEnvironment(MinecraftServer server, String name, EntityType<? extends MobEntity> entityType, int episodes, String savePath, @Nullable String loadPath) throws CommandSyntaxException {
@@ -134,34 +152,16 @@ public class CommandManager implements CommandRegistrationCallback {
         var entityType = argument("entityType", RegistryEntryReferenceArgumentType.registryEntry(registryAccess, RegistryKeys.ENTITY_TYPE))
                 .requires(source -> source.hasPermissionLevel(4))
                 .build();
-        var episodes = argument("episodes", IntegerArgumentType.integer(1))
-                .requires(source -> source.hasPermissionLevel(4))
-                .build();
-        @SuppressWarnings("unchecked") // Just let it fail, it's a command
-        var savePath = argument("savePath", StringArgumentType.string())
-                .requires(source -> source.hasPermissionLevel(4))
-                .executes((context) -> trainFightEnemyEnvironment(context.getSource().getServer(),
-                        StringArgumentType.getString(context, "agent"),
-                        (EntityType<? extends MobEntity>) Registries.ENTITY_TYPE.get(RegistryEntryReferenceArgumentType.getEntityType(context, "entityType").registryKey().getValue()),
-                        IntegerArgumentType.getInteger(context, "episodes"),
-                        StringArgumentType.getString(context, "savePath")))
-                .build();
-        @SuppressWarnings("unchecked") // Just let it fail, it's a command
-        var loadPath = argument("loadPath", StringArgumentType.string())
-                .requires(source -> source.hasPermissionLevel(4))
-                .executes((context) -> trainFightEnemyEnvironment(context.getSource().getServer(), StringArgumentType.getString(context, "agent"),
-                        (EntityType<? extends MobEntity>) Registries.ENTITY_TYPE.get(RegistryEntryReferenceArgumentType.getEntityType(context, "entityType").registryKey().getValue()),
-                        IntegerArgumentType.getInteger(context, "episodes"),
-                        StringArgumentType.getString(context, "savePath"), StringArgumentType.getString(context, "loadPath")))
-                .build();
+        var episodes = makeTrainingSettingsNode(((context, trainingSettings) -> {
+            //noinspection unchecked It's a command, let it fail
+            return trainFightEnemyEnvironment(context.getSource().getServer(), StringArgumentType.getString(context, "agent"), (EntityType<? extends MobEntity>) Registries.ENTITY_TYPE.get(RegistryEntryReferenceArgumentType.getEntityType(context, "entityType").registryKey()), trainingSettings);
+        }));
         // spotless:off
         //@formatter:off
         create.addChild(fightEnemy);
             fightEnemy.addChild(agent);
                 agent.addChild(entityType);
                     entityType.addChild(episodes);
-                        episodes.addChild(savePath);
-                            savePath.addChild(loadPath);
         //@formatter:on
         // spotless:on
     }
@@ -219,5 +219,71 @@ public class CommandManager implements CommandRegistrationCallback {
         dispatcher.getRoot().addChild(environment);
     }
 
+    private static CommandNode<ServerCommandSource> makeTrainingSettingsNode(EnvironmentCommandExecutor executes) {
+        var episodes = argument("episodes", IntegerArgumentType.integer(1))
+                .build();
+        var algorithm = argument("algorithm", StringArgumentType.word())
+                .suggests((context, builder) -> CommandSource.suggestMatching(new String[]{"PPO", "A2C"}, builder))
+                .executes(context -> {
+                    TrainingSettings ts = new TrainingSettings(IntegerArgumentType.getInteger(context, "episodes"), StringArgumentType.getString(context, "algorithm"));
+                    return executes.execute(context, ts);
+                })
+                .build();
+        var savePath = argument("savePath", StringArgumentType.word())
+                .suggests((context, builder) -> CommandSource.suggestMatching(new String[]{"none"}, builder))
+                .executes(context -> {
+                    TrainingSettings ts = new TrainingSettings(IntegerArgumentType.getInteger(context, "episodes"), StringArgumentType.getString(context, "algorithm"));
+                    String savePathArg = StringArgumentType.getString(context, "savePath");
+                    if (!savePathArg.equals("none")) {
+                        ts.setSavePath(savePathArg);
+                    }
+                    return executes.execute(context, ts);
+                })
+                .build();
+        var loadPath = argument("loadPath", StringArgumentType.word())
+                .executes(context -> {
+                    TrainingSettings ts = new TrainingSettings(IntegerArgumentType.getInteger(context, "episodes"), StringArgumentType.getString(context, "algorithm"));
+                    String savePathArg = StringArgumentType.getString(context, "savePath");
+                    if (!savePathArg.equals("none")) {
+                        ts.setSavePath(savePathArg);
+                    }
+                    ts.setLoadPath(StringArgumentType.getString(context, "loadPath"));
+                    return executes.execute(context, ts);
+                })
+                .build();
+        var entCoef = argument("entCoef", DoubleArgumentType.doubleArg(0))
+                .executes(context -> {
+                    TrainingSettings ts = new TrainingSettings(IntegerArgumentType.getInteger(context, "episodes"), StringArgumentType.getString(context, "algorithm"));
+                    String savePathArg = StringArgumentType.getString(context, "savePath");
+                    if (!savePathArg.equals("none")) {
+                        ts.setSavePath(savePathArg);
+                    }
+                    ts.setEntCoef(DoubleArgumentType.getDouble(context, "entCoef"));
+                    return executes.execute(context, ts);
+                })
+                .build();
+        var learningRate = argument("learningRate", DoubleArgumentType.doubleArg(0))
+                .executes(context -> {
+                    TrainingSettings ts = new TrainingSettings(IntegerArgumentType.getInteger(context, "episodes"), StringArgumentType.getString(context, "algorithm"));
+                    String savePathArg = StringArgumentType.getString(context, "savePath");
+                    if (!savePathArg.equals("none")) {
+                        ts.setSavePath(savePathArg);
+                    }
+                    ts.setEntCoef(DoubleArgumentType.getDouble(context, "entCoef"));
+                    ts.setLearningRate(DoubleArgumentType.getDouble(context, "learningRate"));
+                    return executes.execute(context, ts);
+                })
+                .build();
+        //@formatter:off
+        // spotless:off
+        episodes.addChild(algorithm);
+            algorithm.addChild(savePath);
+                savePath.addChild(loadPath);
+                savePath.addChild(entCoef);
+                    entCoef.addChild(learningRate);
+        // spotless:on
+        //@formatter:on
+        return episodes;
+    }
 
 }
