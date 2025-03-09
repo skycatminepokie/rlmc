@@ -156,7 +156,7 @@ public class CommandManager implements CommandRegistrationCallback {
         episodes.addChild(algorithm);
             algorithm.addChild(savePath);
                 savePath.addChild(load);
-                    savePath.addChild(loadPath);
+                    load.addChild(loadPath);
                 savePath.addChild(entCoef);
                     entCoef.addChild(learningRate);
         // spotless:on
