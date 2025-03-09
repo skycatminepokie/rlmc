@@ -15,6 +15,7 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.skycatdev.rlmc.Rlmc;
 import com.skycatdev.rlmc.TrainingSettings;
 import com.skycatdev.rlmc.environment.*;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -37,10 +38,6 @@ import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
 
 public class CommandManager implements CommandRegistrationCallback {
-    private static int evaluateFightEnemyEnvironment(MinecraftServer server, String name, EntityType<? extends MobEntity> entityType, int episodes, String loadPath, ServerCommandSource source) {
-        @Nullable Future<FightEnemyEnvironment> environment = FightEnemyEnvironment.makeAndConnect(name, server, entityType);
-        return evaluateEnvironment(episodes, loadPath, source, environment);
-    }
 
     private static <E extends Environment<?, ?>> int evaluateEnvironment(int episodes, String loadPath, ServerCommandSource source, @Nullable Future<E> environment) {
         if (environment == null) {
@@ -141,8 +138,7 @@ public class CommandManager implements CommandRegistrationCallback {
         return episodes;
     }
 
-    private static int trainFightEnemyEnvironment(MinecraftServer server, String name, EntityType<? extends MobEntity> entityType, TrainingSettings trainingSettings) {
-        @Nullable Future<FightEnemyEnvironment> environment = FightEnemyEnvironment.makeAndConnect(name, server, entityType);
+    private static <E extends Environment<?, ?>> int trainEnvironment(TrainingSettings trainingSettings, @Nullable Future<E> environment) {
         if (environment == null) {
             return -1;
         }
@@ -150,24 +146,9 @@ public class CommandManager implements CommandRegistrationCallback {
             try {
                 Rlmc.getPythonEntrypoint().trainKwargs(environment.get(), trainingSettings);
             } catch (InterruptedException | ExecutionException e) {
-                Rlmc.LOGGER.error("Enemy training environment had an error!", e);
+                Rlmc.LOGGER.error("Training environment had an error!", e);
             }
-        }, "RLMC Enemy Training Thread").start();
-        return Command.SINGLE_SUCCESS;
-    }
-
-    private static int trainGoNorthEnvironment(MinecraftServer server, String name, TrainingSettings trainingSettings) {
-        @Nullable Future<GoNorthEnvironment> environment = GoNorthEnvironment.makeAndConnect(name, server);
-        if (environment == null) {
-            return -1;
-        }
-        new Thread(() -> {
-            try {
-                Rlmc.getPythonEntrypoint().trainKwargs(environment.get(), trainingSettings);
-            } catch (InterruptedException | ExecutionException e) {
-                Rlmc.LOGGER.error("Go north training environment had an error!", e);
-            }
-        }, "RLMC Go North Training Thread").start();
+        }, "RLMC Training Thread").start();
         return Command.SINGLE_SUCCESS;
     }
 
@@ -184,13 +165,19 @@ public class CommandManager implements CommandRegistrationCallback {
         var episodes = argument("episodes", IntegerArgumentType.integer(1))
                 .requires(source -> source.hasPermissionLevel(4))
                 .build();
-        @SuppressWarnings("unchecked") // Just let it fail, it's a command
         var loadPath = argument("loadPath", StringArgumentType.string())
                 .requires(source -> source.hasPermissionLevel(4))
-                .executes((context) -> evaluateFightEnemyEnvironment(context.getSource().getServer(), StringArgumentType.getString(context, "agent"),
-                        (EntityType<? extends MobEntity>) Registries.ENTITY_TYPE.get(RegistryEntryReferenceArgumentType.getEntityType(context, "entityType").registryKey().getValue()),
-                        IntegerArgumentType.getInteger(context, "episodes"),
-                        StringArgumentType.getString(context, "loadPath"), context.getSource()))
+                .executes((context) -> {
+                    MinecraftServer server = context.getSource().getServer();
+                    String name = StringArgumentType.getString(context, "agent");
+                    @SuppressWarnings("unchecked") // Just let it fail, it's a command
+                    EntityType<? extends MobEntity> entityType1 = (EntityType<? extends MobEntity>) Registries.ENTITY_TYPE.get(RegistryEntryReferenceArgumentType.getEntityType(context, "entityType").registryKey().getValue());
+                    int episodes1 = IntegerArgumentType.getInteger(context, "episodes");
+                    String loadPath1 = StringArgumentType.getString(context, "loadPath");
+                    ServerCommandSource source = context.getSource();
+                    @Nullable Future<FightEnemyEnvironment> environment = FightEnemyEnvironment.makeAndConnect(name, server, entityType1);
+                    return evaluateEnvironment(episodes1, loadPath1, source, environment);
+                })
                 .build();
         // spotless:off
         //@formatter:off
@@ -248,7 +235,12 @@ public class CommandManager implements CommandRegistrationCallback {
         var goNorthAgent = argument("agent", StringArgumentType.word())
                 .requires(source -> source.hasPermissionLevel(4))
                 .build();
-        var goNorthSettings = makeTrainingSettingsNode((context, trainingSettings) -> trainGoNorthEnvironment(context.getSource().getServer(), StringArgumentType.getString(context, "agent"), trainingSettings));
+        var goNorthSettings = makeTrainingSettingsNode((context, trainingSettings) -> {
+            MinecraftServer server = context.getSource().getServer();
+            String name = StringArgumentType.getString(context, "agent");
+            @Nullable Future<GoNorthEnvironment> environment1 = GoNorthEnvironment.makeAndConnect(name, server);
+            return trainEnvironment(trainingSettings, environment1);
+        });
         var fightEnemy = literal("enemy")
                 .requires(source -> source.hasPermissionLevel(4))
                 .build();
@@ -259,8 +251,12 @@ public class CommandManager implements CommandRegistrationCallback {
                 .requires(source -> source.hasPermissionLevel(4))
                 .build();
         var fightEnemySettings = makeTrainingSettingsNode(((context, trainingSettings) -> {
+            MinecraftServer server = context.getSource().getServer();
+            String name = StringArgumentType.getString(context, "agent");
             //noinspection unchecked It's a command, let it fail
-            return trainFightEnemyEnvironment(context.getSource().getServer(), StringArgumentType.getString(context, "agent"), (EntityType<? extends MobEntity>) Registries.ENTITY_TYPE.get(RegistryEntryReferenceArgumentType.getEntityType(context, "entityType").registryKey()), trainingSettings);
+            EntityType<? extends MobEntity> entityType = Objects.requireNonNull((EntityType<? extends MobEntity>) Registries.ENTITY_TYPE.get(RegistryEntryReferenceArgumentType.getEntityType(context, "entityType").registryKey()));
+            @Nullable Future<FightEnemyEnvironment> environment1 = FightEnemyEnvironment.makeAndConnect(name, server, entityType);
+            return trainEnvironment(trainingSettings, environment1);
         }));
 
 
