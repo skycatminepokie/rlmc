@@ -75,6 +75,16 @@ class Entrypoint(object):
             env = VecNormalize(env, norm_reward=True, norm_obs=False)
             self.envs[java_environment] = env
 
+        elif environment == "go_north":
+            env = WrappedBasicPlayerObservationEnvironment(
+                java_environment, get_gateway()
+            )
+            env = TimeLimit(env, max_episode_steps=200)
+            env = Monitor(env)
+            env = DummyVecEnv([lambda: env])
+            env = VecNormalize(env, norm_reward=True, norm_obs=False)
+            self.envs[java_environment] = env
+
     def train(
         self,
         environment: JavaObject,
