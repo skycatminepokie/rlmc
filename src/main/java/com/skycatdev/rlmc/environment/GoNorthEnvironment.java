@@ -49,7 +49,7 @@ public class GoNorthEnvironment extends BasicPlayerEnvironment<BasicPlayerObserv
     protected double getReward(BasicPlayerObservation observation) {
         double prevX = this.prevX;
         this.prevX = agent.getX();
-        return (agent.getX() - prevX)/20d;
+        return (agent.getX() - prevX)/25d;
     }
 
     @Override
