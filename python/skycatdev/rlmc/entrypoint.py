@@ -122,7 +122,8 @@ class Entrypoint(object):
         kwargs = dict(kwargs_map)
         algorithm_str: str = training_settings.getAlgorithm()
         algorithm: OnPolicyAlgorithm
-        if load_path is not None:
+        load = load_path is not None
+        if load:
             if algorithm_str == "A2C":
                 algorithm = A2C.load(
                     load_path,
@@ -160,7 +161,10 @@ class Entrypoint(object):
             algorithm.learn(episodes, callback=HParamCallback())
         else:
             algorithm.learn(
-                episodes, tb_log_name=tensorboard_log_name, callback=HParamCallback()
+                episodes,
+                tb_log_name=tensorboard_log_name,
+                callback=HParamCallback(),
+                reset_num_timesteps=not load,
             )
 
         if save_path is not None:
