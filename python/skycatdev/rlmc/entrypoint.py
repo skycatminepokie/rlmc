@@ -100,7 +100,6 @@ class Entrypoint(object):
                 self.envs[environment],
                 verbose=1,
                 tensorboard_log="./tensorboard_log/",
-                ent_coef=0.7,
             )
 
         agent.learn(episodes, tb_log_name=save_path, callback=HParamCallback())
