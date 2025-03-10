@@ -49,7 +49,7 @@ public class GoNorthEnvironment extends BasicPlayerEnvironment<BasicPlayerObserv
     protected double getReward(BasicPlayerObservation observation) {
         double prevX = this.prevX;
         this.prevX = agent.getX();
-        return agent.getX() - prevX;
+        return (agent.getX() - prevX)/20d;
     }
 
     @Override
@@ -60,7 +60,7 @@ public class GoNorthEnvironment extends BasicPlayerEnvironment<BasicPlayerObserv
 
     @Override
     protected boolean isTerminated(BasicPlayerObservation observation) {
-        return agent.getX() > 20;
+        return agent.getX() > 20 || agent.getX() < -20;
     }
 
     @Override

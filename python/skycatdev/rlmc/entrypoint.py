@@ -13,7 +13,7 @@ from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.logger import HParam
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.on_policy_algorithm import OnPolicyAlgorithm
-from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
+from stable_baselines3.common.vec_env import DummyVecEnv
 
 from skycatdev.rlmc.java.wrappers.wrapped_basic_player_observation_environment import (
     WrappedBasicPlayerObservationEnvironment,
@@ -72,7 +72,6 @@ class Entrypoint(object):
             env = TimeLimit(env, max_episode_steps=400)
             env = Monitor(env)
             env = DummyVecEnv([lambda: env])
-            env = VecNormalize(env, norm_reward=True, norm_obs=False)
             self.envs[java_environment] = env
 
         elif environment == "go_north":
@@ -82,7 +81,6 @@ class Entrypoint(object):
             env = TimeLimit(env, max_episode_steps=200)
             env = Monitor(env)
             env = DummyVecEnv([lambda: env])
-            env = VecNormalize(env, norm_reward=True, norm_obs=False)
             self.envs[java_environment] = env
 
     def train(
