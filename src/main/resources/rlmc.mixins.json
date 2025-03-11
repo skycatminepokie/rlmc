@@ -3,6 +3,7 @@
   "package": "com.skycatdev.rlmc.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "ServerCommandSourceMixin",
     "EntityPlayerMPFakeMixin",
     "MinecraftServerMixin",
     "MobEntityMixin",

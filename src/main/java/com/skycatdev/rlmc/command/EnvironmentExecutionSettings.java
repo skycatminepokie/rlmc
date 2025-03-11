@@ -1,5 +1,5 @@
 /* Licensed MIT 2025 */
-package com.skycatdev.rlmc;
+package com.skycatdev.rlmc.command;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,10 +12,23 @@ public class EnvironmentExecutionSettings {
     protected @Nullable String tensorboardLogName;
     protected Map<String, Object> algorithmArgs = new HashMap<>();
     protected String algorithm;
+    protected boolean training;
+    protected @Nullable String tensorboardLogPath;
 
     public EnvironmentExecutionSettings(int episodes, String algorithm) {
         this.episodes = episodes;
         this.algorithm = algorithm;
+    }
+
+    public EnvironmentExecutionSettings(int episodes, String algorithm, Map<String, Object> algorithmArgs, boolean training, @Nullable String savePath, @Nullable String loadPath, @Nullable String tensorboardLogName, @Nullable String tensorboardLogPath) {
+        this.episodes = episodes;
+        this.savePath = savePath;
+        this.loadPath = loadPath;
+        this.tensorboardLogName = tensorboardLogName;
+        this.algorithmArgs = algorithmArgs;
+        this.algorithm = algorithm;
+        this.training = training;
+        this.tensorboardLogPath = tensorboardLogPath;
     }
 
     public String getAlgorithm() {

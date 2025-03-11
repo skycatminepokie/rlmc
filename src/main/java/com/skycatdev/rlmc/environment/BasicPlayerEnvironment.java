@@ -108,7 +108,7 @@ public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> e
         return BlockPos.ofFloored(getStartPos());
     }
 
-    protected abstract Vec3d getStartPos();
+    protected abstract Vec3d getStartPos(); // TODO getWorldSpawnPos
 
     protected void deleteCurrentWorld() {
         if (worldHandle != null) {

@@ -12,7 +12,6 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
-import com.skycatdev.rlmc.EnvironmentExecutionSettings;
 import com.skycatdev.rlmc.Rlmc;
 import com.skycatdev.rlmc.environment.*;
 import java.util.Objects;
@@ -55,23 +54,6 @@ public class CommandManager implements CommandRegistrationCallback {
         return Command.SINGLE_SUCCESS;
     }
 
-    private static int makeSkybridgeEnvironment(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
-        BlockPos pos = BlockPosArgumentType.getLoadedBlockPos(context, "pos");
-        int distance = IntegerArgumentType.getInteger(context, "distance");
-        int historyLength = IntegerArgumentType.getInteger(context, "historyLength");
-        @Nullable CompletableFuture<ServerPlayerEntity> agentFuture = BasicPlayerEnvironment.createPlayerAgent(StringArgumentType.getString(context, "agent"), context.getSource().getServer(), Vec3d.of(pos), context.getSource().getWorld().getRegistryKey());
-        if (agentFuture != null) {
-            agentFuture.thenAcceptAsync((agent) -> {
-                SkybridgeEnvironment environment = new SkybridgeEnvironment(agent, pos, distance, 3, 3);
-                Rlmc.addEnvironment(environment);
-                Rlmc.getPythonEntrypoint().connectEnvironment("skybridge", environment);
-                new Thread(() -> Rlmc.getPythonEntrypoint().train(environment, 1000, "trained_skybridge_agent"), "RLMC Skybridge Training Thread").start();
-            }, (runnable) -> new Thread(runnable).start());
-            return Command.SINGLE_SUCCESS;
-        }
-        return -1;
-    }
-
     private static CommandNode<ServerCommandSource> makeEvaluationSettingsNode(EnvironmentCommandExecutor executor) {
         var episodes = argument("episodes", IntegerArgumentType.integer(1))
                 .build();
@@ -94,74 +76,21 @@ public class CommandManager implements CommandRegistrationCallback {
         return episodes;
     }
 
-    private static CommandNode<ServerCommandSource> makeTrainingSettingsNode(EnvironmentCommandExecutor executor) {
-        var episodes = argument("episodes", IntegerArgumentType.integer(1))
-                .build();
-        var algorithm = argument("algorithm", StringArgumentType.word())
-                .suggests((context, builder) -> CommandSource.suggestMatching(new String[]{"PPO", "A2C"}, builder))
-                .executes(context -> {
-                    EnvironmentExecutionSettings ts = new EnvironmentExecutionSettings(IntegerArgumentType.getInteger(context, "episodes"), StringArgumentType.getString(context, "algorithm"));
-                    return executor.execute(context, ts);
-                })
-                .build();
-        var savePath = argument("savePath", StringArgumentType.string())
-                .suggests((context, builder) -> CommandSource.suggestMatching(new String[]{"none"}, builder))
-                .executes(context -> {
-                    EnvironmentExecutionSettings ts = new EnvironmentExecutionSettings(IntegerArgumentType.getInteger(context, "episodes"), StringArgumentType.getString(context, "algorithm"));
-                    String savePathArg = StringArgumentType.getString(context, "savePath");
-                    if (!savePathArg.equals("none")) {
-                        ts.setSavePath(savePathArg);
-                    }
-                    return executor.execute(context, ts);
-                })
-                .build();
-        var load = literal("load")
-                .build();
-        var loadPath = argument("loadPath", StringArgumentType.string())
-                .executes(context -> {
-                    EnvironmentExecutionSettings ts = new EnvironmentExecutionSettings(IntegerArgumentType.getInteger(context, "episodes"), StringArgumentType.getString(context, "algorithm"));
-                    String savePathArg = StringArgumentType.getString(context, "savePath");
-                    if (!savePathArg.equals("none")) {
-                        ts.setSavePath(savePathArg);
-                    }
-                    ts.setLoadPath(StringArgumentType.getString(context, "loadPath"));
-                    return executor.execute(context, ts);
-                })
-                .build();
-        var entCoef = argument("entCoef", DoubleArgumentType.doubleArg(0))
-                .executes(context -> {
-                    EnvironmentExecutionSettings ts = new EnvironmentExecutionSettings(IntegerArgumentType.getInteger(context, "episodes"), StringArgumentType.getString(context, "algorithm"));
-                    String savePathArg = StringArgumentType.getString(context, "savePath");
-                    if (!savePathArg.equals("none")) {
-                        ts.setSavePath(savePathArg);
-                    }
-                    ts.setEntCoef(DoubleArgumentType.getDouble(context, "entCoef"));
-                    return executor.execute(context, ts);
-                })
-                .build();
-        var learningRate = argument("learningRate", DoubleArgumentType.doubleArg(0))
-                .executes(context -> {
-                    EnvironmentExecutionSettings ts = new EnvironmentExecutionSettings(IntegerArgumentType.getInteger(context, "episodes"), StringArgumentType.getString(context, "algorithm"));
-                    String savePathArg = StringArgumentType.getString(context, "savePath");
-                    if (!savePathArg.equals("none")) {
-                        ts.setSavePath(savePathArg);
-                    }
-                    ts.setEntCoef(DoubleArgumentType.getDouble(context, "entCoef"));
-                    ts.setLearningRate(DoubleArgumentType.getDouble(context, "learningRate"));
-                    return executor.execute(context, ts);
-                })
-                .build();
-        //@formatter:off
-        // spotless:off
-        episodes.addChild(algorithm);
-            algorithm.addChild(savePath);
-                savePath.addChild(load);
-                    load.addChild(loadPath);
-                savePath.addChild(entCoef);
-                    entCoef.addChild(learningRate);
-        // spotless:on
-        //@formatter:on
-        return episodes;
+    private static int makeSkybridgeEnvironment(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+        BlockPos pos = BlockPosArgumentType.getLoadedBlockPos(context, "pos");
+        int distance = IntegerArgumentType.getInteger(context, "distance");
+        int historyLength = IntegerArgumentType.getInteger(context, "historyLength");
+        @Nullable CompletableFuture<ServerPlayerEntity> agentFuture = BasicPlayerEnvironment.createPlayerAgent(StringArgumentType.getString(context, "agent"), context.getSource().getServer(), Vec3d.of(pos), context.getSource().getWorld().getRegistryKey());
+        if (agentFuture != null) {
+            agentFuture.thenAcceptAsync((agent) -> {
+                SkybridgeEnvironment environment = new SkybridgeEnvironment(agent, pos, distance, 3, 3);
+                Rlmc.addEnvironment(environment);
+                Rlmc.getPythonEntrypoint().connectEnvironment("skybridge", environment);
+                new Thread(() -> Rlmc.getPythonEntrypoint().train(environment, 1000, "trained_skybridge_agent"), "RLMC Skybridge Training Thread").start();
+            }, (runnable) -> new Thread(runnable).start());
+            return Command.SINGLE_SUCCESS;
+        }
+        return -1;
     }
 
     private static <E extends Environment<?, ?>> int trainEnvironment(EnvironmentExecutionSettings environmentExecutionSettings, @Nullable Future<E> environment) {
@@ -176,6 +105,68 @@ public class CommandManager implements CommandRegistrationCallback {
             }
         }, "RLMC Training Thread").start();
         return Command.SINGLE_SUCCESS;
+    }
+
+    private static CommandNode<ServerCommandSource> withExecutionSettings(CommandNode<ServerCommandSource> base) {
+        var training = literal("training")
+                .redirect(base, context -> (ServerCommandSource) ((EnvironmentExecutionSettingsBuilder) context.getSource()).rlmc$setTraining())
+                .build();
+        var evaluating = literal("evaluating")
+                .redirect(base, context -> (ServerCommandSource) ((EnvironmentExecutionSettingsBuilder) context.getSource()).rlmc$setEvaluating())
+                .build();
+        var episodes = literal("episodes")
+                .build();
+        var episodesArg = argument("episodes", IntegerArgumentType.integer(1))
+                .redirect(base, context -> (ServerCommandSource) ((EnvironmentExecutionSettingsBuilder) context.getSource()).rlmc$setEpisodes(IntegerArgumentType.getInteger(context, "episodes")))
+                .build();
+        var algorithm = literal("algorithm")
+                .build();
+        var algorithmArg = argument("algorithm", StringArgumentType.word())
+                .suggests((context, builder) -> CommandSource.suggestMatching(new String[]{"PPO", "A2C"}, builder))
+                .redirect(base, context -> (ServerCommandSource) ((EnvironmentExecutionSettingsBuilder) context.getSource()).rlmc$setAlgorithm(StringArgumentType.getString(context, "algorithm")))
+                .build();
+        var save = literal("save")
+                .build();
+        var savePath = argument("savePath", StringArgumentType.string())
+                .redirect(base, context -> (ServerCommandSource) ((EnvironmentExecutionSettingsBuilder) context.getSource()).rlmc$setSavePath(StringArgumentType.getString(context, "savePath")))
+                .build();
+        var load = literal("load")
+                .build();
+        var loadPath = argument("loadPath", StringArgumentType.string())
+                .redirect(base, context -> (ServerCommandSource) ((EnvironmentExecutionSettingsBuilder) context.getSource()).rlmc$setLoadPath(StringArgumentType.getString(context, "loadPath")))
+                .build();
+        var entCoef = literal("entCoef")
+                .build();
+        var entCoefArg = argument("entCoef", DoubleArgumentType.doubleArg(0))
+                .redirect(base, context -> (ServerCommandSource) ((EnvironmentExecutionSettingsBuilder) context.getSource()).rlmc$setAlgorithmArg("ent_coef", DoubleArgumentType.getDouble(context, "entCoef")))
+                .build();
+        var learningRate = literal("learningRate")
+                .build();
+        var learningRateArg = argument("learningRate", DoubleArgumentType.doubleArg(0))
+                .redirect(base, context -> (ServerCommandSource) ((EnvironmentExecutionSettingsBuilder) context.getSource()).rlmc$setAlgorithmArg("learning_rate", DoubleArgumentType.getDouble(context, "learningRate")))
+                .build();
+        var with = literal("with")
+                .build();
+        //@formatter:off
+        // spotless:off
+        base.addChild(training);
+        base.addChild(evaluating);
+        base.addChild(episodes);
+            episodes.addChild(episodesArg);
+        base.addChild(algorithm);
+            algorithm.addChild(algorithmArg);
+        base.addChild(save);
+            save.addChild(savePath);
+        base.addChild(load);
+            load.addChild(loadPath);
+        base.addChild(entCoef);
+            entCoef.addChild(entCoefArg);
+        base.addChild(learningRate);
+            learningRate.addChild(learningRateArg);
+        base.addChild(with);
+        // spotless:on
+        //@formatter:on
+        return with;
     }
 
     private void appendTrainSkybridge(LiteralCommandNode<ServerCommandSource> create) {
@@ -211,59 +202,40 @@ public class CommandManager implements CommandRegistrationCallback {
         var environment = literal("environment")
                 .requires(source -> source.hasPermissionLevel(4))
                 .build();
-        var goNorth = literal("go_north")
-                .requires(source -> source.hasPermissionLevel(4))
-                .build();
-        var goNorthAgent = argument("agent", StringArgumentType.word())
-                .requires(source -> source.hasPermissionLevel(4))
-                .build();
-        var goNorthSettings = makeTrainingSettingsNode((context, environmentExecutionSettings) -> {
-            MinecraftServer server = context.getSource().getServer();
-            String name = StringArgumentType.getString(context, "agent");
-            @Nullable Future<GoNorthEnvironment> environment1 = GoNorthEnvironment.makeAndConnect(name, server);
-            return trainEnvironment(environmentExecutionSettings, environment1);
-        });
         var fightEnemy = literal("enemy")
-                .requires(source -> source.hasPermissionLevel(4))
                 .build();
         var fightEnemyAgent = argument("agent", StringArgumentType.word())
-                .requires(source -> source.hasPermissionLevel(4))
                 .build();
-        var fightEnemyEntityType = argument("entityType", RegistryEntryReferenceArgumentType.registryEntry(registryAccess, RegistryKeys.ENTITY_TYPE))
-                .requires(source -> source.hasPermissionLevel(4))
+        var fightEnemyType = argument("entityType", RegistryEntryReferenceArgumentType.registryEntry(registryAccess, RegistryKeys.ENTITY_TYPE))
+                .executes(context -> {
+                    //noinspection unchecked It's a command, let it fail
+                    EntityType<? extends MobEntity> entityType = Objects.requireNonNull((EntityType<? extends MobEntity>) Registries.ENTITY_TYPE.get(RegistryEntryReferenceArgumentType.getEntityType(context, "entityType").registryKey()));
+                    @Nullable Future<FightEnemyEnvironment> environment1 = FightEnemyEnvironment.makeAndConnect(StringArgumentType.getString(context, "agent"), context.getSource().getServer(), entityType);
+                    return trainEnvironment(((EnvironmentExecutionSettingsBuilder) context.getSource()).rlmc$build(), environment1);
+                })
                 .build();
-        var fightEnemyTrain = literal("train")
+        var goNorth = literal("goNorth")
                 .build();
-        var fightEnemyTrainSettings = makeTrainingSettingsNode(((context, environmentExecutionSettings) -> {
-            //noinspection unchecked It's a command, let it fail
-            EntityType<? extends MobEntity> entityType = Objects.requireNonNull((EntityType<? extends MobEntity>) Registries.ENTITY_TYPE.get(RegistryEntryReferenceArgumentType.getEntityType(context, "entityType").registryKey()));
-            @Nullable Future<FightEnemyEnvironment> environment1 = FightEnemyEnvironment.makeAndConnect(StringArgumentType.getString(context, "agent"), context.getSource().getServer(), entityType);
-            return trainEnvironment(environmentExecutionSettings, environment1);
-        }));
-        var fightEnemyEvaluate = literal("evaluate")
+        var goNorthAgent = argument("agent", StringArgumentType.word())
+                .executes((context) -> {
+                    MinecraftServer server = context.getSource().getServer();
+                    String name = StringArgumentType.getString(context, "agent");
+                    @Nullable Future<GoNorthEnvironment> environment1 = GoNorthEnvironment.makeAndConnect(name, server);
+                    return trainEnvironment(((EnvironmentExecutionSettingsBuilder) context.getSource()).rlmc$build(), environment1);
+                })
                 .build();
-        var fightEnemyEvaluateSettings = makeEvaluationSettingsNode((context, environmentExecutionSettings) -> {
-            //noinspection unchecked It's a command, let it fail
-            EntityType<? extends MobEntity> entityType = Objects.requireNonNull((EntityType<? extends MobEntity>) Registries.ENTITY_TYPE.get(RegistryEntryReferenceArgumentType.getEntityType(context, "entityType").registryKey()));
-            @Nullable Future<FightEnemyEnvironment> environment1 = FightEnemyEnvironment.makeAndConnect(StringArgumentType.getString(context, "agent"), context.getSource().getServer(), entityType);
-            return evaluateEnvironment(context.getSource(), environment1, environmentExecutionSettings);
-        });
 
 
         // spotless:off
         //@formatter:off
         // /environment <environment> <environment-specific settings> <mode> <mode-specific settings>
         appendTrainSkybridge(environment);
-        environment.addChild(fightEnemy);
-            fightEnemy.addChild(fightEnemyAgent);
-                fightEnemyAgent.addChild(fightEnemyEntityType);
-                    fightEnemyEntityType.addChild(fightEnemyTrain);
-                        fightEnemyTrain.addChild(fightEnemyTrainSettings);
-                    fightEnemyEntityType.addChild(fightEnemyEvaluate);
-                        fightEnemyEvaluate.addChild(fightEnemyEvaluateSettings);
-        environment.addChild(goNorth);
-            goNorth.addChild(goNorthAgent);
-                goNorthAgent.addChild(goNorthSettings);
+            var settings = withExecutionSettings(environment);
+                settings.addChild(fightEnemy);
+                    fightEnemy.addChild(fightEnemyAgent);
+                        fightEnemyAgent.addChild(fightEnemyType);
+                settings.addChild(goNorth);
+                    goNorth.addChild(goNorthAgent);
         //@formatter:on
         // spotless:on
 

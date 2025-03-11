@@ -3,7 +3,6 @@ package com.skycatdev.rlmc.command;
 
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.skycatdev.rlmc.EnvironmentExecutionSettings;
 import net.minecraft.server.command.ServerCommandSource;
 
 @FunctionalInterface
