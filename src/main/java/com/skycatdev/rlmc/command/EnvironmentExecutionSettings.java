@@ -76,6 +76,14 @@ public class EnvironmentExecutionSettings {
         return this;
     }
 
+    public @Nullable String getTensorboardLogPath() {
+        return tensorboardLogPath;
+    }
+
+    public boolean isTraining() {
+        return training;
+    }
+
     public EnvironmentExecutionSettings setEntCoef(double entCoef) {
         algorithmArgs.put("ent_coef", entCoef);
         return this;

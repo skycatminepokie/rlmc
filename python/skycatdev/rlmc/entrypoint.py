@@ -113,11 +113,16 @@ class Entrypoint(object):
         return f"Mean: {mean}, Std: {std}"
 
     # noinspection PyPep8Naming
-    def trainKwargs(self, environment: JavaObject, training_settings: JavaObject):
+    def runKwargs(self, environment: JavaObject, training_settings: JavaObject):
         save_path: str | None = training_settings.getSavePath()
         load_path: str | None = training_settings.getLoadPath()
         episodes: int = training_settings.getEpisodes()
         tensorboard_log_name: str | None = training_settings.getTensorboardLogName()
+        tensorboard_path: str = (
+            training_settings.getTensorboardLogPath()
+            if not None
+            else "./tensorboard_log/"
+        )
         kwargs_map: JavaMap = training_settings.getAlgorithmArgs()
         kwargs = dict(kwargs_map)
         algorithm_str: str = training_settings.getAlgorithm()
@@ -128,14 +133,14 @@ class Entrypoint(object):
                 algorithm = A2C.load(
                     load_path,
                     self.envs[environment],
-                    tensorboard_log="./tensorboard_log/",
+                    tensorboard_log=tensorboard_path,
                     kwargs=kwargs,
                 )
             elif algorithm_str == "PPO":
                 algorithm = PPO.load(
                     load_path,
                     self.envs[environment],
-                    tensorboard_log="./tensorboard_log/",
+                    tensorboard_log=tensorboard_path,
                     kwargs=kwargs,
                 )
             else:
@@ -146,14 +151,14 @@ class Entrypoint(object):
                 algorithm = A2C(
                     "MultiInputPolicy",
                     self.envs[environment],
-                    tensorboard_log="./tensorboard_log/",
+                    tensorboard_log=tensorboard_path,
                     **kwargs,
                 )
             elif algorithm_str == "PPO":
                 algorithm = PPO(
                     "MultiInputPolicy",
                     self.envs[environment],
-                    tensorboard_log="./tensorboard_log/",
+                    tensorboard_log=tensorboard_path,
                     **kwargs,
                 )
             else:

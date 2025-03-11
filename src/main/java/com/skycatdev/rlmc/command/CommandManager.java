@@ -99,7 +99,7 @@ public class CommandManager implements CommandRegistrationCallback {
         }
         new Thread(() -> {
             try {
-                Rlmc.getPythonEntrypoint().trainKwargs(environment.get(), environmentExecutionSettings);
+                Rlmc.getPythonEntrypoint().runKwargs(environment.get(), environmentExecutionSettings);
             } catch (InterruptedException | ExecutionException e) {
                 Rlmc.LOGGER.error("Training environment had an error!", e);
             }
@@ -145,7 +145,7 @@ public class CommandManager implements CommandRegistrationCallback {
         var learningRateArg = argument("learningRate", DoubleArgumentType.doubleArg(0))
                 .redirect(base, context -> (ServerCommandSource) ((EnvironmentExecutionSettingsBuilder) context.getSource()).rlmc$setAlgorithmArg("learning_rate", DoubleArgumentType.getDouble(context, "learningRate")))
                 .build();
-        var with = literal("with")
+        var in = literal("in")
                 .build();
         //@formatter:off
         // spotless:off
@@ -163,10 +163,10 @@ public class CommandManager implements CommandRegistrationCallback {
             entCoef.addChild(entCoefArg);
         base.addChild(learningRate);
             learningRate.addChild(learningRateArg);
-        base.addChild(with);
+        base.addChild(in);
         // spotless:on
         //@formatter:on
-        return with;
+        return in;
     }
 
     private void appendTrainSkybridge(LiteralCommandNode<ServerCommandSource> create) {
