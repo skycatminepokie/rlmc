@@ -152,6 +152,11 @@ public class CommandManager implements CommandRegistrationCallback {
         var logNameArg = argument("logName", StringArgumentType.string())
                 .redirect(base, context -> (ServerCommandSource) ((EnvironmentExecutionSettingsBuilder) context.getSource()).rlmc$setTensorboardLog(StringArgumentType.getString(context, "logPath"), StringArgumentType.getString(context, "logName")))
                 .build();
+        var gamma = literal("gamma")
+                .build();
+        var gammaArg = argument("gamma", DoubleArgumentType.doubleArg(0))
+                .redirect(base, context -> (ServerCommandSource) ((EnvironmentExecutionSettingsBuilder)context.getSource()).rlmc$setGamma(DoubleArgumentType.getDouble(context, "gamma")))
+                .build();
         var in = literal("in")
                 .build();
         //@formatter:off
@@ -173,6 +178,8 @@ public class CommandManager implements CommandRegistrationCallback {
         base.addChild(logPath);
             logPath.addChild(logPathArg);
                 logPathArg.addChild(logNameArg);
+        base.addChild(gamma);
+            gamma.addChild(gammaArg);
         base.addChild(in);
         // spotless:on
         //@formatter:on
