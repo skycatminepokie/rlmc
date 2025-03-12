@@ -134,15 +134,15 @@ class Entrypoint(object):
                     load_path,
                     self.envs[environment],
                     tensorboard_log=tensorboard_path,
-                    kwargs=kwargs,
                 )
+                algorithm.set_parameters(kwargs)
             elif algorithm_str == "PPO":
                 algorithm = PPO.load(
                     load_path,
                     self.envs[environment],
                     tensorboard_log=tensorboard_path,
-                    kwargs=kwargs,
                 )
+                algorithm.set_parameters(kwargs)
             else:
                 warnings.warn("Tried to load algorithm with invalid name. Aborting.")
                 return
