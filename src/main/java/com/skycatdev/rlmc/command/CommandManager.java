@@ -145,6 +145,13 @@ public class CommandManager implements CommandRegistrationCallback {
         var learningRateArg = argument("learningRate", DoubleArgumentType.doubleArg(0))
                 .redirect(base, context -> (ServerCommandSource) ((EnvironmentExecutionSettingsBuilder) context.getSource()).rlmc$setAlgorithmArg("learning_rate", DoubleArgumentType.getDouble(context, "learningRate")))
                 .build();
+        var logPath = literal("log")
+                .build();
+        var logPathArg = argument("logPath", StringArgumentType.string())
+                .build();
+        var logNameArg = argument("logName", StringArgumentType.string())
+                .redirect(base, context -> (ServerCommandSource) ((EnvironmentExecutionSettingsBuilder) context.getSource()).rlmc$setTensorboardLog(StringArgumentType.getString(context, "logPath"), StringArgumentType.getString(context, "logName")))
+                .build();
         var in = literal("in")
                 .build();
         //@formatter:off
@@ -163,6 +170,9 @@ public class CommandManager implements CommandRegistrationCallback {
             entCoef.addChild(entCoefArg);
         base.addChild(learningRate);
             learningRate.addChild(learningRateArg);
+        base.addChild(logPath);
+            logPath.addChild(logPathArg);
+                logPathArg.addChild(logNameArg);
         base.addChild(in);
         // spotless:on
         //@formatter:on

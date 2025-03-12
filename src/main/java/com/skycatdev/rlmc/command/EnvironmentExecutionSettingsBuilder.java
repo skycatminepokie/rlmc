@@ -45,7 +45,7 @@ public interface EnvironmentExecutionSettingsBuilder {
     EnvironmentExecutionSettingsBuilder rlmc$setSavePath(String savePath);
 
     @Contract("_,_->this")
-    EnvironmentExecutionSettingsBuilder rlmc$setTensorboardLog(String logName, String logPath);
+    EnvironmentExecutionSettingsBuilder rlmc$setTensorboardLog(String logPath, String logName);
     default EnvironmentExecutionSettings rlmc$build() {
         return new EnvironmentExecutionSettings(rlmc$getEpisodesOrDefault(), rlmc$getAlgorithmOrDefault(), rlmc$getAlgorithmArgs(), rlmc$isTrainingOrDefault(), rlmc$getSavePath(), rlmc$getLoadPath(), rlmc$getTensorboardLogName(), rlmc$getTensorboardLogPath());
     }

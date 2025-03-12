@@ -109,7 +109,7 @@ public abstract class ServerCommandSourceMixin implements EnvironmentExecutionSe
     }
 
     @Override
-    public EnvironmentExecutionSettingsBuilder rlmc$setTensorboardLog(String logName, String logPath) {
+    public EnvironmentExecutionSettingsBuilder rlmc$setTensorboardLog(String logPath, String logName) {
         rlmc$tensorboardLogName = logName;
         rlmc$tensorboardLogPath = logPath;
         return this;
