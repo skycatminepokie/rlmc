@@ -121,8 +121,6 @@ class Entrypoint(object):
         tensorboard_path: str = (
             ees.getTensorboardLogPath() if not None else "./tensorboard_log/"
         )
-        kwargs_map: JavaMap = ees.getAlgorithmArgs()
-        kwargs = dict(kwargs_map)
         algorithm_str: str = ees.getAlgorithm()
         algorithm: OnPolicyAlgorithm
         load = load_path is not None
@@ -139,7 +137,6 @@ class Entrypoint(object):
                     self.envs[environment],
                     tensorboard_log=tensorboard_path,
                 )
-                algorithm.set_parameters(kwargs)
             else:
                 warnings.warn("Tried to load algorithm with invalid name. Aborting.")
                 return
