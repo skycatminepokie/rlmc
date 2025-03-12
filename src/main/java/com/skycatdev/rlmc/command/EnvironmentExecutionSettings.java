@@ -150,7 +150,7 @@ public class EnvironmentExecutionSettings {
         return this;
     }
 
-    public @Nullable Integer getnSteps() {
+    public @Nullable Integer getNSteps() {
         return nSteps;
     }
 
