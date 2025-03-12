@@ -19,29 +19,13 @@ public abstract class ServerCommandSourceMixin implements EnvironmentExecutionSe
     @Unique protected Map<String, Object> rlmc$algorithmArgs = new HashMap<>();
     @Unique protected int rlmc$episodes = 10_000;
     @Unique protected boolean rlmc$training = true;
-
-    @Override
-    public EnvironmentExecutionSettingsBuilder rlmc$setTraining() {
-        rlmc$training = true;
-        return this;
-    }
-
-    @Override
-    public EnvironmentExecutionSettingsBuilder rlmc$setEvaluating() {
-        rlmc$training = false;
-        return this;
-    }
-
-    @Override
-    public boolean rlmc$isTrainingOrDefault() {
-        return rlmc$training;
-    }
-
-    @Override
-    public EnvironmentExecutionSettingsBuilder rlmc$setAlgorithmArg(String key, Object value) {
-        rlmc$algorithmArgs.put(key, value);
-        return this;
-    }
+    @Unique @Nullable protected Double rlmc$maxGradNorm;
+    @Unique @Nullable protected Double rlmc$entCoef;
+    @Unique @Nullable protected Integer rlmc$nSteps;
+    @Unique @Nullable protected Double rlmc$gaeLambda;
+    @Unique @Nullable protected Double rlmc$learningRate;
+    @Unique @Nullable protected Double rlmc$gamma;
+    @Unique @Nullable protected Double rlmc$vfCoef;
 
     @Override
     public EnvironmentExecutionSettingsBuilder rlmc$clearAlgorithmArg(String key) {
@@ -50,13 +34,13 @@ public abstract class ServerCommandSourceMixin implements EnvironmentExecutionSe
     }
 
     @Override
-    public Map<String, Object> rlmc$getAlgorithmArgs() {
-        return rlmc$algorithmArgs;
+    public String rlmc$getAlgorithmOrDefault() {
+        return rlmc$algorithm == null ? "PPO" : rlmc$algorithm;
     }
 
     @Override
-    public String rlmc$getAlgorithmOrDefault() {
-        return rlmc$algorithm == null ? "PPO" : rlmc$algorithm;
+    public @Nullable Double rlmc$getEntCoef() {
+        return rlmc$entCoef;
     }
 
     @Override
@@ -65,8 +49,33 @@ public abstract class ServerCommandSourceMixin implements EnvironmentExecutionSe
     }
 
     @Override
+    public @Nullable Double rlmc$getGaeLambda() {
+        return rlmc$gaeLambda;
+    }
+
+    @Override
+    public @Nullable Double rlmc$getGamma() {
+        return rlmc$gamma;
+    }
+
+    @Override
+    public @Nullable Double rlmc$getLearningRate() {
+        return rlmc$learningRate;
+    }
+
+    @Override
     public @Nullable String rlmc$getLoadPath() {
         return rlmc$loadPath;
+    }
+
+    @Override
+    public @Nullable Double rlmc$getMaxGradNorm() {
+        return rlmc$maxGradNorm;
+    }
+
+    @Override
+    public @Nullable Integer rlmc$getNSteps() {
+        return rlmc$nSteps;
     }
 
     @Override
@@ -85,8 +94,30 @@ public abstract class ServerCommandSourceMixin implements EnvironmentExecutionSe
     }
 
     @Override
+    public @Nullable Double rlmc$getVfCoef() {
+        return rlmc$vfCoef;
+    }
+
+    @Override
+    public boolean rlmc$isTrainingOrDefault() {
+        return rlmc$training;
+    }
+
+    @Override
     public EnvironmentExecutionSettingsBuilder rlmc$setAlgorithm(String algorithm) {
         rlmc$algorithm = algorithm;
+        return this;
+    }
+
+    @Override
+    public EnvironmentExecutionSettingsBuilder rlmc$setAlgorithmArg(String key, Object value) {
+        rlmc$algorithmArgs.put(key, value);
+        return this;
+    }
+
+    @Override
+    public EnvironmentExecutionSettingsBuilder rlmc$setEntCoef(double entCoef) {
+        rlmc$entCoef = entCoef;
         return this;
     }
 
@@ -97,8 +128,44 @@ public abstract class ServerCommandSourceMixin implements EnvironmentExecutionSe
     }
 
     @Override
+    public EnvironmentExecutionSettingsBuilder rlmc$setEvaluating() {
+        rlmc$training = false;
+        return this;
+    }
+
+    @Override
+    public EnvironmentExecutionSettingsBuilder rlmc$setGaeLambda(double gaeLambda) {
+        rlmc$gaeLambda = gaeLambda;
+        return this;
+    }
+
+    @Override
+    public EnvironmentExecutionSettingsBuilder rlmc$setGamma(double gamma) {
+        rlmc$gamma = gamma;
+        return this;
+    }
+
+    @Override
+    public EnvironmentExecutionSettingsBuilder rlmc$setLearningRate(double learningRate) {
+        rlmc$learningRate = learningRate;
+        return this;
+    }
+
+    @Override
     public EnvironmentExecutionSettingsBuilder rlmc$setLoadPath(String loadPath) {
         rlmc$loadPath = loadPath;
+        return this;
+    }
+
+    @Override
+    public EnvironmentExecutionSettingsBuilder rlmc$setMaxGradNorm(double maxGradNorm) {
+        rlmc$maxGradNorm = maxGradNorm;
+        return this;
+    }
+
+    @Override
+    public EnvironmentExecutionSettingsBuilder rlmc$setNSteps(int nSteps) {
+        rlmc$nSteps = nSteps;
         return this;
     }
 
@@ -112,6 +179,18 @@ public abstract class ServerCommandSourceMixin implements EnvironmentExecutionSe
     public EnvironmentExecutionSettingsBuilder rlmc$setTensorboardLog(String logPath, String logName) {
         rlmc$tensorboardLogName = logName;
         rlmc$tensorboardLogPath = logPath;
+        return this;
+    }
+
+    @Override
+    public EnvironmentExecutionSettingsBuilder rlmc$setTraining() {
+        rlmc$training = true;
+        return this;
+    }
+
+    @Override
+    public EnvironmentExecutionSettingsBuilder rlmc$setVfCoef(double vfCoef) {
+        rlmc$vfCoef = vfCoef;
         return this;
     }
 }

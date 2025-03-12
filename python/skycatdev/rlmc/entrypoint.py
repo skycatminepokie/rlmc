@@ -113,19 +113,17 @@ class Entrypoint(object):
         return f"Mean: {mean}, Std: {std}"
 
     # noinspection PyPep8Naming
-    def runKwargs(self, environment: JavaObject, training_settings: JavaObject):
-        save_path: str | None = training_settings.getSavePath()
-        load_path: str | None = training_settings.getLoadPath()
-        episodes: int = training_settings.getEpisodes()
-        tensorboard_log_name: str | None = training_settings.getTensorboardLogName()
+    def runKwargs(self, environment: JavaObject, ees: JavaObject):
+        save_path: str | None = ees.getSavePath()
+        load_path: str | None = ees.getLoadPath()
+        episodes: int = ees.getEpisodes()
+        tensorboard_log_name: str | None = ees.getTensorboardLogName()
         tensorboard_path: str = (
-            training_settings.getTensorboardLogPath()
-            if not None
-            else "./tensorboard_log/"
+            ees.getTensorboardLogPath() if not None else "./tensorboard_log/"
         )
-        kwargs_map: JavaMap = training_settings.getAlgorithmArgs()
+        kwargs_map: JavaMap = ees.getAlgorithmArgs()
         kwargs = dict(kwargs_map)
-        algorithm_str: str = training_settings.getAlgorithm()
+        algorithm_str: str = ees.getAlgorithm()
         algorithm: OnPolicyAlgorithm
         load = load_path is not None
         if load:
@@ -135,7 +133,6 @@ class Entrypoint(object):
                     self.envs[environment],
                     tensorboard_log=tensorboard_path,
                 )
-                algorithm.set_parameters(kwargs)
             elif algorithm_str == "PPO":
                 algorithm = PPO.load(
                     load_path,
@@ -152,18 +149,32 @@ class Entrypoint(object):
                     "MultiInputPolicy",
                     self.envs[environment],
                     tensorboard_log=tensorboard_path,
-                    **kwargs,
                 )
             elif algorithm_str == "PPO":
                 algorithm = PPO(
                     "MultiInputPolicy",
                     self.envs[environment],
                     tensorboard_log=tensorboard_path,
-                    **kwargs,
                 )
             else:
                 warnings.warn("Tried to create algorithm with invalid name. Aborting.")
                 return
+        # load params
+        if ees.getGamma() is not None:
+            algorithm.gamma = ees.getGamma()
+        if ees.getEntCoef() is not None:
+            algorithm.ent_coef = ees.getEntCoef()
+        if ees.getGaeLambda() is not None:
+            algorithm.gae_lambda = ees.getGaeLambda()
+        if ees.getVfCoef() is not None:
+            algorithm.vf_coef = ees.getVfCoef()
+        if ees.getMaxGradNorm() is not None:
+            algorithm.max_grad_norm = ees.getMaxGradNorm()
+        if ees.getLearningRate() is not None:
+            algorithm.learning_rate = ees.getLearningRate()
+        if ees.getNSteps() is not None:
+            algorithm.n_steps = ees.getNSteps()
+
         if tensorboard_log_name is None:
             algorithm.learn(
                 episodes,

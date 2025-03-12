@@ -1,8 +1,6 @@
 /* Licensed MIT 2025 */
 package com.skycatdev.rlmc.command;
 
-import java.util.HashMap;
-import java.util.Map;
 import org.jetbrains.annotations.Nullable;
 
 public class EnvironmentExecutionSettings {
@@ -10,22 +8,44 @@ public class EnvironmentExecutionSettings {
     protected @Nullable String savePath;
     protected @Nullable String loadPath;
     protected @Nullable String tensorboardLogName;
-    protected Map<String, Object> algorithmArgs = new HashMap<>();
     protected String algorithm;
     protected boolean training;
     protected @Nullable String tensorboardLogPath;
+    protected @Nullable Double gamma;
+    protected @Nullable Double entCoef;
+    protected @Nullable Double gaeLambda;
+    protected @Nullable Double vfCoef;
+    protected @Nullable Double maxGradNorm;
+    protected @Nullable Double learningRate;
+    protected @Nullable Integer nSteps;
+
+    public EnvironmentExecutionSettings(int episodes, String algorithm, boolean training, @Nullable String savePath, @Nullable String loadPath, @Nullable String tensorboardLogName, @Nullable String tensorboardLogPath, @Nullable Double gamma, @Nullable Double entCoef, @Nullable Double learningRate, @Nullable Double gaeLambda, @Nullable Double vfCoef, @Nullable Double maxGradNorm, @Nullable Integer nSteps) {
+        this.episodes = episodes;
+        this.savePath = savePath;
+        this.loadPath = loadPath;
+        this.tensorboardLogName = tensorboardLogName;
+        this.algorithm = algorithm;
+        this.training = training;
+        this.tensorboardLogPath = tensorboardLogPath;
+        this.gamma = gamma;
+        this.entCoef = entCoef;
+        this.gaeLambda = gaeLambda;
+        this.vfCoef = vfCoef;
+        this.maxGradNorm = maxGradNorm;
+        this.learningRate = learningRate;
+        this.nSteps = nSteps;
+    }
 
     public EnvironmentExecutionSettings(int episodes, String algorithm) {
         this.episodes = episodes;
         this.algorithm = algorithm;
     }
 
-    public EnvironmentExecutionSettings(int episodes, String algorithm, Map<String, Object> algorithmArgs, boolean training, @Nullable String savePath, @Nullable String loadPath, @Nullable String tensorboardLogName, @Nullable String tensorboardLogPath) {
+    public EnvironmentExecutionSettings(int episodes, String algorithm, boolean training, @Nullable String savePath, @Nullable String loadPath, @Nullable String tensorboardLogName, @Nullable String tensorboardLogPath) {
         this.episodes = episodes;
         this.savePath = savePath;
         this.loadPath = loadPath;
         this.tensorboardLogName = tensorboardLogName;
-        this.algorithmArgs = algorithmArgs;
         this.algorithm = algorithm;
         this.training = training;
         this.tensorboardLogPath = tensorboardLogPath;
@@ -35,12 +55,44 @@ public class EnvironmentExecutionSettings {
         return algorithm;
     }
 
-    public Map<String, Object> getAlgorithmArgs() {
-        return algorithmArgs;
+    public @Nullable Double getEntCoef() {
+        return entCoef;
+    }
+
+    public EnvironmentExecutionSettings setEntCoef(double entCoef) {
+        this.entCoef = entCoef;
+        return this;
     }
 
     public int getEpisodes() {
         return episodes;
+    }
+
+    public @Nullable Double getGaeLambda() {
+        return gaeLambda;
+    }
+
+    public EnvironmentExecutionSettings setGaeLambda(double gaeLambda) {
+        this.gaeLambda = gaeLambda;
+        return this;
+    }
+
+    public @Nullable Double getGamma() {
+        return gamma;
+    }
+
+    public EnvironmentExecutionSettings setGamma(double gamma) {
+        this.gamma = gamma;
+        return this;
+    }
+
+    public @Nullable Double getLearningRate() {
+        return learningRate;
+    }
+
+    public EnvironmentExecutionSettings setLearningRate(double learningRate) {
+        this.learningRate = learningRate;
+        return this;
     }
 
     public @Nullable String getLoadPath() {
@@ -49,6 +101,15 @@ public class EnvironmentExecutionSettings {
 
     public EnvironmentExecutionSettings setLoadPath(String loadPath) {
         this.loadPath = loadPath;
+        return this;
+    }
+
+    public @Nullable Double getMaxGradNorm() {
+        return maxGradNorm;
+    }
+
+    public EnvironmentExecutionSettings setMaxGradNorm(double maxGradNorm) {
+        this.maxGradNorm = maxGradNorm;
         return this;
     }
 
@@ -80,42 +141,25 @@ public class EnvironmentExecutionSettings {
         return tensorboardLogPath;
     }
 
+    public @Nullable Double getVfCoef() {
+        return vfCoef;
+    }
+
+    public EnvironmentExecutionSettings setVfCoef(double vfCoef) {
+        this.vfCoef = vfCoef;
+        return this;
+    }
+
+    public @Nullable Integer getnSteps() {
+        return nSteps;
+    }
+
     public boolean isTraining() {
         return training;
     }
 
-    public EnvironmentExecutionSettings setEntCoef(double entCoef) {
-        algorithmArgs.put("ent_coef", entCoef);
-        return this;
-    }
-
-    public EnvironmentExecutionSettings setGaeLambda(double gaeLambda) {
-        algorithmArgs.put("gae_lambda", gaeLambda);
-        return this;
-    }
-
-    public EnvironmentExecutionSettings setGamma(double gamma) {
-        algorithmArgs.put("gamma", gamma);
-        return this;
-    }
-
-    public EnvironmentExecutionSettings setLearningRate(double learningRate) {
-        algorithmArgs.put("learning_rate", learningRate);
-        return this;
-    }
-
-    public EnvironmentExecutionSettings setMaxGradNorm(double maxGradNorm) {
-        algorithmArgs.put("max_grad_norm", maxGradNorm);
-        return this;
-    }
-
     public EnvironmentExecutionSettings setNSteps(int nSteps) {
-        algorithmArgs.put("n_steps", nSteps);
-        return this;
-    }
-
-    public EnvironmentExecutionSettings setVfCoef(double vfCoef) {
-        algorithmArgs.put("vf_coef", vfCoef);
+        this.nSteps = nSteps;
         return this;
     }
 

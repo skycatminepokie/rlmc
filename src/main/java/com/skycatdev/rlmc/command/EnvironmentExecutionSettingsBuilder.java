@@ -1,24 +1,34 @@
 /* Licensed MIT 2025 */
 package com.skycatdev.rlmc.command;
 
-import java.util.Map;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
 public interface EnvironmentExecutionSettingsBuilder {
-    @Contract("_,_->this")
-    EnvironmentExecutionSettingsBuilder rlmc$setAlgorithmArg(String key, Object value);
+    default EnvironmentExecutionSettings rlmc$build() {
+        return new EnvironmentExecutionSettings(rlmc$getEpisodesOrDefault(), rlmc$getAlgorithmOrDefault(), rlmc$isTrainingOrDefault(), rlmc$getSavePath(), rlmc$getLoadPath(), rlmc$getTensorboardLogName(), rlmc$getTensorboardLogPath(), rlmc$getGamma(), rlmc$getEntCoef(), rlmc$getLearningRate(), rlmc$getGaeLambda(), rlmc$getVfCoef(), rlmc$getMaxGradNorm(), rlmc$getNSteps());
+    }
 
     @Contract("_->this")
     EnvironmentExecutionSettingsBuilder rlmc$clearAlgorithmArg(String key);
 
-    Map<String, Object> rlmc$getAlgorithmArgs();
-
     String rlmc$getAlgorithmOrDefault();
+
+    @Nullable Double rlmc$getEntCoef();
 
     int rlmc$getEpisodesOrDefault();
 
+    @Nullable Double rlmc$getGaeLambda();
+
+    @Nullable Double rlmc$getGamma();
+
+    @Nullable Double rlmc$getLearningRate();
+
     @Nullable String rlmc$getLoadPath();
+
+    @Nullable Double rlmc$getMaxGradNorm();
+
+    @Nullable Integer rlmc$getNSteps();
 
     @Nullable String rlmc$getSavePath();
 
@@ -32,28 +42,55 @@ public interface EnvironmentExecutionSettingsBuilder {
      */
     @Nullable String rlmc$getTensorboardLogPath();
 
+    @Nullable Double rlmc$getVfCoef();
+
+    /**
+     * @return {@code true} if in training mode, {@code false} if in evaluation mode
+     */
+    boolean rlmc$isTrainingOrDefault();
+
     @Contract("_->this")
     EnvironmentExecutionSettingsBuilder rlmc$setAlgorithm(String algorithm);
+
+    @Contract("_,_->this")
+    EnvironmentExecutionSettingsBuilder rlmc$setAlgorithmArg(String key, Object value);
+
+    @Contract("_->this")
+    EnvironmentExecutionSettingsBuilder rlmc$setEntCoef(double entCoef);
 
     @Contract("_->this")
     EnvironmentExecutionSettingsBuilder rlmc$setEpisodes(int episodes);
 
+    @Contract("->this")
+    EnvironmentExecutionSettingsBuilder rlmc$setEvaluating();
+
+    @Contract("_->this")
+    EnvironmentExecutionSettingsBuilder rlmc$setGaeLambda(double gaeLambda);
+
+    @Contract("_->this")
+    EnvironmentExecutionSettingsBuilder rlmc$setGamma(double gamma);
+
+    @Contract("_->this")
+    EnvironmentExecutionSettingsBuilder rlmc$setLearningRate(double learningRate);
+
     @Contract("_->this")
     EnvironmentExecutionSettingsBuilder rlmc$setLoadPath(String loadPath);
+
+    @Contract("_->this")
+    EnvironmentExecutionSettingsBuilder rlmc$setMaxGradNorm(double maxGradNorm);
+
+    @Contract("_->this")
+    EnvironmentExecutionSettingsBuilder rlmc$setNSteps(int nSteps);
 
     @Contract("_->this")
     EnvironmentExecutionSettingsBuilder rlmc$setSavePath(String savePath);
 
     @Contract("_,_->this")
     EnvironmentExecutionSettingsBuilder rlmc$setTensorboardLog(String logPath, String logName);
-    default EnvironmentExecutionSettings rlmc$build() {
-        return new EnvironmentExecutionSettings(rlmc$getEpisodesOrDefault(), rlmc$getAlgorithmOrDefault(), rlmc$getAlgorithmArgs(), rlmc$isTrainingOrDefault(), rlmc$getSavePath(), rlmc$getLoadPath(), rlmc$getTensorboardLogName(), rlmc$getTensorboardLogPath());
-    }
-    EnvironmentExecutionSettingsBuilder rlmc$setTraining();
-    EnvironmentExecutionSettingsBuilder rlmc$setEvaluating();
 
-    /**
-     * @return {@code true} if in training mode, {@code false} if in evaluation mode
-     */
-    boolean rlmc$isTrainingOrDefault();
+    @Contract("->this")
+    EnvironmentExecutionSettingsBuilder rlmc$setTraining();
+
+    @Contract("_->this")
+    EnvironmentExecutionSettingsBuilder rlmc$setVfCoef(double vfCoef);
 }

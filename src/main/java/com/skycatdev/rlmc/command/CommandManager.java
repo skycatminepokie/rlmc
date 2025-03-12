@@ -138,12 +138,12 @@ public class CommandManager implements CommandRegistrationCallback {
         var entCoef = literal("entCoef")
                 .build();
         var entCoefArg = argument("entCoef", DoubleArgumentType.doubleArg(0))
-                .redirect(base, context -> (ServerCommandSource) ((EnvironmentExecutionSettingsBuilder) context.getSource()).rlmc$setAlgorithmArg("ent_coef", DoubleArgumentType.getDouble(context, "entCoef")))
+                .redirect(base, context -> (ServerCommandSource) ((EnvironmentExecutionSettingsBuilder) context.getSource()).rlmc$setEntCoef(DoubleArgumentType.getDouble(context, "entCoef")))
                 .build();
         var learningRate = literal("learningRate")
                 .build();
         var learningRateArg = argument("learningRate", DoubleArgumentType.doubleArg(0))
-                .redirect(base, context -> (ServerCommandSource) ((EnvironmentExecutionSettingsBuilder) context.getSource()).rlmc$setAlgorithmArg("learning_rate", DoubleArgumentType.getDouble(context, "learningRate")))
+                .redirect(base, context -> (ServerCommandSource) ((EnvironmentExecutionSettingsBuilder) context.getSource()).rlmc$setLearningRate(DoubleArgumentType.getDouble(context, "learningRate")))
                 .build();
         var logPath = literal("log")
                 .build();
