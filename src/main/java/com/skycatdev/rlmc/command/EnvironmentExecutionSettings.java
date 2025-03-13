@@ -18,8 +18,9 @@ public class EnvironmentExecutionSettings {
     protected @Nullable Double maxGradNorm;
     protected @Nullable Double learningRate;
     protected @Nullable Integer nSteps;
+    protected Integer @Nullable [] netArch;
 
-    public EnvironmentExecutionSettings(int episodes, String algorithm, boolean training, @Nullable String savePath, @Nullable String loadPath, @Nullable String tensorboardLogName, @Nullable String tensorboardLogPath, @Nullable Double gamma, @Nullable Double entCoef, @Nullable Double learningRate, @Nullable Double gaeLambda, @Nullable Double vfCoef, @Nullable Double maxGradNorm, @Nullable Integer nSteps) {
+    public EnvironmentExecutionSettings(int episodes, String algorithm, boolean training, @Nullable String savePath, @Nullable String loadPath, @Nullable String tensorboardLogName, @Nullable String tensorboardLogPath, @Nullable Double gamma, @Nullable Double entCoef, @Nullable Double learningRate, @Nullable Double gaeLambda, @Nullable Double vfCoef, @Nullable Double maxGradNorm, @Nullable Integer nSteps, Integer @Nullable [] netArch) {
         this.episodes = episodes;
         this.savePath = savePath;
         this.loadPath = loadPath;
@@ -34,6 +35,7 @@ public class EnvironmentExecutionSettings {
         this.maxGradNorm = maxGradNorm;
         this.learningRate = learningRate;
         this.nSteps = nSteps;
+        this.netArch = netArch;
     }
 
     public EnvironmentExecutionSettings(int episodes, String algorithm) {
@@ -51,10 +53,12 @@ public class EnvironmentExecutionSettings {
         this.tensorboardLogPath = tensorboardLogPath;
     }
 
+    @SuppressWarnings("unused") // Used by entrypoint.py
     public String getAlgorithm() {
         return algorithm;
     }
 
+    @SuppressWarnings("unused") // Used by entrypoint.py
     public @Nullable Double getEntCoef() {
         return entCoef;
     }
@@ -68,6 +72,7 @@ public class EnvironmentExecutionSettings {
         return episodes;
     }
 
+    @SuppressWarnings("unused") // Used by entrypoint.py
     public @Nullable Double getGaeLambda() {
         return gaeLambda;
     }
@@ -77,6 +82,7 @@ public class EnvironmentExecutionSettings {
         return this;
     }
 
+    @SuppressWarnings("unused") // Used by entrypoint.py
     public @Nullable Double getGamma() {
         return gamma;
     }
@@ -86,6 +92,7 @@ public class EnvironmentExecutionSettings {
         return this;
     }
 
+    @SuppressWarnings("unused") // Used by entrypoint.py
     public @Nullable Double getLearningRate() {
         return learningRate;
     }
@@ -104,6 +111,7 @@ public class EnvironmentExecutionSettings {
         return this;
     }
 
+    @SuppressWarnings("unused") // Used by entrypoint.py
     public @Nullable Double getMaxGradNorm() {
         return maxGradNorm;
     }
@@ -113,6 +121,25 @@ public class EnvironmentExecutionSettings {
         return this;
     }
 
+    @SuppressWarnings("unused") // Used by entrypoint.py
+    public @Nullable Integer getNSteps() {
+        return nSteps;
+    }
+
+    public EnvironmentExecutionSettings setNSteps(int nSteps) {
+        this.nSteps = nSteps;
+        return this;
+    }
+
+    public Integer @Nullable [] getNetArch() {
+        return netArch;
+    }
+
+    public void setNetArch(Integer @Nullable [] netArch) {
+        this.netArch = netArch;
+    }
+
+    @SuppressWarnings("unused") // Used by entrypoint.py
     public @Nullable String getSavePath() {
         return savePath;
     }
@@ -122,6 +149,7 @@ public class EnvironmentExecutionSettings {
         return this;
     }
 
+    @SuppressWarnings("unused") // Used by entrypoint.py
     public @Nullable String getTensorboardLogName() {
         if (tensorboardLogName != null) {
             return tensorboardLogName;
@@ -137,10 +165,12 @@ public class EnvironmentExecutionSettings {
         return this;
     }
 
+    @SuppressWarnings("unused") // Used by entrypoint.py
     public @Nullable String getTensorboardLogPath() {
         return tensorboardLogPath;
     }
 
+    @SuppressWarnings("unused") // Used by entrypoint.py
     public @Nullable Double getVfCoef() {
         return vfCoef;
     }
@@ -150,18 +180,9 @@ public class EnvironmentExecutionSettings {
         return this;
     }
 
-    public @Nullable Integer getNSteps() {
-        return nSteps;
-    }
-
+    @SuppressWarnings("unused") // Used by entrypoint.py
     public boolean isTraining() {
         return training;
     }
-
-    public EnvironmentExecutionSettings setNSteps(int nSteps) {
-        this.nSteps = nSteps;
-        return this;
-    }
-
 
 }

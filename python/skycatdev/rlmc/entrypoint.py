@@ -1,11 +1,13 @@
 import logging
 import string
 import sys
+import typing
+from typing import Any
 import warnings
 from typing import override
 
 from gymnasium.wrappers import TimeLimit
-from py4j.java_collections import JavaMap
+from py4j.java_collections import JavaMap, JavaArray
 from py4j.java_gateway import JavaGateway, JavaObject, server_connection_started
 from stable_baselines3 import PPO, A2C
 from stable_baselines3.common.callbacks import BaseCallback
@@ -124,18 +126,24 @@ class Entrypoint(object):
         algorithm_str: str = ees.getAlgorithm()
         algorithm: OnPolicyAlgorithm
         load = load_path is not None
+        net_arch: JavaArray | None = ees.getNetArch()
+        policy_kwargs: dict[str, Any] = {}
+        if net_arch is not None:
+            policy_kwargs["net_arch"] = list(net_arch)
         if load:
             if algorithm_str == "A2C":
                 algorithm = A2C.load(
                     load_path,
                     self.envs[environment],
                     tensorboard_log=tensorboard_path,
+                    policy_kwargs=policy_kwargs,
                 )
             elif algorithm_str == "PPO":
                 algorithm = PPO.load(
                     load_path,
                     self.envs[environment],
                     tensorboard_log=tensorboard_path,
+                    policy_kwargs=policy_kwargs,
                 )
             else:
                 warnings.warn("Tried to load algorithm with invalid name. Aborting.")
@@ -146,12 +154,14 @@ class Entrypoint(object):
                     "MultiInputPolicy",
                     self.envs[environment],
                     tensorboard_log=tensorboard_path,
+                    policy_kwargs=policy_kwargs,
                 )
             elif algorithm_str == "PPO":
                 algorithm = PPO(
                     "MultiInputPolicy",
                     self.envs[environment],
                     tensorboard_log=tensorboard_path,
+                    policy_kwargs=policy_kwargs,
                 )
             else:
                 warnings.warn("Tried to create algorithm with invalid name. Aborting.")
@@ -172,7 +182,6 @@ class Entrypoint(object):
         if ees.getNSteps() is not None:
             algorithm.n_steps = ees.getNSteps()
 
-        # TODO options for net_arch https://stable-baselines3.readthedocs.io/en/master/guide/custom_policy.html
         if ees.isTraining():
             if tensorboard_log_name is None:
                 algorithm.learn(

@@ -3,6 +3,8 @@ package com.skycatdev.rlmc.mixin;
 
 import com.skycatdev.rlmc.command.EnvironmentExecutionSettingsBuilder;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import net.minecraft.server.command.ServerCommandSource;
 import org.jetbrains.annotations.Nullable;
@@ -26,6 +28,7 @@ public abstract class ServerCommandSourceMixin implements EnvironmentExecutionSe
     @Unique @Nullable protected Double rlmc$learningRate;
     @Unique @Nullable protected Double rlmc$gamma;
     @Unique @Nullable protected Double rlmc$vfCoef;
+    @Unique protected List<Integer> rlmc$netArch = new LinkedList<>();
 
     @Override
     public EnvironmentExecutionSettingsBuilder rlmc$clearAlgorithmArg(String key) {
@@ -192,5 +195,13 @@ public abstract class ServerCommandSourceMixin implements EnvironmentExecutionSe
     public EnvironmentExecutionSettingsBuilder rlmc$setVfCoef(double vfCoef) {
         rlmc$vfCoef = vfCoef;
         return this;
+    }
+
+    @Override
+    public Integer @Nullable [] rlmc$getNetArch() {
+        if (rlmc$netArch.isEmpty()) {
+            return null;
+        }
+        return rlmc$netArch.toArray(Integer[]::new);
     }
 }

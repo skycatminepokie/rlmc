@@ -5,8 +5,11 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
 public interface EnvironmentExecutionSettingsBuilder {
+    @Contract("_->this")
+    EnvironmentExecutionSettingsBuilder rlmc$addNetLayer(int neurons);
+
     default EnvironmentExecutionSettings rlmc$build() {
-        return new EnvironmentExecutionSettings(rlmc$getEpisodesOrDefault(), rlmc$getAlgorithmOrDefault(), rlmc$isTrainingOrDefault(), rlmc$getSavePath(), rlmc$getLoadPath(), rlmc$getTensorboardLogName(), rlmc$getTensorboardLogPath(), rlmc$getGamma(), rlmc$getEntCoef(), rlmc$getLearningRate(), rlmc$getGaeLambda(), rlmc$getVfCoef(), rlmc$getMaxGradNorm(), rlmc$getNSteps());
+        return new EnvironmentExecutionSettings(rlmc$getEpisodesOrDefault(), rlmc$getAlgorithmOrDefault(), rlmc$isTrainingOrDefault(), rlmc$getSavePath(), rlmc$getLoadPath(), rlmc$getTensorboardLogName(), rlmc$getTensorboardLogPath(), rlmc$getGamma(), rlmc$getEntCoef(), rlmc$getLearningRate(), rlmc$getGaeLambda(), rlmc$getVfCoef(), rlmc$getMaxGradNorm(), rlmc$getNSteps(), rlmc$getNetArch());
     }
 
     @Contract("_->this")
@@ -29,6 +32,8 @@ public interface EnvironmentExecutionSettingsBuilder {
     @Nullable Double rlmc$getMaxGradNorm();
 
     @Nullable Integer rlmc$getNSteps();
+
+    Integer @Nullable [] rlmc$getNetArch();
 
     @Nullable String rlmc$getSavePath();
 
