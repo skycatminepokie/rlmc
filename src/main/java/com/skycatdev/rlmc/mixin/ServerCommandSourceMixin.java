@@ -204,4 +204,16 @@ public abstract class ServerCommandSourceMixin implements EnvironmentExecutionSe
         }
         return rlmc$netArch.toArray(Integer[]::new);
     }
+
+    @Override
+    public EnvironmentExecutionSettingsBuilder rlmc$addNetLayer(int neurons) {
+        rlmc$netArch.add(neurons);
+        return this;
+    }
+
+    @Override
+    public EnvironmentExecutionSettingsBuilder rlmc$clearNetArch() {
+        rlmc$netArch.clear();
+        return this;
+    }
 }

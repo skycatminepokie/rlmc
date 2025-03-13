@@ -157,6 +157,19 @@ public class CommandManager implements CommandRegistrationCallback {
         var gammaArg = argument("gamma", DoubleArgumentType.doubleArg(0))
                 .redirect(base, context -> (ServerCommandSource) ((EnvironmentExecutionSettingsBuilder)context.getSource()).rlmc$setGamma(DoubleArgumentType.getDouble(context, "gamma")))
                 .build();
+        var netArch = literal("netArch")
+                .build();
+        var netArchBuild = literal("build")
+                .build();
+        var layer = argument("layer", IntegerArgumentType.integer(0))
+                .redirect(netArchBuild, context -> (ServerCommandSource) ((EnvironmentExecutionSettingsBuilder)context.getSource()).rlmc$addNetLayer(IntegerArgumentType.getInteger(context, "layer")))
+                .build();
+        var netArchDone = literal("done")
+                .redirect(base)
+                .build();
+        var netArchDefault = literal("default")
+                .redirect(base, context -> (ServerCommandSource) ((EnvironmentExecutionSettingsBuilder)context.getSource()).rlmc$clearNetArch())
+                .build();
         var in = literal("in")
                 .build();
         //@formatter:off
@@ -180,6 +193,11 @@ public class CommandManager implements CommandRegistrationCallback {
                 logPathArg.addChild(logNameArg);
         base.addChild(gamma);
             gamma.addChild(gammaArg);
+        base.addChild(netArch);
+            netArch.addChild(netArchBuild);
+                netArchBuild.addChild(layer);
+                netArchBuild.addChild(netArchDone);
+            netArch.addChild(netArchDefault);
         base.addChild(in);
         // spotless:on
         //@formatter:on

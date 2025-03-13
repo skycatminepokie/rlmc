@@ -15,6 +15,9 @@ public interface EnvironmentExecutionSettingsBuilder {
     @Contract("_->this")
     EnvironmentExecutionSettingsBuilder rlmc$clearAlgorithmArg(String key);
 
+    @Contract("->this")
+    EnvironmentExecutionSettingsBuilder rlmc$clearNetArch();
+
     String rlmc$getAlgorithmOrDefault();
 
     @Nullable Double rlmc$getEntCoef();
