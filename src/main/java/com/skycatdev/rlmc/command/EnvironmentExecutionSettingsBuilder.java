@@ -9,7 +9,7 @@ public interface EnvironmentExecutionSettingsBuilder {
     EnvironmentExecutionSettingsBuilder rlmc$addNetLayer(int neurons);
 
     default EnvironmentExecutionSettings rlmc$build() {
-        return new EnvironmentExecutionSettings(rlmc$getEpisodesOrDefault(), rlmc$getAlgorithmOrDefault(), rlmc$isTrainingOrDefault(), rlmc$getSavePath(), rlmc$getLoadPath(), rlmc$getTensorboardLogName(), rlmc$getTensorboardLogPath(), rlmc$getGamma(), rlmc$getEntCoef(), rlmc$getLearningRate(), rlmc$getGaeLambda(), rlmc$getVfCoef(), rlmc$getMaxGradNorm(), rlmc$getNSteps(), rlmc$getNetArch());
+        return new EnvironmentExecutionSettings(rlmc$getEpisodesOrDefault(), rlmc$getAlgorithmOrDefault(), rlmc$isTrainingOrDefault(), rlmc$getSavePath(), rlmc$getLoadPath(), rlmc$getTensorboardLogName(), rlmc$getTensorboardLogPath(), rlmc$getGamma(), rlmc$getEntCoef(), rlmc$getLearningRate(), rlmc$getGaeLambda(), rlmc$getVfCoef(), rlmc$getMaxGradNorm(), rlmc$getNSteps(), rlmc$getNetArch(), rlmc$getBatchSize());
     }
 
     @Contract("_->this")
@@ -19,6 +19,8 @@ public interface EnvironmentExecutionSettingsBuilder {
     EnvironmentExecutionSettingsBuilder rlmc$clearNetArch();
 
     String rlmc$getAlgorithmOrDefault();
+
+    @Nullable Integer rlmc$getBatchSize();
 
     @Nullable Double rlmc$getEntCoef();
 
@@ -62,6 +64,9 @@ public interface EnvironmentExecutionSettingsBuilder {
 
     @Contract("_,_->this")
     EnvironmentExecutionSettingsBuilder rlmc$setAlgorithmArg(String key, Object value);
+
+    @Contract("_->this")
+    EnvironmentExecutionSettingsBuilder rlmc$setBatchSize(int batchSize);
 
     @Contract("_->this")
     EnvironmentExecutionSettingsBuilder rlmc$setEntCoef(double entCoef);

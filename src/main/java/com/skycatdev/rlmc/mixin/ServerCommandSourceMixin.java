@@ -29,6 +29,13 @@ public abstract class ServerCommandSourceMixin implements EnvironmentExecutionSe
     @Unique @Nullable protected Double rlmc$gamma;
     @Unique @Nullable protected Double rlmc$vfCoef;
     @Unique protected List<Integer> rlmc$netArch = new LinkedList<>();
+    @Unique @Nullable protected Integer rlmc$batchSize;
+
+    @Override
+    public EnvironmentExecutionSettingsBuilder rlmc$addNetLayer(int neurons) {
+        rlmc$netArch.add(neurons);
+        return this;
+    }
 
     @Override
     public EnvironmentExecutionSettingsBuilder rlmc$clearAlgorithmArg(String key) {
@@ -37,8 +44,19 @@ public abstract class ServerCommandSourceMixin implements EnvironmentExecutionSe
     }
 
     @Override
+    public EnvironmentExecutionSettingsBuilder rlmc$clearNetArch() {
+        rlmc$netArch.clear();
+        return this;
+    }
+
+    @Override
     public String rlmc$getAlgorithmOrDefault() {
         return rlmc$algorithm == null ? "PPO" : rlmc$algorithm;
+    }
+
+    @Override
+    public @Nullable Integer rlmc$getBatchSize() {
+        return rlmc$batchSize;
     }
 
     @Override
@@ -82,6 +100,14 @@ public abstract class ServerCommandSourceMixin implements EnvironmentExecutionSe
     }
 
     @Override
+    public Integer @Nullable [] rlmc$getNetArch() {
+        if (rlmc$netArch.isEmpty()) {
+            return null;
+        }
+        return rlmc$netArch.toArray(Integer[]::new);
+    }
+
+    @Override
     public @Nullable String rlmc$getSavePath() {
         return rlmc$savePath;
     }
@@ -115,6 +141,12 @@ public abstract class ServerCommandSourceMixin implements EnvironmentExecutionSe
     @Override
     public EnvironmentExecutionSettingsBuilder rlmc$setAlgorithmArg(String key, Object value) {
         rlmc$algorithmArgs.put(key, value);
+        return this;
+    }
+
+    @Override
+    public EnvironmentExecutionSettingsBuilder rlmc$setBatchSize(int batchSize) {
+        rlmc$batchSize = batchSize;
         return this;
     }
 
@@ -194,26 +226,6 @@ public abstract class ServerCommandSourceMixin implements EnvironmentExecutionSe
     @Override
     public EnvironmentExecutionSettingsBuilder rlmc$setVfCoef(double vfCoef) {
         rlmc$vfCoef = vfCoef;
-        return this;
-    }
-
-    @Override
-    public Integer @Nullable [] rlmc$getNetArch() {
-        if (rlmc$netArch.isEmpty()) {
-            return null;
-        }
-        return rlmc$netArch.toArray(Integer[]::new);
-    }
-
-    @Override
-    public EnvironmentExecutionSettingsBuilder rlmc$addNetLayer(int neurons) {
-        rlmc$netArch.add(neurons);
-        return this;
-    }
-
-    @Override
-    public EnvironmentExecutionSettingsBuilder rlmc$clearNetArch() {
-        rlmc$netArch.clear();
         return this;
     }
 }

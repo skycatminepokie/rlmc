@@ -170,6 +170,11 @@ public class CommandManager implements CommandRegistrationCallback {
         var netArchDefault = literal("default")
                 .redirect(base, context -> (ServerCommandSource) ((EnvironmentExecutionSettingsBuilder)context.getSource()).rlmc$clearNetArch())
                 .build();
+        var batchSize = literal("batchSize")
+                .build();
+        var batchSizeArg = argument("batchSize", IntegerArgumentType.integer(1))
+                .redirect(base, context -> (ServerCommandSource) ((EnvironmentExecutionSettingsBuilder)context.getSource()).rlmc$setBatchSize(IntegerArgumentType.getInteger(context, "batchSize")))
+                .build();
         var in = literal("in")
                 .build();
         //@formatter:off
@@ -198,6 +203,8 @@ public class CommandManager implements CommandRegistrationCallback {
                 netArchBuild.addChild(layer);
                 netArchBuild.addChild(netArchDone);
             netArch.addChild(netArchDefault);
+        base.addChild(batchSize);
+            batchSize.addChild(batchSizeArg);
         base.addChild(in);
         // spotless:on
         //@formatter:on

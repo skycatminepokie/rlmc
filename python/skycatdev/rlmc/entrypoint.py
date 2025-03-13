@@ -162,6 +162,7 @@ class Entrypoint(object):
                     self.envs[environment],
                     tensorboard_log=tensorboard_path,
                     policy_kwargs=policy_kwargs,
+                    batch_size=ees.getBatchSize() if not None else 64,
                 )
             else:
                 warnings.warn("Tried to create algorithm with invalid name. Aborting.")

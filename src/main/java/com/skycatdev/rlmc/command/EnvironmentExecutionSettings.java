@@ -19,8 +19,9 @@ public class EnvironmentExecutionSettings {
     protected @Nullable Double learningRate;
     protected @Nullable Integer nSteps;
     protected Integer @Nullable [] netArch;
+    protected @Nullable Integer batchSize;
 
-    public EnvironmentExecutionSettings(int episodes, String algorithm, boolean training, @Nullable String savePath, @Nullable String loadPath, @Nullable String tensorboardLogName, @Nullable String tensorboardLogPath, @Nullable Double gamma, @Nullable Double entCoef, @Nullable Double learningRate, @Nullable Double gaeLambda, @Nullable Double vfCoef, @Nullable Double maxGradNorm, @Nullable Integer nSteps, Integer @Nullable [] netArch) {
+    public EnvironmentExecutionSettings(int episodes, String algorithm, boolean training, @Nullable String savePath, @Nullable String loadPath, @Nullable String tensorboardLogName, @Nullable String tensorboardLogPath, @Nullable Double gamma, @Nullable Double entCoef, @Nullable Double learningRate, @Nullable Double gaeLambda, @Nullable Double vfCoef, @Nullable Double maxGradNorm, @Nullable Integer nSteps, Integer @Nullable [] netArch, @Nullable Integer batchSize) {
         this.episodes = episodes;
         this.savePath = savePath;
         this.loadPath = loadPath;
@@ -36,6 +37,7 @@ public class EnvironmentExecutionSettings {
         this.learningRate = learningRate;
         this.nSteps = nSteps;
         this.netArch = netArch;
+        this.batchSize = batchSize;
     }
 
     public EnvironmentExecutionSettings(int episodes, String algorithm) {
@@ -56,6 +58,14 @@ public class EnvironmentExecutionSettings {
     @SuppressWarnings("unused") // Used by entrypoint.py
     public String getAlgorithm() {
         return algorithm;
+    }
+
+    public @Nullable Integer getBatchSize() {
+        return batchSize;
+    }
+
+    public void setBatchSize(@Nullable Integer batchSize) {
+        this.batchSize = batchSize;
     }
 
     @SuppressWarnings("unused") // Used by entrypoint.py
