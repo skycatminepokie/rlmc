@@ -40,7 +40,7 @@ class HParamCallback(
             hparam_dict["entropy coefficient"] = self.model.ent_coef
             hparam_dict["gamma"] = self.model.gamma
             if "net_arch" in self.model.policy_kwargs:
-                hparam_dict["net_arch"] = self.model.policy_kwargs["net_arch"]
+                hparam_dict["net_arch"] = str(self.model.policy_kwargs["net_arch"])
         # define the metrics that will appear in the `HPARAMS` Tensorboard tab by referencing their tag
         # Tensorboard will find & display metrics from the `SCALARS` tab
         metric_dict = {
