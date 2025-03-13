@@ -1,13 +1,12 @@
 import logging
 import string
 import sys
-import typing
-from typing import Any
 import warnings
+from typing import Any
 from typing import override
 
 from gymnasium.wrappers import TimeLimit
-from py4j.java_collections import JavaMap, JavaArray
+from py4j.java_collections import JavaArray
 from py4j.java_gateway import JavaGateway, JavaObject, server_connection_started
 from stable_baselines3 import PPO, A2C
 from stable_baselines3.common.callbacks import BaseCallback
@@ -36,6 +35,7 @@ class HParamCallback(
         hparam_dict = {
             "algorithm": self.model.__class__.__name__,
             "learning rate": self.model.learning_rate,
+            "net_arch": self.model.policy_kwargs["net_arch"],
         }
         if isinstance(self.model, OnPolicyAlgorithm):
             hparam_dict["entropy coefficient"] = self.model.ent_coef
@@ -231,6 +231,7 @@ class Log4jHandler(logging.Handler):
 
 
 class Log4jStream:
+    # noinspection PyMethodMayBeStatic
     def write(self, message):
         message = message.strip()
         if message:
