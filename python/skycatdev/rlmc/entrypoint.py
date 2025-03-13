@@ -172,19 +172,23 @@ class Entrypoint(object):
         if ees.getNSteps() is not None:
             algorithm.n_steps = ees.getNSteps()
 
-        if tensorboard_log_name is None:
-            algorithm.learn(
-                episodes,
-                callback=HParamCallback(),
-                reset_num_timesteps=not load,
-            )
+        # TODO options for net_arch https://stable-baselines3.readthedocs.io/en/master/guide/custom_policy.html
+        if ees.isTraining():
+            if tensorboard_log_name is None:
+                algorithm.learn(
+                    episodes,
+                    callback=HParamCallback(),
+                    reset_num_timesteps=not load,
+                )
+            else:
+                algorithm.learn(
+                    episodes,
+                    tb_log_name=tensorboard_log_name,
+                    callback=HParamCallback(),
+                    reset_num_timesteps=not load,
+                )
         else:
-            algorithm.learn(
-                episodes,
-                tb_log_name=tensorboard_log_name,
-                callback=HParamCallback(),
-                reset_num_timesteps=not load,
-            )
+            evaluate_policy(algorithm, self.envs[environment], n_eval_episodes=episodes)
 
         if save_path is not None:
             algorithm.save(save_path)
