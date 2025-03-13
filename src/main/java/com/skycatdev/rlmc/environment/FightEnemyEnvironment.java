@@ -41,11 +41,16 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvi
         this.structure = structure;
     }
 
-    public static @Nullable Future<FightEnemyEnvironment> makeAndConnect(String agentName, MinecraftServer server, EntityType<? extends MobEntity> entityType) {
+    public static @Nullable Future<FightEnemyEnvironment> makeAndConnect(String agentName, MinecraftServer server, EntityType<? extends MobEntity> entityType, @Nullable Identifier structure) {
         @Nullable CompletableFuture<ServerPlayerEntity> agentFuture = createPlayerAgent(agentName, server, Vec3d.ZERO, server.getOverworld().getRegistryKey());
         if (agentFuture != null) {
             Function<ServerPlayerEntity, FightEnemyEnvironment> environmentFuture = agent -> {
-                FightEnemyEnvironment environment = new FightEnemyEnvironment(agent, entityType, Identifier.of(Rlmc.MOD_ID, "fight_enemy_box"));
+                FightEnemyEnvironment environment;
+                if (structure != null) {
+                    environment = new FightEnemyEnvironment(agent, entityType, structure);
+                } else {
+                    environment = new FightEnemyEnvironment(agent, entityType);
+                }
                 Rlmc.addEnvironment(environment);
                 Rlmc.getPythonEntrypoint().connectEnvironment("fight_enemy", environment);
                 return environment;

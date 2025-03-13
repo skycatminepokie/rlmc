@@ -24,6 +24,7 @@ import net.minecraft.command.CommandSource;
 import net.minecraft.command.argument.BlockPosArgumentType;
 import net.minecraft.command.argument.GameProfileArgumentType;
 import net.minecraft.command.argument.RegistryEntryReferenceArgumentType;
+import net.minecraft.command.argument.RegistryKeyArgumentType;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.registry.Registries;
@@ -252,7 +253,16 @@ public class CommandManager implements CommandRegistrationCallback {
                 .executes(context -> {
                     //noinspection unchecked It's a command, let it fail
                     EntityType<? extends MobEntity> entityType = Objects.requireNonNull((EntityType<? extends MobEntity>) Registries.ENTITY_TYPE.get(RegistryEntryReferenceArgumentType.getEntityType(context, "entityType").registryKey()));
-                    @Nullable Future<FightEnemyEnvironment> environment1 = FightEnemyEnvironment.makeAndConnect(StringArgumentType.getString(context, "agent"), context.getSource().getServer(), entityType);
+                    @Nullable Future<FightEnemyEnvironment> environment1 = FightEnemyEnvironment.makeAndConnect(StringArgumentType.getString(context, "agent"), context.getSource().getServer(), entityType, null);
+                    return trainEnvironment(((EnvironmentExecutionSettingsBuilder) context.getSource()).rlmc$build(), environment1);
+                })
+                .build();
+        var fightEnemyStructure = argument("structure", RegistryKeyArgumentType.registryKey(RegistryKeys.STRUCTURE))
+                .executes(context -> {
+                    //noinspection unchecked It's a command, let it fail
+                    EntityType<? extends MobEntity> entityType = Objects.requireNonNull((EntityType<? extends MobEntity>) Registries.ENTITY_TYPE.get(RegistryEntryReferenceArgumentType.getEntityType(context, "entityType").registryKey()));
+                    //noinspection OptionalGetWithoutIsPresent
+                    @Nullable Future<FightEnemyEnvironment> environment1 = FightEnemyEnvironment.makeAndConnect(StringArgumentType.getString(context, "agent"), context.getSource().getServer(), entityType, RegistryKeyArgumentType.getStructureEntry(context, "structure").getKey().get().getValue());
                     return trainEnvironment(((EnvironmentExecutionSettingsBuilder) context.getSource()).rlmc$build(), environment1);
                 })
                 .build();
@@ -276,6 +286,7 @@ public class CommandManager implements CommandRegistrationCallback {
                 settings.addChild(fightEnemy);
                     fightEnemy.addChild(fightEnemyAgent);
                         fightEnemyAgent.addChild(fightEnemyType);
+                            fightEnemyAgent.addChild(fightEnemyStructure);
                 settings.addChild(goNorth);
                     goNorth.addChild(goNorthAgent);
         //@formatter:on
