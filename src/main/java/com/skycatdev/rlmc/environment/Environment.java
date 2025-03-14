@@ -25,6 +25,7 @@ import org.jetbrains.annotations.Nullable;
 public abstract class Environment<A, O> {
     private final Object[] initializedLock = new Object[]{};
     private final Object[] closedLock = new Object[]{};
+    private final Object[] pausedLock = new Object[]{};
     /**
      * Queue of things to do around a tick. Left is before tick, right is after tick. Left will always be finished before right.
      */
@@ -41,6 +42,7 @@ public abstract class Environment<A, O> {
      * True when {@link Environment#close()} has been called at least once. Synchronize on {@link Environment#closedLock} first.
      */
     private boolean closed;
+    private boolean paused;
 
     @SuppressWarnings("unused") // Used by java_environment_wrapper.py
     public void close() {
@@ -74,6 +76,18 @@ public abstract class Environment<A, O> {
      * @return A pair of tasks. The first will be executed before the tick, the second will be executed after the tick. These should be blocking.
      */
     protected abstract Pair<@Nullable FutureTask<?>, FutureTask<StepTuple<O>>> innerStep(A action);
+
+    public boolean isPaused() {
+        synchronized (pausedLock) {
+            return paused;
+        }
+    }
+
+    public void pause() {
+        synchronized (pausedLock) {
+            paused = true;
+        }
+    }
 
     /**
      * Tasks to be done after a tick. Usually should not be overridden.
@@ -111,17 +125,6 @@ public abstract class Environment<A, O> {
         }
     }
 
-    protected boolean shouldRunPreTick() {
-        boolean shouldRun;
-        synchronized (initializedLock) {
-            shouldRun = this.initialized;
-        }
-        synchronized (closedLock) {
-            shouldRun = shouldRun && !this.closed;
-        }
-        return shouldRun;
-    }
-
     /**
      * Called to request a reset. Usually should not be overridden. Blocking.
      *
@@ -132,6 +135,7 @@ public abstract class Environment<A, O> {
      */
     @SuppressWarnings("unused") // Used by java_environment_wrapper.py
     public ResetTuple<O> reset(@Nullable Integer seed, @Nullable Map<String, Object> options) {
+        unpause();
         FutureTask<ResetTuple<O>> resetTask = new FutureTask<>(() -> innerReset(seed, options));
         try {
             synchronized (initializedLock) {
@@ -144,6 +148,20 @@ public abstract class Environment<A, O> {
         }
     }
 
+    protected boolean shouldRunPreTick() {
+        boolean shouldRun;
+        synchronized (initializedLock) {
+            shouldRun = initialized;
+        }
+        synchronized (closedLock) {
+            shouldRun = shouldRun && !closed;
+        }
+        synchronized (pausedLock) {
+            shouldRun = shouldRun && !paused;
+        }
+        return shouldRun;
+    }
+
     /**
      * Call request a step. Usually should not be overridden. Blocking.
      *
@@ -153,6 +171,7 @@ public abstract class Environment<A, O> {
      */
     @SuppressWarnings("unused") // Used by java_environment_wrapper.py
     public StepTuple<O> step(A action) {
+        unpause();
         Pair<@Nullable FutureTask<?>, FutureTask<StepTuple<O>>> innerStep = innerStep(action);
         FutureTask<StepTuple<O>> right = innerStep.getRight();
         Pair<FutureTask<?>, FutureTask<?>> castedInnerStep = new Pair<>(innerStep.getLeft() == null ? new FutureTask<>(() -> false) : innerStep.getLeft(), right);
@@ -162,6 +181,12 @@ public abstract class Environment<A, O> {
             return right.get();
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public void unpause() {
+        synchronized (pausedLock) {
+            paused = false;
         }
     }
 }
