@@ -174,4 +174,9 @@ public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> e
         assert (agent == this.agent);
         justKilled = true;
     }
+
+    @Override
+    public boolean isIn(ServerWorld world) {
+        return world.equals(getWorld());
+    }
 }

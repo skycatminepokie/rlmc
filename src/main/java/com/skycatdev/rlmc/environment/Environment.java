@@ -8,6 +8,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.TimeUnit;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Pair;
 import org.jetbrains.annotations.Nullable;
 
@@ -42,6 +43,10 @@ public abstract class Environment<A, O> {
      * True when {@link Environment#close()} has been called at least once. Synchronize on {@link Environment#closedLock} first.
      */
     private boolean closed;
+    /**
+     * True when {@link Environment#pause()} has been called more recently than either {@link Environment#step} or {@link Environment#reset(Integer, Map)}.
+     * Synchronize on {@link Environment#pausedLock} first.
+     */
     private boolean paused;
 
     @SuppressWarnings("unused") // Used by java_environment_wrapper.py
@@ -109,7 +114,7 @@ public abstract class Environment<A, O> {
      * @see Environment#innerReset(Integer, Map)
      */
     public void preTick() {
-        if (shouldRunPreTick()) {
+        if (shouldTick()) {
             try {
                 @Nullable var tasks = queue.poll(10, TimeUnit.HOURS); // TODO: Wait time is for debug.
                 if (tasks == null) {
@@ -148,7 +153,7 @@ public abstract class Environment<A, O> {
         }
     }
 
-    protected boolean shouldRunPreTick() {
+    public boolean shouldTick() {
         boolean shouldRun;
         synchronized (initializedLock) {
             shouldRun = initialized;
@@ -183,6 +188,8 @@ public abstract class Environment<A, O> {
             throw new RuntimeException(e);
         }
     }
+
+    public abstract boolean isIn(ServerWorld world);
 
     public void unpause() {
         synchronized (pausedLock) {

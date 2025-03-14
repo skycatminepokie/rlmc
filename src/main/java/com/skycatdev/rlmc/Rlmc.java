@@ -28,9 +28,6 @@ public class Rlmc implements ModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
     public static final Logger PYTHON_LOGGER = LoggerFactory.getLogger(MOD_ID + "_python");
     private static final GatewayServer GATEWAY_SERVER = new GatewayServer();
-    /**
-     * Synchronize on this before iterating!
-     */
     private static final List<Environment<?, ?>> ENVIRONMENTS = new CopyOnWriteArrayList<>();
     private static @Nullable BiMap<EntityType<?>, Integer> ENTITY_TYPE_MAP = null;
     private static @Nullable BiMap<Item, Integer> ITEM_MAP = null;
@@ -46,6 +43,10 @@ public class Rlmc implements ModInitializer {
 
     public static void forEachEnvironment(Consumer<? super Environment<?, ?>> consumer) {
         ENVIRONMENTS.forEach(consumer);
+    }
+
+    public static List<Environment<?, ?>> getEnvironments() {
+        return ENVIRONMENTS;
     }
 
     @SuppressWarnings("unused") // Used by block_hit_result.py

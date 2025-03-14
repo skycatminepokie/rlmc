@@ -121,9 +121,7 @@ class Entrypoint(object):
         load_path: str | None = ees.getLoadPath()
         episodes: int = ees.getEpisodes()
         tensorboard_log_name: str | None = ees.getTensorboardLogName()
-        tensorboard_path: str = (
-            ees.getTensorboardLogPath() if not None else "./tensorboard_log/"
-        )
+        tensorboard_path: str = ees.getTensorboardLogPath() or "./tensorboard_log/"
         algorithm_str: str = ees.getAlgorithm()
         algorithm: OnPolicyAlgorithm
         load = load_path is not None
@@ -163,7 +161,7 @@ class Entrypoint(object):
                     self.envs[environment],
                     tensorboard_log=tensorboard_path,
                     policy_kwargs=policy_kwargs,
-                    batch_size=ees.getBatchSize() if not None else 64,
+                    batch_size=ees.getBatchSize() or 64,
                 )
             else:
                 warnings.warn("Tried to create algorithm with invalid name. Aborting.")
