@@ -190,7 +190,7 @@ class Entrypoint(object):
 
         if ees.isTraining():
             eval_callback = EvalCallback(
-                eval_env=self.envs[environment].makeAnother().get(),
+                eval_env=self.envs[environment.makeAnother().get()],
                 best_model_save_path="./logs/best_model/",
                 log_path="./logs/",
                 eval_freq=5_000,
