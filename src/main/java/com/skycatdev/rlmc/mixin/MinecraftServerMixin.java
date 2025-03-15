@@ -19,12 +19,12 @@ public abstract class MinecraftServerMixin {
 
     @Inject(method = "tick", at = @At("HEAD"))
     protected void rlmc$preTick(BooleanSupplier shouldKeepTicking, CallbackInfo ci) {
-        Rlmc.forEachEnvironment(Environment::preTick);
+        //Rlmc.forEachEnvironment(Environment::preTick);
     }
 
     @Inject(method = "tick", at = @At("RETURN"))
     protected void rlmc$postTick(BooleanSupplier shouldKeepTicking, CallbackInfo ci) {
-        Rlmc.forEachEnvironment(Environment::postTick);
+        //Rlmc.forEachEnvironment(Environment::postTick);
     }
 
     @WrapOperation(method = "tickWorlds", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;tick(Ljava/util/function/BooleanSupplier;)V"))
@@ -32,6 +32,7 @@ public abstract class MinecraftServerMixin {
         List<Environment<?, ?>> envs = Rlmc.getEnvironments().stream().filter(env -> env.isIn(instance)).toList();
         boolean readyToTick = envs.stream().allMatch(Environment::shouldTick);
         if (readyToTick) {
+            envs.forEach(Environment::preTick);
             original.call(instance, shouldKeepTicking);
             envs.forEach(Environment::postTick);
         }

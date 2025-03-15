@@ -177,6 +177,6 @@ public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> e
 
     @Override
     public boolean isIn(ServerWorld world) {
-        return world.equals(getWorld());
+        return world.equals(getWorld()) || world.equals(agent.getWorld()); // Second condition is hack for starting the first reset
     }
 }
