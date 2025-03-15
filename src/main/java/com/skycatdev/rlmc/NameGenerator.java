@@ -20,6 +20,7 @@ public class NameGenerator {
     }
 
     public synchronized static String newPlayerName(List<ServerPlayerEntity> playersOnline) {
+        Rlmc.LOGGER.debug("Generating new player name");
         List<String> onlineNames = playersOnline.stream()
                 .map(player -> player.getGameProfile().getName())
                 .toList();
@@ -30,6 +31,8 @@ public class NameGenerator {
                 USED_NAMES.add(name);
             }
         }
+        USED_NAMES.add(name);
+        Rlmc.LOGGER.debug("New player name: {}", name);
         return name;
     }
 

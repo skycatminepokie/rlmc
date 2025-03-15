@@ -34,6 +34,10 @@ public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> e
     protected FutureActionPack.History history;
     protected boolean justKilled;
     @Nullable protected RuntimeWorldHandle worldHandle;
+    /**
+     * True if {@link Environment#innerReset} has been called at least once.
+     */
+    private boolean running;
 
     public BasicPlayerEnvironment(ServerPlayerEntity agent, Supplier<Float> initialHealth, Supplier<Integer> initialFoodLevel, int xRaycasts, int yRaycasts) {
         this.agent = agent;
@@ -43,6 +47,7 @@ public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> e
         this.yRaycasts = yRaycasts;
         this.history = new FutureActionPack.History();
         this.justKilled = false;
+        this.running = false;
         ((PlayerAgentCandidate) agent).rlmc$markAsAgent();
         ((PlayerAgentCandidate) agent).rlmc$setKilledTrigger(this::onAgentKilled);
     }
@@ -138,6 +143,7 @@ public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> e
 
     @Override
     protected ResetTuple<O> innerReset(@Nullable Integer seed, @Nullable Map<String, Object> options) {
+        running = true;
         innerPreReset(seed, options);
         history = new FutureActionPack.History();
         agent.teleport(getWorld(), getStartPos().getX(), getStartPos().getY(), getStartPos().getZ(), Set.of(), 0, 0);
@@ -177,6 +183,6 @@ public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> e
 
     @Override
     public boolean isIn(ServerWorld world) {
-        return world.equals(getWorld()) || world.equals(agent.getWorld()); // Second condition is hack for starting the first reset
+        return world.equals(getWorld()) || (!running && shouldTick()); // Second condition is a hack to get the first reset done
     }
 }

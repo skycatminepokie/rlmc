@@ -193,7 +193,7 @@ class Entrypoint(object):
                 eval_env=self.envs[environment.makeAnother().get()],
                 best_model_save_path="./logs/best_model/",
                 log_path="./logs/",
-                eval_freq=5_000,
+                eval_freq=10,  # TODO DEBUG
                 deterministic=True,
                 callback_on_new_best=StopTrainingOnRewardThreshold(0.75),
                 callback_after_eval=StopTrainingOnNoModelImprovement(3, 5),

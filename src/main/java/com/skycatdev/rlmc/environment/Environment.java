@@ -113,7 +113,7 @@ public abstract class Environment<A, O> {
     public void preTick() {
         if (shouldTick()) {
             try {
-                @Nullable var tasks = queue.poll(10, TimeUnit.HOURS); // TODO: Wait time is for debug.
+                @Nullable var tasks = queue.poll(1, TimeUnit.MINUTES); // TODO Wait time is for debug, it probably shouldn't be this long
                 if (tasks == null) {
                     throw new EnvironmentException("Expected non-null tasks, got null. This could be because Python shut down.");
                 }
@@ -137,6 +137,7 @@ public abstract class Environment<A, O> {
      */
     @SuppressWarnings("unused") // Used by java_environment_wrapper.py
     public ResetTuple<O> reset(@Nullable Integer seed, @Nullable Map<String, Object> options) {
+        Rlmc.LOGGER.debug("Resetting environment (reset phase)");
         unpause();
         FutureTask<ResetTuple<O>> resetTask = new FutureTask<>(() -> innerReset(seed, options));
         try {
