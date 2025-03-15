@@ -136,6 +136,7 @@ public abstract class Environment<A, O> {
                         assert resetOpt.isPresent() : "Sanity check failed - left was gone but so was right?"; // Guess I'm insane
                         postTick = resetOpt.get();
                     }
+                    task = null;
                 }
             }
         }
