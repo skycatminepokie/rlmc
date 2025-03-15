@@ -30,7 +30,7 @@ public abstract class MinecraftServerMixin {
     @WrapOperation(method = "tickWorlds", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;tick(Ljava/util/function/BooleanSupplier;)V"))
     protected void rlmc$tickWorld(ServerWorld instance, BooleanSupplier shouldKeepTicking, Operation<Void> original) {
         List<Environment<?, ?>> envs = Rlmc.getEnvironments().stream().filter(env -> env.isIn(instance)).toList();
-        boolean readyToTick = envs.stream().allMatch(Environment::shouldTick);
+        boolean readyToTick = envs.stream().allMatch(Environment::waitingForTick);
         if (readyToTick) {
             envs.forEach(Environment::preTick);
             original.call(instance, shouldKeepTicking);
