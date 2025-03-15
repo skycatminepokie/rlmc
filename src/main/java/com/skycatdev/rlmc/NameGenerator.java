@@ -24,13 +24,13 @@ public class NameGenerator {
         List<String> onlineNames = playersOnline.stream()
                 .map(player -> player.getGameProfile().getName())
                 .toList();
-        String name = "Alex";
-        while (USED_NAMES.contains(name)) {
+        String name;
+        do {
             name = getRandom(PREFIXES) + getRandom(SUFFIXES);
             if (onlineNames.contains(name)) {
                 USED_NAMES.add(name);
             }
-        }
+        } while (USED_NAMES.contains(name));
         USED_NAMES.add(name);
         Rlmc.LOGGER.debug("New player name: {}", name);
         return name;
