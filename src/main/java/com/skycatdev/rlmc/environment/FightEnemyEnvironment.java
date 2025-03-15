@@ -1,6 +1,7 @@
 /* Licensed MIT 2025 */
 package com.skycatdev.rlmc.environment;
 
+import com.skycatdev.rlmc.NameGenerator;
 import com.skycatdev.rlmc.Rlmc;
 import com.skycatdev.rlmc.SpreadEntitiesHelper;
 import java.util.*;
@@ -64,6 +65,11 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvi
     public void close() {
         super.close();
         Objects.requireNonNull(worldHandle).delete();
+    }
+
+    @Override
+    public Future<? extends Environment<FutureActionPack, Observation>> makeAnother() {
+        return Objects.requireNonNull(makeAndConnect(NameGenerator.newPlayerName(getWorld().getServer().getPlayerManager().getPlayerList()), getWorld().getServer(), enemyType, structure));
     }
 
     @Override

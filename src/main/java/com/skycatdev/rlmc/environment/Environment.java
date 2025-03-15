@@ -4,10 +4,7 @@ package com.skycatdev.rlmc.environment;
 import com.skycatdev.rlmc.Rlmc;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Pair;
 import org.jetbrains.annotations.Nullable;
@@ -196,4 +193,10 @@ public abstract class Environment<A, O> {
             paused = false;
         }
     }
+
+    /**
+     * Make another environment with compatible settings. For example, a player name may need to be different, but an entity type might be the same.
+     * This is used for making vectorized environments.
+     */
+    public abstract Future<? extends Environment<A, O>> makeAnother();
 }

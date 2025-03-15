@@ -1,9 +1,11 @@
 /* Licensed MIT 2025 */
 package com.skycatdev.rlmc.environment;
 
+import com.skycatdev.rlmc.NameGenerator;
 import com.skycatdev.rlmc.Rlmc;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.function.Function;
@@ -71,5 +73,10 @@ public class GoNorthEnvironment extends BasicPlayerEnvironment<BasicPlayerObserv
     @Override
     protected void innerPreReset(@Nullable Integer seed, @Nullable Map<String, Object> options) {
 
+    }
+
+    @Override
+    public Future<? extends Environment<FutureActionPack, BasicPlayerObservation>> makeAnother() {
+        return Objects.requireNonNull(makeAndConnect(NameGenerator.newPlayerName(getWorld().getServer().getPlayerManager().getPlayerList()), getWorld().getServer()));
     }
 }
