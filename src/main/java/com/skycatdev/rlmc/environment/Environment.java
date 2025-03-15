@@ -114,7 +114,7 @@ public abstract class Environment<A, O> {
         if (shouldTick()) {
             Rlmc.LOGGER.debug("Preparing to pre-tick environment \"{}\"", getUniqueEnvName());
             try {
-                @Nullable var tasks = queue.poll(1, TimeUnit.MINUTES); // TODO Wait time is for debug, it probably shouldn't be this long
+                @Nullable var tasks = queue.poll(10, TimeUnit.MINUTES); // TODO Wait time is for debug, it probably shouldn't be this long
                 if (tasks == null) {
                     throw new EnvironmentException("Expected non-null tasks, got null. This could be because Python shut down.");
                 }
