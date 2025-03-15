@@ -3,6 +3,7 @@ package com.skycatdev.rlmc.environment;
 
 import carpet.fakes.ServerPlayerInterface;
 import carpet.patches.EntityPlayerMPFake;
+import com.skycatdev.rlmc.Rlmc;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.FutureTask;
@@ -125,6 +126,7 @@ public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> e
     @SuppressWarnings("unused") // Used by wrapped_basic_player_environment.py
     protected ServerWorld getWorld() {
         if (worldHandle == null) {
+            Rlmc.LOGGER.debug("Creating world for basic player env \"{}\"", getUniqueEnvName());
             worldHandle = Fantasy.get(Objects.requireNonNull(agent.getServer())).openTemporaryWorld(new RuntimeWorldConfig()
                     .setDimensionType(DimensionTypes.OVERWORLD)
                     .setDifficulty(Difficulty.HARD)
@@ -132,6 +134,7 @@ public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> e
                     .setGenerator(Objects.requireNonNull(agent.getServer()).getOverworld().getChunkManager().getChunkGenerator())
                     .setSeed(new Random().nextLong()));
             worldHandle.asWorld().setTimeOfDay(24000L);
+            Rlmc.LOGGER.debug("Created world for basic player env \"{}\"", getUniqueEnvName());
         }
         return worldHandle.asWorld();
     };
@@ -144,7 +147,9 @@ public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> e
     @Override
     protected ResetTuple<O> innerReset(@Nullable Integer seed, @Nullable Map<String, Object> options) {
         running = true;
+        Rlmc.LOGGER.debug("Running innerPreReset for basic player env \"{}\"", getUniqueEnvName());
         innerPreReset(seed, options);
+        Rlmc.LOGGER.debug("Finished running innerPreReset for basic player env \"{}\"", getUniqueEnvName());
         history = new FutureActionPack.History();
         agent.teleport(getWorld(), getStartPos().getX(), getStartPos().getY(), getStartPos().getZ(), Set.of(), 0, 0);
         agent.setHealth(initialHealth.get());
@@ -184,5 +189,10 @@ public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> e
     @Override
     public boolean isIn(ServerWorld world) {
         return world.equals(getWorld()) || (!running && shouldTick()); // Second condition is a hack to get the first reset done
+    }
+
+    @Override
+    public String getUniqueEnvName() {
+        return agent.getName().getString();
     }
 }

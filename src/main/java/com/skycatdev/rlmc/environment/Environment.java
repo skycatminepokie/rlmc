@@ -112,14 +112,19 @@ public abstract class Environment<A, O> {
      */
     public void preTick() {
         if (shouldTick()) {
+            Rlmc.LOGGER.debug("Preparing to pre-tick environment \"{}\"", getUniqueEnvName());
             try {
                 @Nullable var tasks = queue.poll(1, TimeUnit.MINUTES); // TODO Wait time is for debug, it probably shouldn't be this long
                 if (tasks == null) {
                     throw new EnvironmentException("Expected non-null tasks, got null. This could be because Python shut down.");
                 }
                 postTick = tasks.getRight();
+                Rlmc.LOGGER.debug("Pre-ticking environment \"{}\"", getUniqueEnvName());
                 if (tasks.getLeft() != null) {
                     tasks.getLeft().run();
+                    Rlmc.LOGGER.debug("Pre-ticked environment \"{}\"", getUniqueEnvName());
+                } else {
+                    Rlmc.LOGGER.debug("Skipping pre-tick for environment \"{}\", task was null.", getUniqueEnvName());
                 }
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
@@ -137,19 +142,29 @@ public abstract class Environment<A, O> {
      */
     @SuppressWarnings("unused") // Used by java_environment_wrapper.py
     public ResetTuple<O> reset(@Nullable Integer seed, @Nullable Map<String, Object> options) {
-        Rlmc.LOGGER.debug("Resetting environment (reset phase)");
+        Rlmc.LOGGER.debug("Resetting environment \"{}\" (reset called)", getUniqueEnvName());
         unpause();
-        FutureTask<ResetTuple<O>> resetTask = new FutureTask<>(() -> innerReset(seed, options));
+        FutureTask<ResetTuple<O>> resetTask = new FutureTask<>(() -> {
+            Rlmc.LOGGER.debug("Resetting environment \"{}\" (innerReset called)", getUniqueEnvName());
+            return innerReset(seed, options);
+        });
         try {
             synchronized (initializedLock) {
                 initialized = true;
             }
+            Rlmc.LOGGER.debug("Environment \"{}\" marked as initialized. Waiting for reset.", getUniqueEnvName());
             queue.put(new Pair<>(resetTask, null));
+            Rlmc.LOGGER.debug("Environment \"{}\" reset received, returning.", getUniqueEnvName());
             return resetTask.get();
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
     }
+
+    /**
+     * Used for logging. Should be reasonably unique, but human-readable. May be called many times, please don't make this computation-heavy.
+     */
+    public abstract String getUniqueEnvName();
 
     public boolean shouldTick() {
         boolean shouldRun;
@@ -166,7 +181,7 @@ public abstract class Environment<A, O> {
     }
 
     /**
-     * Call request a step. Usually should not be overridden. Blocking.
+     * Request a step. Usually should not be overridden. Blocking.
      *
      * @param action The action to take during the step.
      * @return Step information.
@@ -176,12 +191,13 @@ public abstract class Environment<A, O> {
     public StepTuple<O> step(A action) {
         unpause();
         Pair<@Nullable FutureTask<?>, FutureTask<StepTuple<O>>> innerStep = innerStep(action);
-        FutureTask<StepTuple<O>> right = innerStep.getRight();
-        Pair<FutureTask<?>, FutureTask<?>> castedInnerStep = new Pair<>(innerStep.getLeft() == null ? new FutureTask<>(() -> false) : innerStep.getLeft(), right);
+        FutureTask<StepTuple<O>> postTick = innerStep.getRight();
+        Pair<FutureTask<?>, FutureTask<?>> castedInnerStep = new Pair<>(innerStep.getLeft() == null ? new FutureTask<>(() -> false) : innerStep.getLeft(), postTick);
         try {
+            Rlmc.LOGGER.debug("Queueing step for environment \"{}\"", getUniqueEnvName());
             queue.put(castedInnerStep);
             // left.get(); // Guaranteed to happen first by the implementation
-            return right.get();
+            return postTick.get();
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
@@ -193,6 +209,7 @@ public abstract class Environment<A, O> {
         synchronized (pausedLock) {
             paused = false;
         }
+        Rlmc.LOGGER.debug("Environment \"{}\" unpaused.", getUniqueEnvName());
     }
 
     /**
