@@ -47,6 +47,7 @@ spotless {
 loom {
 	accessWidenerPath = file("src/main/resources/rlmc.accesswidener")
 	splitEnvironmentSourceSets()
+	log4jConfigs.from(file("src/main/resources/log4j2-debug.xml"))
 
 	mods {
 		"rl-agents" {
