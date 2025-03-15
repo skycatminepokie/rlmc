@@ -7,10 +7,10 @@ import java.util.Random;
 import net.minecraft.server.network.ServerPlayerEntity;
 
 public class NameGenerator {
-    private static HashSet<String> USED_NAMES = new HashSet<>();
-    private static List<String> PREFIXES;
-    private static List<String> SUFFIXES;
-    private static Random RANDOM = new Random();
+    private static final HashSet<String> USED_NAMES = new HashSet<>();
+    private static final List<String> PREFIXES;
+    private static final List<String> SUFFIXES;
+    private static final Random RANDOM = new Random();
 
     static {
         PREFIXES = List.of("Brave", "Dumb", "Silly", "Lame", "The", "Fun", "Crazy", "Gray", "Grey",
