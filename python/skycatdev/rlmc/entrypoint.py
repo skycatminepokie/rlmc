@@ -9,7 +9,13 @@ from gymnasium.wrappers import TimeLimit
 from py4j.java_collections import JavaArray
 from py4j.java_gateway import JavaGateway, JavaObject, server_connection_started
 from stable_baselines3 import PPO, A2C
-from stable_baselines3.common.callbacks import BaseCallback
+from stable_baselines3.common.callbacks import (
+    BaseCallback,
+    EvalCallback,
+    StopTrainingOnRewardThreshold,
+    StopTrainingOnNoModelImprovement,
+    CallbackList,
+)
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.logger import HParam
 from stable_baselines3.common.monitor import Monitor
@@ -183,17 +189,28 @@ class Entrypoint(object):
             algorithm.n_steps = ees.getNSteps()
 
         if ees.isTraining():
+            eval_callback = EvalCallback(
+                eval_env=self.envs[environment].makeAnother().get(),
+                best_model_save_path="./logs/best_model/",
+                log_path="./logs/",
+                eval_freq=5_000,
+                deterministic=True,
+                callback_on_new_best=StopTrainingOnRewardThreshold(0.75),
+                callback_after_eval=StopTrainingOnNoModelImprovement(3, 5),
+            )
+            h_param_callback = HParamCallback()
+            callback = CallbackList([eval_callback, h_param_callback])
             if tensorboard_log_name is None:
                 algorithm.learn(
                     episodes,
-                    callback=HParamCallback(),
+                    callback=callback,
                     reset_num_timesteps=not load,
                 )
             else:
                 algorithm.learn(
                     episodes,
                     tb_log_name=tensorboard_log_name,
-                    callback=HParamCallback(),
+                    callback=callback,
                     reset_num_timesteps=not load,
                 )
         else:
