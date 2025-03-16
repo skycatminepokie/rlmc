@@ -77,11 +77,34 @@ class Entrypoint(object):
             self.envs[java_environment] = env
 
         elif environment == "fight_enemy":
-            env = WrappedFightEnemyEnvironment(java_environment, get_gateway())
-            env = FrameStackObservation(env, 3)
-            env = TimeLimit(env, max_episode_steps=400)
-            env = Monitor(env)
-            env = DummyVecEnv([lambda: env])
+
+            def make_env(index: int):
+                if index == 0:
+                    return Monitor(
+                        TimeLimit(
+                            FrameStackObservation(
+                                WrappedFightEnemyEnvironment(
+                                    java_environment, get_gateway()
+                                ),
+                                3,
+                            ),
+                            max_episode_steps=400,
+                        )
+                    )
+                else:
+                    return Monitor(
+                        TimeLimit(
+                            FrameStackObservation(
+                                WrappedFightEnemyEnvironment(
+                                    java_environment.makeAnother(), get_gateway()
+                                ),
+                                3,
+                            ),
+                            max_episode_steps=400,
+                        )
+                    )
+
+            env = DummyVecEnv([lambda: make_env(i) for i in range(4)])
             self.envs[java_environment] = env
 
         elif environment == "go_north":
@@ -91,7 +114,7 @@ class Entrypoint(object):
             env = FrameStackObservation(env, 3)
             env = TimeLimit(env, max_episode_steps=200)
             env = Monitor(env)
-            env = DummyVecEnv([lambda: env for _ in range(4)])
+            env = DummyVecEnv([lambda: env])
             self.envs[java_environment] = env
 
     def train(
