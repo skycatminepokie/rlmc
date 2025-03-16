@@ -96,8 +96,7 @@ class Entrypoint(object):
                         TimeLimit(
                             FrameStackObservation(
                                 WrappedFightEnemyEnvironment(
-                                    java_environment.makeAnother().get().get(),
-                                    get_gateway(),
+                                    java_environment.makeAnother(), get_gateway()
                                 ),
                                 3,
                             ),

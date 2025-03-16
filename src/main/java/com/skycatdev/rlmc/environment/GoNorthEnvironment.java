@@ -76,8 +76,7 @@ public class GoNorthEnvironment extends BasicPlayerEnvironment<BasicPlayerObserv
     }
 
     @Override
-    public Future<Future<? extends Environment<FutureActionPack, BasicPlayerObservation>>> makeAnother() {
-        Future<GoNorthEnvironment> future = Objects.requireNonNull(makeAndConnect(NameGenerator.newPlayerName(getWorld().getServer().getPlayerManager().getPlayerList()), getWorld().getServer()));
-        return getWorld().getServer().submit(() -> future);
+    public Future<? extends Environment<FutureActionPack, BasicPlayerObservation>> makeAnother() {
+        return Objects.requireNonNull(makeAndConnect(NameGenerator.newPlayerName(getWorld().getServer().getPlayerManager().getPlayerList()), getWorld().getServer()));
     }
 }

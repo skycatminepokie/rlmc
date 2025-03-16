@@ -91,7 +91,7 @@ public abstract class Environment<A, O> {
      * This is used for making vectorized environments.
      */
     @SuppressWarnings("unused") // Used by entrypoint.py
-    public abstract Future<Future<? extends Environment<A, O>>> makeAnother();
+    public abstract Future<? extends Environment<A, O>> makeAnother();
 
     public void pause() {
         synchronized (pausedLock) {
