@@ -24,7 +24,7 @@ public abstract class MinecraftServerMixin {
 
     @Inject(method = "tick", at = @At("RETURN"))
     protected void rlmc$postTick(BooleanSupplier shouldKeepTicking, CallbackInfo ci) {
-        //Rlmc.forEachEnvironment(Environment::postTick);
+        Rlmc.onTick();
     }
 
     @WrapOperation(method = "tickWorlds", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;tick(Ljava/util/function/BooleanSupplier;)V"))
