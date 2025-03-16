@@ -78,6 +78,7 @@ class Entrypoint(object):
 
         elif environment == "fight_enemy":
             env = WrappedFightEnemyEnvironment(java_environment, get_gateway())
+            env = FrameStackObservation(env, 3)
             env = TimeLimit(env, max_episode_steps=400)
             env = Monitor(env)
             env = DummyVecEnv([lambda: env])
@@ -197,7 +198,7 @@ class Entrypoint(object):
                 eval_freq=10_000,
                 deterministic=True,
                 callback_on_new_best=StopTrainingOnRewardThreshold(0.75),
-                callback_after_eval=StopTrainingOnNoModelImprovement(3, 5),
+                callback_after_eval=StopTrainingOnNoModelImprovement(5, 5),
             )
             h_param_callback = HParamCallback()
             callback = CallbackList([eval_callback, h_param_callback])
