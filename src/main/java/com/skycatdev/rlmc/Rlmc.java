@@ -32,7 +32,6 @@ public class Rlmc implements ModInitializer {
     private static @Nullable BiMap<EntityType<?>, Integer> ENTITY_TYPE_MAP = null;
     private static @Nullable BiMap<Item, Integer> ITEM_MAP = null;
     private static @Nullable BiMap<BlockState, Integer> BLOCK_STATE_MAP = null;
-    private static final ArrayList<Runnable> ON_TICK = new ArrayList<>();
 
     static {
         new Thread(() -> GATEWAY_SERVER.start(false), "RLMC Python Gateway Server Thread").start();
@@ -80,19 +79,6 @@ public class Rlmc implements ModInitializer {
             }
         }
         return ENTITY_TYPE_MAP;
-    }
-
-    public static void onTick() { // TODO: Fixup, this was a late-night hack
-        synchronized (ON_TICK) {
-            ON_TICK.forEach(Runnable::run);
-            ON_TICK.clear();
-        }
-    }
-
-    public synchronized static void doOnTick(Runnable runnable) { // TODO: Fixup, this was a late-night hack
-        synchronized (ON_TICK) {
-            ON_TICK.add(runnable);
-        }
     }
 
     public static BiMap<Item, Integer> getItemMap() {
