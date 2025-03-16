@@ -5,7 +5,7 @@ import warnings
 from typing import Any
 from typing import override
 
-from gymnasium.wrappers import TimeLimit
+from gymnasium.wrappers import TimeLimit, FrameStackObservation
 from py4j.java_collections import JavaArray
 from py4j.java_gateway import JavaGateway, JavaObject, server_connection_started
 from stable_baselines3 import PPO, A2C
@@ -87,9 +87,10 @@ class Entrypoint(object):
             env = WrappedBasicPlayerObservationEnvironment(
                 java_environment, get_gateway()
             )
+            env = FrameStackObservation(env, 3)
             env = TimeLimit(env, max_episode_steps=200)
             env = Monitor(env)
-            env = DummyVecEnv([lambda: env])
+            env = DummyVecEnv([lambda: env for _ in range(4)])
             self.envs[java_environment] = env
 
     def train(
