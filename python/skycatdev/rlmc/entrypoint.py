@@ -65,6 +65,7 @@ class HParamCallback(
 
 class Entrypoint(object):
     envs = {}
+    first_env_hack = 0  # TODO: VERY TEMPORARY HACK JUST TO MAKE IT WORK
 
     # noinspection PyPep8Naming
     def connectEnvironment(self, environment: string, java_environment: JavaObject):
@@ -105,7 +106,13 @@ class Entrypoint(object):
                         )
                     )
 
-            env = DummyVecEnv([lambda: make_env(i) for i in range(4)])
+            if self.first_env_hack == 0:
+                self.first_env_hack += 1
+                for _ in range(10):
+                    print("YEET THIS AWFUL HACK")  # meaning two lines above
+                env = DummyVecEnv([lambda: make_env(i) for i in range(4)])
+            else:
+                env = DummyVecEnv([lambda: make_env(0)])
             self.envs[java_environment] = env
 
         elif environment == "go_north":
