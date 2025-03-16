@@ -249,7 +249,7 @@ class Log4jHandler(logging.Handler):
             print(message)
 
 
-class Log4jStream:
+class Log4jStream:  # TODO: I think this stopped working
     # noinspection PyMethodMayBeStatic
     def write(self, message):
         message = message.strip()
