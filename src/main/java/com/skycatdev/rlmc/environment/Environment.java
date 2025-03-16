@@ -88,10 +88,10 @@ public abstract class Environment<A, O> {
 
     /**
      * Make another environment with compatible settings. For example, a player name may need to be different, but an entity type might be the same.
-     * This is used for making vectorized environments.
+     * This is used for making vectorized environments. It will be called off the server thread.
      */
     @SuppressWarnings("unused") // Used by entrypoint.py
-    public abstract Future<? extends Environment<A, O>> makeAnother();
+    public abstract Future<Future<? extends Environment<A, O>>> makeAnother();
 
     public void pause() {
         synchronized (pausedLock) {

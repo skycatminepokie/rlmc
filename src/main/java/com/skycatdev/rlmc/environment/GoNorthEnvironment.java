@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 import java.util.function.Function;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -76,7 +77,9 @@ public class GoNorthEnvironment extends BasicPlayerEnvironment<BasicPlayerObserv
     }
 
     @Override
-    public Future<? extends Environment<FutureActionPack, BasicPlayerObservation>> makeAnother() {
-        return Objects.requireNonNull(makeAndConnect(NameGenerator.newPlayerName(getWorld().getServer().getPlayerManager().getPlayerList()), getWorld().getServer()));
+    public Future<Future<? extends Environment<FutureActionPack, BasicPlayerObservation>>> makeAnother() {
+        FutureTask<Future<? extends Environment<FutureActionPack, BasicPlayerObservation>>> futureTask = new FutureTask<>(() -> Objects.requireNonNull(makeAndConnect(NameGenerator.newPlayerName(getWorld().getServer().getPlayerManager().getPlayerList()), getWorld().getServer())));
+        Rlmc.runBeforeNextTick(futureTask);
+        return futureTask;
     }
 }

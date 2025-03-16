@@ -32,6 +32,7 @@ public class Rlmc implements ModInitializer {
     private static @Nullable BiMap<EntityType<?>, Integer> ENTITY_TYPE_MAP = null;
     private static @Nullable BiMap<Item, Integer> ITEM_MAP = null;
     private static @Nullable BiMap<BlockState, Integer> BLOCK_STATE_MAP = null;
+    private static final Collection<Runnable> RUN_BEFORE_NEXT_TICK = new LinkedList<>();
 
     static {
         new Thread(() -> GATEWAY_SERVER.start(false), "RLMC Python Gateway Server Thread").start();
@@ -97,6 +98,19 @@ public class Rlmc implements ModInitializer {
 
     public static PythonEntrypoint getPythonEntrypoint() {
         return (PythonEntrypoint) GATEWAY_SERVER.getPythonServerEntryPoint(new Class[]{PythonEntrypoint.class});
+    }
+
+    public static void runBeforeNextTick(Runnable runnable) {
+        synchronized (RUN_BEFORE_NEXT_TICK) {
+            RUN_BEFORE_NEXT_TICK.add(runnable);
+        }
+    }
+
+    public static void preTick() {
+        synchronized (RUN_BEFORE_NEXT_TICK) {
+            RUN_BEFORE_NEXT_TICK.forEach(Runnable::run);
+            RUN_BEFORE_NEXT_TICK.clear();
+        }
     }
 
     @SuppressWarnings("unused") // Used by entrypoint.py

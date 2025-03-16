@@ -7,6 +7,7 @@ import com.skycatdev.rlmc.SpreadEntitiesHelper;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 import java.util.function.Function;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnReason;
@@ -70,9 +71,11 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvi
     }
 
     @Override
-    public Future<? extends Environment<FutureActionPack, Observation>> makeAnother() {
+    public Future<Future<? extends Environment<FutureActionPack, Observation>>> makeAnother() {
         Rlmc.LOGGER.debug("Making another FightEnemyEnvironment...");
-        return Objects.requireNonNull(makeAndConnect(NameGenerator.newPlayerName(getWorld().getServer().getPlayerManager().getPlayerList()), getWorld().getServer(), enemyType, structure));
+        FutureTask<Future<? extends Environment<FutureActionPack, Observation>>> futureTask = new FutureTask<>(() -> Objects.requireNonNull(makeAndConnect(NameGenerator.newPlayerName(getWorld().getServer().getPlayerManager().getPlayerList()), getWorld().getServer(), enemyType, structure)));
+        Rlmc.runBeforeNextTick(futureTask);
+        return futureTask;
     }
 
     @Override
