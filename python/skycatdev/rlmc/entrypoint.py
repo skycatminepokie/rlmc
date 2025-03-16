@@ -20,7 +20,7 @@ from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.logger import HParam
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.on_policy_algorithm import OnPolicyAlgorithm
-from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
+from stable_baselines3.common.vec_env import DummyVecEnv
 
 from skycatdev.rlmc.java.wrappers.wrapped_basic_player_observation_environment import (
     WrappedBasicPlayerObservationEnvironment,
@@ -77,21 +77,10 @@ class Entrypoint(object):
             self.envs[java_environment] = env
 
         elif environment == "fight_enemy":
-
-            def make_env(index: int) -> WrappedFightEnemyEnvironment:
-                if index == 0:
-                    return WrappedFightEnemyEnvironment(java_environment, get_gateway())
-                else:
-                    return WrappedFightEnemyEnvironment(
-                        java_environment.makeAnother(), get_gateway()
-                    )
-
-            env = SubprocVecEnv(
-                [
-                    lambda: Monitor(TimeLimit(make_env(i), max_episode_steps=400))
-                    for i in range(4)
-                ]
-            )
+            env = WrappedFightEnemyEnvironment(java_environment, get_gateway())
+            env = TimeLimit(env, max_episode_steps=400)
+            env = Monitor(env)
+            env = DummyVecEnv([lambda: env])
             self.envs[java_environment] = env
 
         elif environment == "go_north":
