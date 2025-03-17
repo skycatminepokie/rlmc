@@ -3,6 +3,7 @@ package com.skycatdev.rlmc.environment;
 
 import com.mojang.datafixers.util.Either;
 import com.skycatdev.rlmc.Rlmc;
+import com.skycatdev.rlmc.command.EnvironmentSettings;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -27,6 +28,7 @@ public abstract class Environment<A, O> {
     private final Object[] closedLock = new Object[]{};
     private final Object[] pausedLock = new Object[]{};
     private final Object[] taskLock = new Object[0];
+    protected EnvironmentSettings settings;
     /**
      * What to do on the next post-tick. Do not access outside the server thread or during a tick.
      */
@@ -42,12 +44,20 @@ public abstract class Environment<A, O> {
     private boolean paused;
     private @Nullable Either<Pair<@Nullable FutureTask<?>, FutureTask<StepTuple<O>>>, FutureTask<ResetTuple<O>>> task;
 
+    protected Environment(EnvironmentSettings environmentSettings) {
+        this.settings = environmentSettings;
+    }
+
     @SuppressWarnings("unused") // Used by java_environment_wrapper.py
     public void close() {
         synchronized (closedLock) {
             closed = true;
             Rlmc.removeEnvironment(this);
         }
+    }
+
+    public EnvironmentSettings getSettings() {
+        return settings;
     }
 
     /**

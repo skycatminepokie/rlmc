@@ -5,6 +5,7 @@ import static net.minecraft.server.command.CommandManager.*;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -14,6 +15,7 @@ import com.skycatdev.rlmc.environment.*;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.function.Consumer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.command.CommandSource;
@@ -25,17 +27,18 @@ import net.minecraft.registry.Registries;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 
 public class CommandManager implements CommandRegistrationCallback {
 
-    private static <E extends Environment<?, ?>> int trainEnvironment(EnvironmentExecutionSettings environmentExecutionSettings, @Nullable Future<E> environment) {
+    private static <E extends Environment<?, ?>> int trainEnvironment(EnvironmentExecutionSettings environmentExecutionSettings, @Nullable Future<E> environment, Consumer<@Nullable String> resultConsumer) {
         if (environment == null) {
             return -1;
         }
         new Thread(() -> {
             try {
-                Rlmc.getPythonEntrypoint().runKwargs(environment.get(), environmentExecutionSettings);
+                resultConsumer.accept(Rlmc.getPythonEntrypoint().runKwargs(environment.get(), environmentExecutionSettings));
             } catch (InterruptedException | ExecutionException e) {
                 Rlmc.LOGGER.error("Training environment had an error!", e);
             }
@@ -43,7 +46,7 @@ public class CommandManager implements CommandRegistrationCallback {
         return Command.SINGLE_SUCCESS;
     }
 
-    private static CommandNode<ServerCommandSource> withExecutionSettings(CommandNode<ServerCommandSource> base) {
+    private static CommandNode<ServerCommandSource> withEnvironmentAndExecutionSettings(CommandNode<ServerCommandSource> base) {
         var training = literal("training")
                 .redirect(base, context -> (ServerCommandSource) ((EnvironmentExecutionSettingsBuilder) context.getSource()).rlmc$setTraining())
                 .build();
@@ -111,6 +114,27 @@ public class CommandManager implements CommandRegistrationCallback {
         var batchSizeArg = argument("batchSize", IntegerArgumentType.integer(1))
                 .redirect(base, context -> (ServerCommandSource) ((EnvironmentExecutionSettingsBuilder)context.getSource()).rlmc$setBatchSize(IntegerArgumentType.getInteger(context, "batchSize")))
                 .build();
+        var monitor = literal("monitor")
+                .build();
+        var monitorArg = argument("monitor", BoolArgumentType.bool())
+                .redirect(base, context -> (ServerCommandSource) ((EnvironmentSettingsBuilder)context.getSource()).rlmc$setUseMonitor(BoolArgumentType.getBool(context, "monitor")))
+                .build();
+        var frameStack = literal("frameStack")
+                .build();
+        var frameStackRemove = literal("remove")
+                .redirect(base, context -> (ServerCommandSource) ((EnvironmentSettingsBuilder)context.getSource()).rlmc$removeFrameStack())
+                .build();
+        var frameStackArg = argument("frameStack", IntegerArgumentType.integer(1))
+                .redirect(base, context -> (ServerCommandSource) ((EnvironmentSettingsBuilder)context.getSource()).rlmc$setFrameStack(IntegerArgumentType.getInteger(context, "frameStack")))
+                .build();
+        var timeLimit = literal("timeLimit")
+                .build();
+        var timeLimitRemove = literal("remove")
+                .redirect(base, context -> (ServerCommandSource) ((EnvironmentSettingsBuilder)context.getSource()).rlmc$removeTimeLimit())
+                .build();
+        var timeLimitArg = argument("timeLimit", IntegerArgumentType.integer(0))
+                .redirect(base, context -> (ServerCommandSource) ((EnvironmentSettingsBuilder)context.getSource()).rlmc$setTimeLimit(IntegerArgumentType.getInteger(context, "timeLimit")))
+                .build();
         var in = literal("in")
                 .build();
         //@formatter:off
@@ -141,6 +165,14 @@ public class CommandManager implements CommandRegistrationCallback {
             netArch.addChild(netArchDefault);
         base.addChild(batchSize);
             batchSize.addChild(batchSizeArg);
+        base.addChild(monitor);
+            monitor.addChild(monitorArg);
+        base.addChild(frameStack);
+            frameStack.addChild(frameStackArg);
+            frameStack.addChild(frameStackRemove);
+        base.addChild(timeLimit);
+            timeLimit.addChild(timeLimitArg);
+            timeLimit.addChild(timeLimitRemove);
         base.addChild(in);
         // spotless:on
         //@formatter:on
@@ -160,27 +192,42 @@ public class CommandManager implements CommandRegistrationCallback {
                 .executes(context -> {
                     //noinspection unchecked It's a command, let it fail
                     EntityType<? extends MobEntity> entityType = Objects.requireNonNull((EntityType<? extends MobEntity>) Registries.ENTITY_TYPE.get(RegistryEntryReferenceArgumentType.getEntityType(context, "entityType").registryKey()));
-                    @Nullable Future<FightEnemyEnvironment> environment1 = FightEnemyEnvironment.makeAndConnect(StringArgumentType.getString(context, "agent"), context.getSource().getServer(), entityType, null);
-                    return trainEnvironment(((EnvironmentExecutionSettingsBuilder) context.getSource()).rlmc$build(), environment1);
+                    ServerCommandSource source = context.getSource();
+                    @Nullable Future<FightEnemyEnvironment> environment1 = FightEnemyEnvironment.makeAndConnect(((EnvironmentSettingsBuilder) source).rlmc$buildEnvironmentSettings(), StringArgumentType.getString(context, "agent"), source.getServer(), entityType, null);
+                    return trainEnvironment(((EnvironmentExecutionSettingsBuilder) source).rlmc$build(), Objects.requireNonNull(environment1), (message) -> {
+                        if (message != null) {
+                            source.sendFeedback(() -> Text.literal(message), false);
+                        }
+                    });
                 })
                 .build();
         var fightEnemyStructure = argument("structure", RegistryKeyArgumentType.registryKey(RegistryKeys.STRUCTURE))
                 .executes(context -> {
                     //noinspection unchecked It's a command, let it fail
                     EntityType<? extends MobEntity> entityType = Objects.requireNonNull((EntityType<? extends MobEntity>) Registries.ENTITY_TYPE.get(RegistryEntryReferenceArgumentType.getEntityType(context, "entityType").registryKey()));
+                    ServerCommandSource source = context.getSource();
                     //noinspection OptionalGetWithoutIsPresent
-                    @Nullable Future<FightEnemyEnvironment> environment1 = FightEnemyEnvironment.makeAndConnect(StringArgumentType.getString(context, "agent"), context.getSource().getServer(), entityType, RegistryKeyArgumentType.getStructureEntry(context, "structure").getKey().get().getValue());
-                    return trainEnvironment(((EnvironmentExecutionSettingsBuilder) context.getSource()).rlmc$build(), environment1);
+                    @Nullable Future<FightEnemyEnvironment> environment1 = FightEnemyEnvironment.makeAndConnect(((EnvironmentSettingsBuilder) source).rlmc$buildEnvironmentSettings(), StringArgumentType.getString(context, "agent"), source.getServer(), entityType, RegistryKeyArgumentType.getStructureEntry(context, "structure").getKey().get().getValue());
+                    return trainEnvironment(((EnvironmentExecutionSettingsBuilder) source).rlmc$build(), Objects.requireNonNull(environment1), (message) -> {
+                        if (message != null) {
+                            source.sendFeedback(() -> Text.literal(message), false);
+                        }
+                    });
                 })
                 .build();
         var goNorth = literal("goNorth")
                 .build();
         var goNorthAgent = argument("agent", StringArgumentType.word())
                 .executes((context) -> {
-                    MinecraftServer server = context.getSource().getServer();
+                    ServerCommandSource source = context.getSource();
+                    MinecraftServer server = source.getServer();
                     String name = StringArgumentType.getString(context, "agent");
-                    @Nullable Future<GoNorthEnvironment> environment1 = GoNorthEnvironment.makeAndConnect(name, server);
-                    return trainEnvironment(((EnvironmentExecutionSettingsBuilder) context.getSource()).rlmc$build(), environment1);
+                    @Nullable Future<GoNorthEnvironment> environment1 = GoNorthEnvironment.makeAndConnect(((EnvironmentSettingsBuilder) source).rlmc$buildEnvironmentSettings(), name, server);
+                    return trainEnvironment(((EnvironmentExecutionSettingsBuilder) source).rlmc$build(), environment1, (message) -> {
+                        if (message != null) {
+                            source.sendFeedback(() -> Text.literal(message), false);
+                        }
+                    });
                 })
                 .build();
 
@@ -188,7 +235,7 @@ public class CommandManager implements CommandRegistrationCallback {
         // spotless:off
         //@formatter:off
         // /environment <environment> <environment-specific settings> <mode> <mode-specific settings>
-        var settings = withExecutionSettings(environment);
+        var settings = withEnvironmentAndExecutionSettings(environment);
             settings.addChild(fightEnemy);
                 fightEnemy.addChild(fightEnemyAgent);
                     fightEnemyAgent.addChild(fightEnemyType);

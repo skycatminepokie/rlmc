@@ -13,7 +13,6 @@ from stable_baselines3.common.callbacks import (
     BaseCallback,
     EvalCallback,
     StopTrainingOnRewardThreshold,
-    StopTrainingOnNoModelImprovement,
     CallbackList,
 )
 from stable_baselines3.common.evaluation import evaluate_policy
@@ -68,31 +67,32 @@ class Entrypoint(object):
 
     # noinspection PyPep8Naming
     def connectEnvironment(self, environment: string, java_environment: JavaObject):
+        env_settings: JavaObject = java_environment.getSettings()
+        frame_stack: int = env_settings.getFrameStack()
+        time_limit: int = env_settings.getTimeLimit()
+
         if environment == "skybridge":
             env = WrappedBasicPlayerObservationEnvironment(
                 java_environment, get_gateway()
             )
-            env = Monitor(env)
-            env = TimeLimit(env, max_episode_steps=200)
-            self.envs[java_environment] = env
-
         elif environment == "fight_enemy":
             env = WrappedFightEnemyEnvironment(java_environment, get_gateway())
-            env = FrameStackObservation(env, 3)
-            env = TimeLimit(env, max_episode_steps=400)
-            env = Monitor(env)
-            env = DummyVecEnv([lambda: env])
-            self.envs[java_environment] = env
-
-        elif environment == "go_north":
+        else:
+            assert (
+                environment == "go_north"
+            ), f"Received unknown environment type {environment}."
             env = WrappedBasicPlayerObservationEnvironment(
                 java_environment, get_gateway()
             )
-            env = FrameStackObservation(env, 3)
-            env = TimeLimit(env, max_episode_steps=200)
+
+        if frame_stack > 1:
+            env = FrameStackObservation(env, frame_stack)
+        if time_limit > 0:
+            env = TimeLimit(env, max_episode_steps=time_limit)
+        if env_settings.shouldUseMonitor():
             env = Monitor(env)
-            env = DummyVecEnv([lambda: env for _ in range(4)])
-            self.envs[java_environment] = env
+        env = DummyVecEnv([lambda: env])
+        self.envs[java_environment] = env
 
     def train(
         self,

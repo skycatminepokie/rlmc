@@ -4,6 +4,7 @@ package com.skycatdev.rlmc.environment;
 import com.skycatdev.rlmc.NameGenerator;
 import com.skycatdev.rlmc.Rlmc;
 import com.skycatdev.rlmc.SpreadEntitiesHelper;
+import com.skycatdev.rlmc.command.EnvironmentSettings;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
@@ -33,26 +34,26 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvi
     protected EntityType<? extends MobEntity> enemyType;
     @Nullable private Identifier structure = null;
 
-    public FightEnemyEnvironment(ServerPlayerEntity agent, EntityType<? extends MobEntity> enemyType) {
-        super(agent, 20, 20, 3, 3);
+    public FightEnemyEnvironment(EnvironmentSettings settings, ServerPlayerEntity agent, EntityType<? extends MobEntity> enemyType) {
+        super(settings, agent, 20, 20, 3, 3);
         this.enemyType = enemyType;
     }
 
-    public FightEnemyEnvironment(ServerPlayerEntity agent, EntityType<? extends MobEntity> enemyType, Identifier structure) {
-        this(agent, enemyType);
+    public FightEnemyEnvironment(EnvironmentSettings settings, ServerPlayerEntity agent, EntityType<? extends MobEntity> enemyType, Identifier structure) {
+        this(settings, agent, enemyType);
         this.structure = structure;
     }
 
-    public static @Nullable Future<FightEnemyEnvironment> makeAndConnect(String agentName, MinecraftServer server, EntityType<? extends MobEntity> entityType, @Nullable Identifier structure) {
+    public static @Nullable Future<FightEnemyEnvironment> makeAndConnect(EnvironmentSettings environmentSettings, String agentName, MinecraftServer server, EntityType<? extends MobEntity> entityType, @Nullable Identifier structure) {
         Rlmc.LOGGER.debug("Creating fight enemy env for \"{}\"", agentName);
         @Nullable CompletableFuture<ServerPlayerEntity> agentFuture = createPlayerAgent(agentName, server, Vec3d.ZERO, server.getOverworld().getRegistryKey());
         if (agentFuture != null) {
             Function<ServerPlayerEntity, FightEnemyEnvironment> environmentFuture = agent -> {
                 FightEnemyEnvironment environment;
                 if (structure != null) {
-                    environment = new FightEnemyEnvironment(agent, entityType, structure);
+                    environment = new FightEnemyEnvironment(environmentSettings, agent, entityType, structure);
                 } else {
-                    environment = new FightEnemyEnvironment(agent, entityType);
+                    environment = new FightEnemyEnvironment(environmentSettings, agent, entityType);
                 }
                 Rlmc.addEnvironment(environment);
                 Rlmc.getPythonEntrypoint().connectEnvironment("fight_enemy", environment);
@@ -73,7 +74,7 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvi
     @Override
     public Future<Future<? extends Environment<FutureActionPack, Observation>>> makeAnother() {
         Rlmc.LOGGER.trace("Making another FightEnemyEnvironment...");
-        FutureTask<Future<? extends Environment<FutureActionPack, Observation>>> futureTask = new FutureTask<>(() -> Objects.requireNonNull(makeAndConnect(NameGenerator.newPlayerName(getWorld().getServer().getPlayerManager().getPlayerList()), getWorld().getServer(), enemyType, structure)));
+        FutureTask<Future<? extends Environment<FutureActionPack, Observation>>> futureTask = new FutureTask<>(() -> Objects.requireNonNull(makeAndConnect(settings, NameGenerator.newPlayerName(getWorld().getServer().getPlayerManager().getPlayerList()), getWorld().getServer(), enemyType, structure)));
         Rlmc.runBeforeNextTick(futureTask);
         return futureTask;
     }

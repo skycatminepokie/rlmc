@@ -2,17 +2,19 @@
 package com.skycatdev.rlmc.mixin;
 
 import com.skycatdev.rlmc.command.EnvironmentExecutionSettingsBuilder;
+import com.skycatdev.rlmc.command.EnvironmentSettingsBuilder;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.server.command.ServerCommandSource;
+import org.checkerframework.common.value.qual.IntRange;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
 @Mixin(ServerCommandSource.class)
-public abstract class ServerCommandSourceMixin implements EnvironmentExecutionSettingsBuilder {
+public abstract class ServerCommandSourceMixin implements EnvironmentExecutionSettingsBuilder, EnvironmentSettingsBuilder {
     @Unique @Nullable protected String rlmc$savePath;
     @Unique @Nullable protected String rlmc$loadPath;
     @Unique @Nullable protected String rlmc$tensorboardLogName;
@@ -30,6 +32,9 @@ public abstract class ServerCommandSourceMixin implements EnvironmentExecutionSe
     @Unique @Nullable protected Double rlmc$vfCoef;
     @Unique protected List<Integer> rlmc$netArch = new LinkedList<>();
     @Unique @Nullable protected Integer rlmc$batchSize;
+    @Unique protected boolean rlmc$monitor = true;
+    @IntRange(from = 1) @Unique protected int rlmc$frameStack = 3;
+    @IntRange(from = 0) @Unique protected int rlmc$timeLimit = 0;
 
     @Override
     public EnvironmentExecutionSettingsBuilder rlmc$addNetLayer(int neurons) {
@@ -67,6 +72,11 @@ public abstract class ServerCommandSourceMixin implements EnvironmentExecutionSe
     @Override
     public int rlmc$getEpisodesOrDefault() {
         return rlmc$episodes;
+    }
+
+    @Override
+    public @IntRange(from = 1) int rlmc$getFrameStack() {
+        return rlmc$frameStack;
     }
 
     @Override
@@ -123,6 +133,11 @@ public abstract class ServerCommandSourceMixin implements EnvironmentExecutionSe
     }
 
     @Override
+    public @IntRange(from = 0) int rlmc$getTimeLimit() {
+        return rlmc$timeLimit;
+    }
+
+    @Override
     public @Nullable Double rlmc$getVfCoef() {
         return rlmc$vfCoef;
     }
@@ -130,6 +145,11 @@ public abstract class ServerCommandSourceMixin implements EnvironmentExecutionSe
     @Override
     public boolean rlmc$isTrainingOrDefault() {
         return rlmc$training;
+    }
+
+    @Override
+    public boolean rlmc$isUsingMonitor() {
+        return rlmc$monitor;
     }
 
     @Override
@@ -165,6 +185,12 @@ public abstract class ServerCommandSourceMixin implements EnvironmentExecutionSe
     @Override
     public EnvironmentExecutionSettingsBuilder rlmc$setEvaluating() {
         rlmc$training = false;
+        return this;
+    }
+
+    @Override
+    public EnvironmentSettingsBuilder rlmc$setFrameStack(@IntRange(from = 1) int frameStack) {
+        rlmc$frameStack = frameStack;
         return this;
     }
 
@@ -218,8 +244,20 @@ public abstract class ServerCommandSourceMixin implements EnvironmentExecutionSe
     }
 
     @Override
+    public EnvironmentSettingsBuilder rlmc$setTimeLimit(@IntRange(from = 0) int timeLimit) {
+        rlmc$timeLimit = timeLimit;
+        return this;
+    }
+
+    @Override
     public EnvironmentExecutionSettingsBuilder rlmc$setTraining() {
         rlmc$training = true;
+        return this;
+    }
+
+    @Override
+    public EnvironmentSettingsBuilder rlmc$setUseMonitor(boolean useMonitor) {
+        rlmc$monitor = useMonitor;
         return this;
     }
 

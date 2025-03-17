@@ -3,6 +3,7 @@ package com.skycatdev.rlmc.environment;
 
 import com.skycatdev.rlmc.NameGenerator;
 import com.skycatdev.rlmc.Rlmc;
+import com.skycatdev.rlmc.command.EnvironmentSettings;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -20,11 +21,11 @@ import org.jetbrains.annotations.Nullable;
 public class GoNorthEnvironment extends BasicPlayerEnvironment<BasicPlayerObservation> {
     private double prevX;
 
-    public static @Nullable Future<GoNorthEnvironment> makeAndConnect(String agentName, MinecraftServer server) {
+    public static @Nullable Future<GoNorthEnvironment> makeAndConnect(EnvironmentSettings settings, String agentName, MinecraftServer server) {
         @Nullable CompletableFuture<ServerPlayerEntity> agentFuture = createPlayerAgent(agentName, server, Vec3d.ZERO, server.getOverworld().getRegistryKey());
         if (agentFuture != null) {
             Function<ServerPlayerEntity, GoNorthEnvironment> environmentFuture = agent -> {
-                GoNorthEnvironment environment = new GoNorthEnvironment(agent);
+                GoNorthEnvironment environment = new GoNorthEnvironment(settings, agent);
                 Rlmc.addEnvironment(environment);
                 Rlmc.getPythonEntrypoint().connectEnvironment("go_north", environment);
                 return environment;
@@ -34,8 +35,8 @@ public class GoNorthEnvironment extends BasicPlayerEnvironment<BasicPlayerObserv
         return null;
     }
 
-    public GoNorthEnvironment(ServerPlayerEntity agent) {
-        super(agent, 20, 20, 3, 3);
+    public GoNorthEnvironment(EnvironmentSettings settings, ServerPlayerEntity agent) {
+        super(settings, agent, 20, 20, 3, 3);
     }
 
     @Override
@@ -78,7 +79,7 @@ public class GoNorthEnvironment extends BasicPlayerEnvironment<BasicPlayerObserv
 
     @Override
     public Future<Future<? extends Environment<FutureActionPack, BasicPlayerObservation>>> makeAnother() {
-        FutureTask<Future<? extends Environment<FutureActionPack, BasicPlayerObservation>>> futureTask = new FutureTask<>(() -> Objects.requireNonNull(makeAndConnect(NameGenerator.newPlayerName(getWorld().getServer().getPlayerManager().getPlayerList()), getWorld().getServer())));
+        FutureTask<Future<? extends Environment<FutureActionPack, BasicPlayerObservation>>> futureTask = new FutureTask<>(() -> Objects.requireNonNull(makeAndConnect(settings, NameGenerator.newPlayerName(getWorld().getServer().getPlayerManager().getPlayerList()), getWorld().getServer())));
         Rlmc.runBeforeNextTick(futureTask);
         return futureTask;
     }

@@ -3,6 +3,7 @@ package com.skycatdev.rlmc;
 
 import com.skycatdev.rlmc.command.EnvironmentExecutionSettings;
 import com.skycatdev.rlmc.environment.Environment;
+import org.jetbrains.annotations.Nullable;
 
 public interface PythonEntrypoint {
     /**
@@ -26,6 +27,13 @@ public interface PythonEntrypoint {
      * @param loadPath The path to load from. Paths are handled by Python, so beware!
      */
     void train(Environment<?, ?> environment, int episodes, String savePath, String loadPath);
-    void runKwargs(Environment<?, ?> environment, EnvironmentExecutionSettings environmentExecutionSettings);
+
+    /**
+     * Train or evaluate an agent.
+     * @param environment The environment to evaluate in.
+     * @param environmentExecutionSettings The settings to execute with.
+     * @return Optionally a message when finished.
+     */
+    @Nullable String runKwargs(Environment<?, ?> environment, EnvironmentExecutionSettings environmentExecutionSettings);
     String evaluate(Environment<?, ?> environment, int episodes, String loadPath);
 }

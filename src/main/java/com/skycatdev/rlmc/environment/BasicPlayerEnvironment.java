@@ -4,6 +4,7 @@ package com.skycatdev.rlmc.environment;
 import carpet.fakes.ServerPlayerInterface;
 import carpet.patches.EntityPlayerMPFake;
 import com.skycatdev.rlmc.Rlmc;
+import com.skycatdev.rlmc.command.EnvironmentSettings;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.FutureTask;
@@ -40,7 +41,8 @@ public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> e
      */
     private boolean running;
 
-    public BasicPlayerEnvironment(ServerPlayerEntity agent, Supplier<Float> initialHealth, Supplier<Integer> initialFoodLevel, int xRaycasts, int yRaycasts) {
+    public BasicPlayerEnvironment(EnvironmentSettings settings, ServerPlayerEntity agent, Supplier<Float> initialHealth, Supplier<Integer> initialFoodLevel, int xRaycasts, int yRaycasts) {
+        super(settings);
         this.agent = agent;
         this.initialHealth = initialHealth;
         this.initialFoodLevel = initialFoodLevel;
@@ -53,8 +55,8 @@ public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> e
         ((PlayerAgentCandidate) agent).rlmc$setKilledTrigger(this::onAgentKilled);
     }
 
-    public BasicPlayerEnvironment(ServerPlayerEntity agent, float initialHealth, int initialFoodLevel, int xRaycasts, int yRaycasts) {
-        this(agent, () -> initialHealth, () -> initialFoodLevel, xRaycasts, yRaycasts);
+    public BasicPlayerEnvironment(EnvironmentSettings settings, ServerPlayerEntity agent, float initialHealth, int initialFoodLevel, int xRaycasts, int yRaycasts) {
+        this(settings, agent, () -> initialHealth, () -> initialFoodLevel, xRaycasts, yRaycasts);
     }
 
     public static @Nullable CompletableFuture<ServerPlayerEntity> createPlayerAgent(String name, MinecraftServer server, Vec3d pos, RegistryKey<World> world) {
