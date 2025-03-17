@@ -14,9 +14,9 @@ public class NameGenerator {
 
     static {
         PREFIXES = List.of("Brave", "Dumb", "Silly", "Lame", "The", "Fun", "Crazy", "Gray", "Grey",
-                "Purple", "Green", "Blue", "Condescending", "Apt", "Tall", "Short", "Gamer", "Fat");
+                "Purple", "Green", "Blue", "Apt", "Tall", "Short", "Gamer", "Fat");
         SUFFIXES = List.of("Tiger", "Math", "Cheetah", "Leopard", "Chair", "Gamer", "Bee", "Hat", "Cheese",
-                "Drink", "Potato", "Table", "Carpet", "Headphones", "Monkey", "Chimp", "Fat", "Nobody");
+                "Drink", "Potato", "Table", "Carpet", "Monkey", "Chimp", "Fat", "Nobody");
     }
 
     public synchronized static String newPlayerName(List<ServerPlayerEntity> playersOnline) {
