@@ -153,14 +153,14 @@ public abstract class Environment<A, O> {
     @SuppressWarnings("unused") // Used by java_environment_wrapper.py
     public ResetTuple<O> reset(@Nullable Integer seed, @Nullable Map<String, Object> options) {
         unpause();
-        Rlmc.LOGGER.debug("Resetting environment \"{}\" (reset called)", getUniqueEnvName());
+        Rlmc.LOGGER.trace("Resetting environment \"{}\" (reset called)", getUniqueEnvName());
         FutureTask<ResetTuple<O>> resetTask;
         synchronized (initializedLock) {
             synchronized (taskLock) {
                 if (task == null) {
                     resetTask = new FutureTask<>(() -> innerReset(seed, options));
                     task = Either.right(resetTask);
-                    Rlmc.LOGGER.debug("Environment \"{}\" initialized. Waiting for reset.", getUniqueEnvName());
+                    Rlmc.LOGGER.trace("Environment \"{}\" initialized. Waiting for reset.", getUniqueEnvName());
                 } else {
                     throw new EnvironmentException("Expected task to be null, but it wasn't. Did you call reset/step from two different threads?");
                 }
@@ -168,7 +168,7 @@ public abstract class Environment<A, O> {
         }
         try {
             ResetTuple<O> ret = resetTask.get();
-            Rlmc.LOGGER.debug("Environment \"{}\" reset received, returning.", getUniqueEnvName());
+            Rlmc.LOGGER.trace("Environment \"{}\" reset received, returning.", getUniqueEnvName());
             return ret;
         } catch (InterruptedException | ExecutionException e) {
             throw new EnvironmentException(e);
@@ -209,7 +209,7 @@ public abstract class Environment<A, O> {
         synchronized (pausedLock) {
             paused = false;
         }
-        Rlmc.LOGGER.debug("Environment \"{}\" unpaused.", getUniqueEnvName());
+        Rlmc.LOGGER.trace("Environment \"{}\" unpaused.", getUniqueEnvName());
     }
 
     public boolean waitingForTick() {

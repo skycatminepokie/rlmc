@@ -126,7 +126,7 @@ public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> e
     @SuppressWarnings("unused") // Used by wrapped_basic_player_environment.py
     protected ServerWorld getWorld() {
         if (worldHandle == null) {
-            Rlmc.LOGGER.debug("Creating world for basic player env \"{}\"", getUniqueEnvName());
+            Rlmc.LOGGER.trace("Creating world for basic player env \"{}\"", getUniqueEnvName());
             worldHandle = Fantasy.get(Objects.requireNonNull(agent.getServer())).openTemporaryWorld(new RuntimeWorldConfig()
                     .setDimensionType(DimensionTypes.OVERWORLD)
                     .setDifficulty(Difficulty.HARD)
@@ -134,7 +134,7 @@ public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> e
                     .setGenerator(Objects.requireNonNull(agent.getServer()).getOverworld().getChunkManager().getChunkGenerator())
                     .setSeed(new Random().nextLong()));
             worldHandle.asWorld().setTimeOfDay(24000L);
-            Rlmc.LOGGER.debug("Created world for basic player env \"{}\"", getUniqueEnvName());
+            Rlmc.LOGGER.trace("Created world for basic player env \"{}\"", getUniqueEnvName());
         }
         return worldHandle.asWorld();
     };
@@ -147,9 +147,9 @@ public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> e
     @Override
     protected ResetTuple<O> innerReset(@Nullable Integer seed, @Nullable Map<String, Object> options) {
         running = true;
-        Rlmc.LOGGER.debug("Running innerPreReset for basic player env \"{}\"", getUniqueEnvName());
+        Rlmc.LOGGER.trace("Running innerPreReset for basic player env \"{}\"", getUniqueEnvName());
         innerPreReset(seed, options);
-        Rlmc.LOGGER.debug("Finished running innerPreReset for basic player env \"{}\"", getUniqueEnvName());
+        Rlmc.LOGGER.trace("Finished running innerPreReset for basic player env \"{}\"", getUniqueEnvName());
         history = new FutureActionPack.History();
         agent.teleport(getWorld(), getStartPos().getX(), getStartPos().getY(), getStartPos().getZ(), Set.of(), 0, 0);
         agent.setHealth(initialHealth.get());

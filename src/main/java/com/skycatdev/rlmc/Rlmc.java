@@ -140,7 +140,7 @@ public class Rlmc implements ModInitializer {
         GATEWAY_SERVER.addListener(new GatewayServerListener() {
             @Override
             public void connectionError(Exception e) {
-                LOGGER.debug("Py4J Connection Error. Printing stack trace.", e);
+                LOGGER.warn("Py4J Connection Error. Printing stack trace.", e);
             }
 
             @Override
@@ -155,7 +155,7 @@ public class Rlmc implements ModInitializer {
 
             @Override
             public void serverError(Exception e) {
-                LOGGER.debug("Py4J Server Error. Print stack trace.", e);
+                LOGGER.warn("Py4J Server Error. Print stack trace.", e);
             }
 
             @Override
