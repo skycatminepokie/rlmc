@@ -94,35 +94,6 @@ class Entrypoint(object):
         env = DummyVecEnv([lambda: env])
         self.envs[java_environment] = env
 
-    def train(
-        self,
-        environment: JavaObject,
-        episodes: int,
-        save_path: str,
-        load_path: str | None = None,
-    ):
-        if load_path is not None:
-            agent = A2C.load(
-                load_path, self.envs[environment], force_reset=True, verbose=1
-            )
-        else:
-            agent = A2C(
-                "MultiInputPolicy",
-                self.envs[environment],
-                verbose=1,
-                tensorboard_log="./tensorboard_log/",
-            )
-
-        agent.learn(episodes, tb_log_name=save_path, callback=HParamCallback())
-        agent.save(save_path)
-        self.envs[environment].close()
-
-    def evaluate(self, environment: JavaObject, episodes: int, load_path: str) -> str:
-        agent = A2C.load(load_path, self.envs[environment], force_reset=True, verbose=1)
-        mean, std = evaluate_policy(agent, self.envs[environment], episodes, False)
-        self.envs[environment].close()
-        return f"Mean: {mean}, Std: {std}"
-
     # noinspection PyPep8Naming
     def runKwargs(self, environment: JavaObject, ees: JavaObject):
         save_path: str | None = ees.getSavePath()
