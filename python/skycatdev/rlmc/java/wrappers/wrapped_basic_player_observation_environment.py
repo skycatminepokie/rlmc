@@ -119,7 +119,7 @@ class WrappedBasicPlayerObservationEnvironment(WrappedJavaEnv):
             #     "offhand": java_list_to_array(agent.getInventory.offHand),
             # },
             "history": history,
-            "health": np.clip(agent.getHealth(), 0.0, 20.0),
+            "health": (np.clip(agent.getHealth(), 0.0, 20.0) - 10) / 10,
         }
 
     def history_to_python(self, java_obs):
