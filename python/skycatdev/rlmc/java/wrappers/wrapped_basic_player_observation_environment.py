@@ -66,6 +66,7 @@ class WrappedBasicPlayerObservationEnvironment(WrappedJavaEnv):
             #     "offhand":item_space,
             # }),
             "history": self.history_space,
+            "health": Box(-1, 1, dtype=np.float32, shape=(1,)),
         }
         self.observation_space = self.make_observation_space()
 
@@ -118,6 +119,7 @@ class WrappedBasicPlayerObservationEnvironment(WrappedJavaEnv):
             #     "offhand": java_list_to_array(agent.getInventory.offHand),
             # },
             "history": history,
+            "health": np.clip(agent.getHealth(), 0.0, 20.0),
         }
 
     def history_to_python(self, java_obs):
