@@ -31,7 +31,6 @@ import org.jetbrains.annotations.Nullable;
 public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvironment.Observation> {
     public final int maxEnemyDistance = 300;
     @Nullable protected MobEntity enemy;
-    @Nullable protected Vec3d startPos;
     protected EntityType<? extends MobEntity> enemyType;
     @Nullable private Identifier structure = null;
 
