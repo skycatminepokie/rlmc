@@ -114,6 +114,11 @@ public class CommandManager implements CommandRegistrationCallback {
         var batchSizeArg = argument("batchSize", IntegerArgumentType.integer(1))
                 .redirect(base, context -> (ServerCommandSource) ((EnvironmentExecutionSettingsBuilder)context.getSource()).rlmc$setBatchSize(IntegerArgumentType.getInteger(context, "batchSize")))
                 .build();
+        var vfCoef = literal("vfCoef")
+                .build();
+        var vfCoefArg = argument("vfCoef", DoubleArgumentType.doubleArg(0))
+                .redirect(base, context -> (ServerCommandSource) ((EnvironmentExecutionSettingsBuilder)context.getSource()).rlmc$setVfCoef(DoubleArgumentType.getDouble(context, "vfCoef")))
+                .build();
         var monitor = literal("monitor")
                 .build();
         var monitorArg = argument("monitor", BoolArgumentType.bool())
@@ -165,6 +170,8 @@ public class CommandManager implements CommandRegistrationCallback {
             netArch.addChild(netArchDefault);
         base.addChild(batchSize);
             batchSize.addChild(batchSizeArg);
+        base.addChild(vfCoef);
+            vfCoef.addChild(vfCoefArg);
         base.addChild(monitor);
             monitor.addChild(monitorArg);
         base.addChild(frameStack);
