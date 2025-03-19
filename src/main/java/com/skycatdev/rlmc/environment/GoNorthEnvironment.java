@@ -7,6 +7,7 @@ import com.skycatdev.rlmc.command.EnvironmentSettings;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
@@ -15,6 +16,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.random.Random;
 import net.minecraft.world.Heightmap;
 import org.jetbrains.annotations.Nullable;
 
@@ -57,12 +59,6 @@ public class GoNorthEnvironment extends BasicPlayerEnvironment<BasicPlayerObserv
     }
 
     @Override
-    protected Vec3d getStartPos() {
-        return getWorld().getTopPosition(Heightmap.Type.WORLD_SURFACE, BlockPos.ORIGIN).toCenterPos();
-    }
-
-
-    @Override
     protected boolean isTerminated(BasicPlayerObservation observation) {
         return agent.getX() > 20 || agent.getX() < -20;
     }
@@ -74,7 +70,9 @@ public class GoNorthEnvironment extends BasicPlayerEnvironment<BasicPlayerObserv
 
     @Override
     protected void innerPreReset(@Nullable Integer seed, @Nullable Map<String, Object> options) {
-
+        Random random = Random.create();
+        Vec3d agentPos = getWorld().getTopPosition(Heightmap.Type.WORLD_SURFACE, BlockPos.ORIGIN).toCenterPos();
+        agent.teleport(getWorld(), agentPos.getX(), agentPos.getY(), agentPos.getZ(), Set.of(), (random.nextFloat() % 180) - 180,  (random.nextFloat() % 90) - 90);
     }
 
     @Override

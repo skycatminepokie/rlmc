@@ -14,7 +14,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Pair;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.GameMode;
@@ -112,11 +111,6 @@ public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> e
 
     protected abstract double getReward(BasicPlayerObservation observation);
 
-    protected BlockPos getStartBlockPos() {
-        return BlockPos.ofFloored(getStartPos());
-    }
-
-    protected abstract Vec3d getStartPos(); // TODO getWorldSpawnPos
 
     protected void deleteCurrentWorld() {
         if (worldHandle != null) {
@@ -142,7 +136,7 @@ public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> e
     };
 
     /**
-     * Called when resetting at the beginning of the tick. History, food, and health will be reset and the agent will be teleported after this.
+     * Called when resetting at the beginning of the tick.
      */
     protected abstract void innerPreReset(@Nullable Integer seed, @Nullable Map<String, Object> options);
 
@@ -153,15 +147,18 @@ public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> e
         innerPreReset(seed, options);
         Rlmc.LOGGER.trace("Finished running innerPreReset for basic player env \"{}\"", getUniqueEnvName());
         history = new FutureActionPack.History();
-        agent.teleport(getWorld(), getStartPos().getX(), getStartPos().getY(), getStartPos().getZ(), Set.of(), 0, 0);
+        resetAgent();
+
+
+        return new ResetTuple<>(getObservation(), new HashMap<>());
+    }
+
+    protected void resetAgent() {
         agent.setHealth(initialHealth.get());
         agent.getHungerManager().setFoodLevel(initialFoodLevel.get());
         agent.setAir(20);
         agent.extinguish();
         agent.fallDistance = 0;
-
-
-        return new ResetTuple<>(getObservation(), new HashMap<>());
     }
 
     @Override

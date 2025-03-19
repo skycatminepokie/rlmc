@@ -23,8 +23,9 @@ import net.minecraft.structure.StructurePlacementData;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.Vec3i;
+import net.minecraft.util.math.random.Random;
 import org.jetbrains.annotations.Nullable;
 
 public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvironment.Observation> {
@@ -105,14 +106,6 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvi
     }
 
     @Override
-    protected Vec3d getStartPos() {
-        if (startPos == null) {
-            throw new IllegalStateException("Something called getStartPos before we were ready!");
-        }
-        return startPos;
-    }
-
-    @Override
     protected void innerPreReset(@Nullable Integer seed, @Nullable Map<String, Object> options) {
         deleteCurrentWorld();
         PlayerInventory inventory = agent.getInventory();
@@ -122,29 +115,33 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvi
         if (enemy != null) {
             enemy.discard();
         }
-        enemy = enemyType.spawn(getWorld(), BlockPos.ORIGIN, SpawnReason.COMMAND); // TODO: Move spread players usage to custom impl so I don't waste stuff and things
+        Random random = Random.create();
+        var spawnLocations = Objects.requireNonNull(SpreadEntitiesHelper.getSpreadLocations(getWorld(), getWorld().getSpawnPos(), new Vec3i(75, 75, 75), new Vec3i(5, 0, 5), new Vec3i(10, 5, 10), random));
+        BlockPos enemyBlock = spawnLocations.getLeft();
+        Vec3d enemyPos = enemyBlock.toCenterPos();
+        BlockPos playerBlock = spawnLocations.getRight();
+        Vec3d playerPos = playerBlock.toCenterPos();
+        enemy = enemyType.spawn(getWorld(), enemyBlock, SpawnReason.COMMAND);
         if (enemy == null) {
-            throw new NullPointerException("Skeleton was null, expected non-null");
+            throw new NullPointerException("Enemy was null, expected non-null");
         }
-        agent.getStatHandler().setStat(agent, Stats.CUSTOM.getOrCreateStat(Stats.DAMAGE_DEALT), 0);
-        agent.getStatHandler().setStat(agent, Stats.CUSTOM.getOrCreateStat(Stats.DAMAGE_TAKEN), 0);
-        Vec3d spawnPos = Vec3d.of(getWorld().getSpawnPos());
-        SpreadEntitiesHelper.spreadEntities(getWorld(),
-                new Vec2f((float) spawnPos.getX(), (float) spawnPos.getZ()),
-                2.0f,
-                2f,
-                100,
-                false,
-                List.of(enemy, agent));
-        startPos = enemy.getPos(); // TODO: Move to an override of something like teleportToStart
+        enemy.teleport(getWorld(), enemyPos.getX(), enemyPos.getY(), enemyPos.getZ(), Set.of(), (random.nextFloat() % 180) - 180, (random.nextFloat() % 90) - 90);
+        agent.teleport(getWorld(), playerPos.getX(), playerPos.getY(), playerPos.getZ(), Set.of(), (random.nextFloat() % 180) - 180,  (random.nextFloat() % 90) - 90);
         if (structure != null) {
             var optTemplate = getWorld().getStructureTemplateManager().getTemplate(structure);
             if (optTemplate.isPresent()) {
-                optTemplate.get().place(getWorld(), BlockPos.ofFloored(Objects.requireNonNull(startPos).subtract(6, 1, 6)), BlockPos.ofFloored(startPos), new StructurePlacementData(), net.minecraft.util.math.random.Random.create(), 0);
+                optTemplate.get().place(getWorld(), playerBlock.subtract(new Vec3i(6, 1, 6)), playerBlock, new StructurePlacementData(), random, 0);
             } else {
                 Rlmc.LOGGER.warn("Tried to place non-existent structure {}, skipping.", structure);
             }
         }
+    }
+
+    @Override
+    protected void resetAgent() {
+        super.resetAgent();
+        agent.getStatHandler().setStat(agent, Stats.CUSTOM.getOrCreateStat(Stats.DAMAGE_DEALT), 0);
+        agent.getStatHandler().setStat(agent, Stats.CUSTOM.getOrCreateStat(Stats.DAMAGE_TAKEN), 0);
     }
 
     @Override

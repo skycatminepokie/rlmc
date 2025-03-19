@@ -6,8 +6,7 @@
     "ServerCommandSourceMixin",
     "EntityPlayerMPFakeMixin",
     "MinecraftServerMixin",
-    "MobEntityMixin",
-    "SpreadPlayersCommandAccessor"
+    "MobEntityMixin"
   ],
   "injectors": {
     "defaultRequire": 1

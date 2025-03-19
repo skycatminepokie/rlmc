@@ -1,45 +1,56 @@
 /* Licensed MIT 2025 */
 package com.skycatdev.rlmc;
 
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.skycatdev.rlmc.mixin.SpreadPlayersCommandAccessor;
-import java.util.Collection;
+import java.util.Set;
 import net.minecraft.entity.Entity;
-import net.minecraft.server.command.SpreadPlayersCommand;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.Vec2f;
+import net.minecraft.util.Pair;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.Vec3i;
 import net.minecraft.util.math.random.Random;
+import net.minecraft.world.Heightmap;
+import org.jetbrains.annotations.Nullable;
 
 public class SpreadEntitiesHelper {
-    /**
-     * Totally and completely yoinked from SpreadPlayersCommand.
-     */
-    public static int spreadEntities(ServerWorld world, Vec2f center, float spreadDistance, float maxRange, int maxY, boolean respectTeams, Collection<? extends Entity> entities) {
-        if (maxY < world.getBottomY()) {
-            throw new IllegalArgumentException("Invalid height - it's below the world");
-        } else {
-            Random random = Random.create();
-            double minX = center.x - maxRange;
-            double minZ = center.y - maxRange;
-            double maxX = center.x + maxRange;
-            double maxZ = center.y + maxRange;
-            SpreadPlayersCommand.Pile[] piles = SpreadPlayersCommandAccessor.callMakePiles(random, respectTeams ? SpreadPlayersCommandAccessor.callGetPileCountRespectingTeams(entities) : entities.size(), minX, minZ, maxX, maxZ);
-            boolean success = false;
-            for (int i = 0; i < 10000; i++) {
-                try {
-                    SpreadPlayersCommandAccessor.callSpread(center, spreadDistance, world, random, minX, minZ, maxX, maxZ, maxY, piles, respectTeams);
-                } catch (CommandSyntaxException ex) {
-                    minX++;
-                    minZ++;
-                    maxX++;
-                    maxZ++;
-                    continue;
+    // TODO test
+    public static @Nullable Pair<BlockPos, BlockPos> getSpreadLocations(ServerWorld world,
+                                                                        Vec3i center,
+                                                                        Vec3i firstMaxFromCenter,
+                                                                        Vec3i minSpread,
+                                                                        Vec3i maxSpread,
+                                                                        Random random) {
+        Iterable<BlockPos> centerIterable = BlockPos.iterateOutwards(net.minecraft.util.math.BlockPos.ofFloored(center.getX(),0, center.getY()), firstMaxFromCenter.getX(), 0, firstMaxFromCenter.getZ());
+        for (BlockPos blockPos : centerIterable) {
+            BlockPos blockCenter = world.getTopPosition(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, blockPos);
+            BlockPos min = new BlockPos(blockCenter.getX() - minSpread.getX(), blockCenter.getY() - minSpread.getY(), blockCenter.getZ() - minSpread.getZ());
+            BlockPos max = new BlockPos(blockCenter.getX() + maxSpread.getX(), blockCenter.getY() + maxSpread.getY(), blockCenter.getZ() + maxSpread.getZ());
+            Iterable<BlockPos> secondIterable = BlockPos.iterateRandomly(random, 1000, min.getX(), min.getY(), min.getZ(), max.getX(), max.getY(), max.getZ());
+            for (BlockPos secondSpawn : secondIterable) {
+                if (secondSpawn.getX() >= min.getX() && secondSpawn.getY() >= min.getY() && secondSpawn.getZ() >= min.getZ()) {
+                    return new Pair<>(blockCenter, secondSpawn);
                 }
-                success = true;
-                break;
             }
-            double h = SpreadPlayersCommandAccessor.callGetMinDistance(entities, world, piles, maxY, respectTeams);
-            return piles.length;
         }
+        return null;
+    }
+
+    public static boolean spreadEntities(ServerWorld world,
+                                         Vec3i center,
+                                         Vec3i firstMaxFromCenter,
+                                         Vec3i minSpread,
+                                         Vec3i maxSpread,
+                                         Entity entity1,
+                                         Entity entity2,
+                                         Random random) {
+        @Nullable Pair<BlockPos, BlockPos> positions = getSpreadLocations(world, center, firstMaxFromCenter, minSpread, maxSpread, random);
+        if (positions == null) {
+            return false;
+        }
+        Vec3d firstPos = positions.getLeft().toCenterPos();
+        Vec3d secondPos = positions.getRight().toCenterPos();
+        entity1.teleport(world, firstPos.getX(), firstPos.getY(), firstPos.getZ(), Set.of(), (random.nextFloat() % 180) - 180,  (random.nextFloat() % 90) - 90);
+        entity2.teleport(world, secondPos.getX(), secondPos.getY(), secondPos.getZ(), Set.of(), (random.nextFloat() % 180) - 180,  (random.nextFloat() % 90) - 90);
+        return true;
     }
 }
