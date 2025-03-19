@@ -23,6 +23,7 @@ public class SpreadEntitiesHelper {
         Iterable<BlockPos> centerIterable = BlockPos.iterateOutwards(net.minecraft.util.math.BlockPos.ofFloored(center.getX(),0, center.getY()), firstMaxFromCenter.getX(), 0, firstMaxFromCenter.getZ());
         for (BlockPos blockPos : centerIterable) {
             BlockPos blockCenter = world.getTopPosition(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, blockPos);
+            if (world.getBlockState(blockCenter).isAir()) continue;
             BlockPos min = new BlockPos(blockCenter.getX() - minSpread.getX(), blockCenter.getY() - minSpread.getY(), blockCenter.getZ() - minSpread.getZ());
             BlockPos max = new BlockPos(blockCenter.getX() + maxSpread.getX(), blockCenter.getY() + maxSpread.getY(), blockCenter.getZ() + maxSpread.getZ());
             Iterable<BlockPos> secondIterable = BlockPos.iterateRandomly(random, 1000, min.getX(), min.getY(), min.getZ(), max.getX(), max.getY(), max.getZ());
