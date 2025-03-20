@@ -115,7 +115,7 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvi
             enemy.discard();
         }
         Random random = Random.create();
-        var spawnLocations = Objects.requireNonNull(SpreadEntitiesHelper.getSpreadLocations(getWorld(), getWorld().getSpawnPos(), new Vec3i(75, 75, 75), new Vec3i(5, 0, 5), new Vec3i(10, 5, 10), random));
+        var spawnLocations = Objects.requireNonNull(SpreadEntitiesHelper.getSpreadLocations(getWorld(), BlockPos.ORIGIN, new Vec3i(75, 300, 75), new Vec3i(1, 0, 1), new Vec3i(5, 5, 5), random));
         BlockPos enemyBlock = spawnLocations.getLeft();
         Vec3d enemyPos = enemyBlock.toCenterPos();
         BlockPos playerBlock = spawnLocations.getRight();
