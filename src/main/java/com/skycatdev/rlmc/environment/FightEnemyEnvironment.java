@@ -23,6 +23,7 @@ import net.minecraft.structure.StructurePlacementData;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.util.math.random.Random;
@@ -165,16 +166,20 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvi
         }
 
         public static Observation fromBasic(BasicPlayerObservation basic, MobEntity entity, int maxEnemyDistance) {
-            Vec3d vecToEnemy = entity.getEyePos().subtract(basic.self().getEyePos());
-            Vec3d clamped = new Vec3d(Math.clamp(vecToEnemy.getX(), -maxEnemyDistance, maxEnemyDistance),
-                    Math.clamp(vecToEnemy.getY(), -maxEnemyDistance, maxEnemyDistance),
-                    Math.clamp(vecToEnemy.getZ(), -maxEnemyDistance, maxEnemyDistance));
+            Vec3d posVec = entity.getEyePos().subtract(basic.self().getEyePos());
+            // Vector calculations: https://stackoverflow.com/questions/58469297/how-do-i-calculate-the-yaw-pitch-and-roll-of-a-point-in-3d/58469298#58469298
+            double yawRad = Math.atan2(posVec.getZ(), posVec.getX());
+            double pitchRad = Math.atan2(posVec.getY(), Math.sqrt(Math.pow(posVec.getX(), 2) + Math.pow(posVec.getZ(), 2)));
+            double yaw = MathHelper.wrapDegrees(Math.toDegrees(yawRad) - basic.self().getYaw());
+            double pitch = MathHelper.wrapDegrees(Math.toDegrees(pitchRad) - basic.self().getPitch());
+            double dist = Math.clamp(posVec.length(), 0, maxEnemyDistance);
+            // TODO: Debug renderer to test this
             return new Observation(
                     basic.blocks(),
                     basic.entities(),
                     basic.self(),
                     basic.history(),
-                    clamped
+                    new Vec3d(yaw, pitch, dist)
             );
         }
 
