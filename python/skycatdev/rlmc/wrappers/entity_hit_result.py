@@ -4,8 +4,8 @@ import numpy as np
 from gymnasium.spaces import Dict, Box, flatten_space, Discrete
 from py4j.java_gateway import JavaObject, JVMView
 
-from skycatdev.rlmc.java.wrappers.block_pos import MAX_BLOCK_DISTANCE
-from skycatdev.rlmc.java.wrappers.vec3d import Vec3d
+from skycatdev.rlmc.wrappers.block_pos import MAX_BLOCK_DISTANCE
+from skycatdev.rlmc.wrappers.vec3d import Vec3d
 
 MAX_IDENTIFIER_LENGTH = 32767
 

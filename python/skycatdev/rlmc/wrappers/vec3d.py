@@ -1,4 +1,3 @@
-import numpy
 from gymnasium.spaces import Box
 import numpy as np
 from py4j.java_gateway import JavaObject

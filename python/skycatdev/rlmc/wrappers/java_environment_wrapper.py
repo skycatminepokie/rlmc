@@ -5,7 +5,7 @@ import gymnasium as gym
 from gymnasium.core import ObsType, ActType
 from py4j.java_gateway import JavaObject, JavaGateway
 
-from skycatdev.rlmc.java.utils import java_map_to_dict
+from skycatdev.rlmc.utils import java_map_to_dict
 
 
 class WrappedJavaEnv(ABC, gym.Env):

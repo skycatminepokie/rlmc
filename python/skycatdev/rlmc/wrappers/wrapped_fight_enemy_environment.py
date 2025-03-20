@@ -4,9 +4,9 @@ from gymnasium.spaces import Dict
 from py4j.java_gateway import JavaObject, JavaGateway
 from typing_extensions import override
 
-from skycatdev.rlmc.java.wrappers import vec3d
-from skycatdev.rlmc.java.wrappers.vec3d import Vec3d
-from skycatdev.rlmc.java.wrappers.wrapped_basic_player_observation_environment import (
+from skycatdev.rlmc.wrappers import vec3d
+from skycatdev.rlmc.wrappers.vec3d import Vec3d
+from skycatdev.rlmc.wrappers.wrapped_basic_player_observation_environment import (
     WrappedBasicPlayerObservationEnvironment,
 )
 

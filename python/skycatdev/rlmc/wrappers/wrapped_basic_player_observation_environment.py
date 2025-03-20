@@ -10,12 +10,12 @@ from gymnasium.spaces import (
 from py4j.java_collections import JavaList, JavaMap
 from py4j.java_gateway import JavaObject, JavaGateway, java_import
 
-from skycatdev.rlmc.java.utils import java_list_to_array
-from skycatdev.rlmc.java.wrappers import block_hit_result, entity_hit_result
-from skycatdev.rlmc.java.wrappers.block_hit_result import WrappedBlockHitResult
-from skycatdev.rlmc.java.wrappers.block_pos import MAX_BLOCK_DISTANCE, BlockPos
-from skycatdev.rlmc.java.wrappers.entity_hit_result import WrappedEntityHitResult
-from skycatdev.rlmc.java.wrappers.java_environment_wrapper import WrappedJavaEnv
+from skycatdev.rlmc.utils import java_list_to_array
+from skycatdev.rlmc.wrappers import block_hit_result, entity_hit_result
+from skycatdev.rlmc.wrappers.block_hit_result import WrappedBlockHitResult
+from skycatdev.rlmc.wrappers.block_pos import MAX_BLOCK_DISTANCE, BlockPos
+from skycatdev.rlmc.wrappers.entity_hit_result import WrappedEntityHitResult
+from skycatdev.rlmc.wrappers.java_environment_wrapper import WrappedJavaEnv
 
 MAX_ID_LENGTH = 32767
 

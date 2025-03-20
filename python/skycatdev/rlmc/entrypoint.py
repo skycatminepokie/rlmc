@@ -21,10 +21,10 @@ from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.on_policy_algorithm import OnPolicyAlgorithm
 from stable_baselines3.common.vec_env import DummyVecEnv
 
-from skycatdev.rlmc.java.wrappers.wrapped_basic_player_observation_environment import (
+from skycatdev.rlmc.wrappers.wrapped_basic_player_observation_environment import (
     WrappedBasicPlayerObservationEnvironment,
 )
-from skycatdev.rlmc.java.wrappers.wrapped_fight_enemy_environment import (
+from skycatdev.rlmc.wrappers.wrapped_fight_enemy_environment import (
     WrappedFightEnemyEnvironment,
 )
 
