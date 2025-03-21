@@ -86,6 +86,7 @@ class Entrypoint(object):
                 for i in range(1, 10):
                     action[i] = 0
                 action[11] = 0
+                return action
 
             env = WrappedFightEnemyEnvironment(java_environment, get_gateway())
             env = FilterObservation(env, filter_keys=["enemy"])
