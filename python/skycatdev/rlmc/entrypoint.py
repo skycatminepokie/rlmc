@@ -17,7 +17,6 @@ from stable_baselines3 import PPO, A2C
 from stable_baselines3.common.callbacks import (
     BaseCallback,
     EvalCallback,
-    StopTrainingOnRewardThreshold,
     CallbackList,
 )
 from stable_baselines3.common.evaluation import evaluate_policy
