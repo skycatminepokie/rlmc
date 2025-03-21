@@ -5,7 +5,12 @@ import warnings
 from typing import Any
 from typing import override
 
-from gymnasium.wrappers import TimeLimit, FrameStackObservation, FilterObservation
+from gymnasium.wrappers import (
+    TimeLimit,
+    FrameStackObservation,
+    FilterObservation,
+    TransformAction,
+)
 from py4j.java_collections import JavaArray
 from py4j.java_gateway import JavaGateway, JavaObject, server_connection_started
 from stable_baselines3 import PPO, A2C
@@ -77,7 +82,7 @@ class Entrypoint(object):
             )
         elif environment == "fight_enemy":
             env = WrappedFightEnemyEnvironment(java_environment, get_gateway())
-            env = FilterObservation(env, filter_keys=["enemy", "history"])
+            env = FilterObservation(env, filter_keys=["enemy"])
         else:
             assert (
                 environment == "go_north"
