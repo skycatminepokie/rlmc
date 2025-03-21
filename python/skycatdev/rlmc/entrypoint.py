@@ -81,8 +81,15 @@ class Entrypoint(object):
                 java_environment, get_gateway()
             )
         elif environment == "fight_enemy":
+
+            def fix_action(action):
+                for i in range(1, 10):
+                    action[i] = 0
+                action[11] = 0
+
             env = WrappedFightEnemyEnvironment(java_environment, get_gateway())
             env = FilterObservation(env, filter_keys=["enemy"])
+            env = TransformAction(env, fix_action)
         else:
             assert (
                 environment == "go_north"
