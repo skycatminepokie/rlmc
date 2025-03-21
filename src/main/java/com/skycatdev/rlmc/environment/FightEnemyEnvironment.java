@@ -170,8 +170,8 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvi
             // Vector calculations: https://stackoverflow.com/questions/58469297/how-do-i-calculate-the-yaw-pitch-and-roll-of-a-point-in-3d/58469298#58469298
             double yawRad = Math.atan2(posVec.getX(), posVec.getZ());
             double pitchRad = Math.atan2(posVec.getY(), Math.sqrt(Math.pow(posVec.getX(), 2) + Math.pow(posVec.getZ(), 2)));
-            double yaw = MathHelper.wrapDegrees(Math.toDegrees(yawRad) - basic.self().getYaw());
-            double pitch = MathHelper.wrapDegrees(Math.toDegrees(pitchRad) - basic.self().getPitch());
+            double yaw = MathHelper.wrapDegrees(Math.toDegrees(yawRad));
+            double pitch = MathHelper.wrapDegrees(Math.toDegrees(pitchRad));
             double dist = Math.clamp(posVec.length(), 0, maxEnemyDistance);
             // TODO: Debug renderer to test this
             return new Observation(
