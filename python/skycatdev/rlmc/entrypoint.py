@@ -182,7 +182,6 @@ class Entrypoint(object):
                 log_path="./logs/",
                 eval_freq=10_000,
                 deterministic=True,
-                callback_on_new_best=StopTrainingOnRewardThreshold(0.75),
             )
             h_param_callback = HParamCallback()
             callback = CallbackList([eval_callback, h_param_callback])
