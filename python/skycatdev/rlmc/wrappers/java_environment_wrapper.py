@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, SupportsFloat
+from typing import Any, SupportsFloat, Callable
 
 import gymnasium as gym
 from gymnasium.core import ObsType, ActType
@@ -9,9 +9,19 @@ from skycatdev.rlmc.utils import java_map_to_dict
 
 
 class WrappedJavaEnv(ABC, gym.Env):
-    def __init__(self, java_env: JavaObject, java_gateway: JavaGateway):
-        self.java_env = java_env
-        self.java_view = java_gateway.new_jvm_view()
+    def __init__(
+        self,
+        java_env: JavaObject | Callable[[], JavaObject],
+        java_gateway: JavaGateway | Callable[[], JavaGateway],
+    ):
+        if isinstance(java_env, JavaObject):
+            self.java_env = java_env
+        else:
+            self.java_env = java_env()
+        if isinstance(java_gateway, JavaGateway):
+            self.java_view = java_gateway.new_jvm_view()
+        else:
+            self.java_view = java_gateway().new_jvm_view()
 
     def step(
         self, action: ActType

@@ -1,3 +1,5 @@
+from typing import Callable
+
 import numpy as np
 from gymnasium import Space
 from gymnasium.core import ActType, ObsType
@@ -23,7 +25,11 @@ MAX_STACK_SIZE = 999
 
 
 class WrappedBasicPlayerObservationEnvironment(WrappedJavaEnv):
-    def __init__(self, java_env: JavaObject, java_gateway: JavaGateway):
+    def __init__(
+        self,
+        java_env: JavaObject | Callable[[], JavaObject],
+        java_gateway: JavaGateway | Callable[[], JavaGateway],
+    ):
         super().__init__(java_env, java_gateway)
         self.raycasts = self.java_env.getRaycasts()
         self.raycast_distance = self.java_env.getRaycastDistance()

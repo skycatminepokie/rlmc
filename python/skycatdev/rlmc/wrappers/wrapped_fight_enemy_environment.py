@@ -1,3 +1,5 @@
+from typing import Callable
+
 from gymnasium import Space
 from gymnasium.core import ObsType
 from gymnasium.spaces import Dict
@@ -12,14 +14,19 @@ from skycatdev.rlmc.wrappers.wrapped_basic_player_observation_environment import
 
 
 class WrappedFightEnemyEnvironment(WrappedBasicPlayerObservationEnvironment):
-    def __init__(self, java_env: JavaObject, java_gateway: JavaGateway):
-        self.max_enemy_distance = java_env.getMaxEnemyDistance()
+    def __init__(
+        self,
+        java_env: JavaObject | Callable[[], JavaObject],
+        java_gateway: JavaGateway | Callable[[], JavaGateway],
+    ):
         super().__init__(java_env, java_gateway)
 
     @override
     def make_observation_space(self) -> Space:
         self.observation_dict["enemy"] = vec3d.space(
-            self.max_enemy_distance, self.max_enemy_distance, self.max_enemy_distance
+            self.java_env.getMaxEnemyDistance(),
+            self.java_env.getMaxEnemyDistance(),
+            self.java_env.getMaxEnemyDistance(),
         )
         return Dict(self.observation_dict)
 

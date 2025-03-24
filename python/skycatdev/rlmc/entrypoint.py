@@ -209,9 +209,12 @@ class Entrypoint(object):
         implements = ["com.skycatdev.rlmc.PythonEntrypoint"]
 
 
-gateway = JavaGateway(
-    start_callback_server=True, python_server_entry_point=Entrypoint(), auto_field=True
-)
+if __name__ == "__main__":
+    gateway = JavaGateway(
+        start_callback_server=True,
+        python_server_entry_point=Entrypoint(),
+        auto_field=True,
+    )
 
 
 class Log4jHandler(logging.Handler):
@@ -257,11 +260,12 @@ def connection_started(sender, **kwargs):
     sys.stderr = Log4jStream()
 
 
-server_connection_started.connect(
-    connection_started, sender=gateway.get_callback_server()
-)
+if __name__ == "__main__":
+    server_connection_started.connect(
+        connection_started, sender=gateway.get_callback_server()
+    )
 
-print("Gateway started")
+    print("Gateway started")
 
 
 def get_gateway():
