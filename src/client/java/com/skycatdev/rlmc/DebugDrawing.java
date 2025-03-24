@@ -3,6 +3,8 @@ package com.skycatdev.rlmc;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.skycatdev.rlmc.network.DrawVectorPayload;
+import java.util.LinkedList;
+import java.util.List;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.minecraft.client.render.*;
@@ -10,9 +12,10 @@ import net.minecraft.util.math.Vec3d;
 import org.joml.Vector3f;
 
 public class DebugDrawing implements WorldRenderEvents.DebugRender {
+    protected final List<DebugVector> vectors = new LinkedList<>();
 
     public void addVector(DebugVector debugVector) {
-
+        vectors.add(debugVector);
     }
 
     public DebugVector addVector(Vector3f origin, Vector3f vector, DrawVectorPayload.Mode mode) {
@@ -44,7 +47,17 @@ public class DebugDrawing implements WorldRenderEvents.DebugRender {
                         .color(vector.color);
             }
             case ROTATION -> {
-                // TODO
+                vertexConsumer.vertex((float) (vector.origin.x - cameraPos.x), (float) (vector.origin.y - cameraPos.y), (float) (vector.origin.z - cameraPos.z))
+                        .color(vector.color);
+                // (x,y,z) = (-sin(yaw)cos(pitch), sin(pitch), -cos(yaw)cos(pitch)) https://math.stackexchange.com/questions/2618527/converting-from-yaw-pitch-roll-to-vector
+                double yaw = Math.toRadians(vector.vector.x);
+                double pitch = Math.toRadians(vector.vector.y);
+                float dist = vector.vector.z;
+                Vec3d vecFromZero = new Vec3d(-Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch));
+                vecFromZero = vecFromZero.normalize().multiply(dist);
+                Vector3f vec = vector.origin.add(vecFromZero.toVector3f());
+                vertexConsumer.vertex((float) (vec.x - cameraPos.x), (float) (vec.y - cameraPos.y), (float) (vec.z - cameraPos.z))
+                        .color(vector.color);
             }
         }
     }
