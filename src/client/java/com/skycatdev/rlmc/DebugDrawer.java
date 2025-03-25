@@ -5,13 +5,15 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.skycatdev.rlmc.network.drawing.DebugVector;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.*;
 import net.minecraft.util.math.Vec3d;
 import org.joml.Vector3f;
 
-public class DebugDrawing implements WorldRenderEvents.DebugRender {
+public class DebugDrawer implements WorldRenderEvents.DebugRender, ClientTickEvents.EndTick {
     protected final Queue<DebugVector> vectors = new ConcurrentLinkedQueue<>();
 
     public void addVector(DebugVector debugVector) {
@@ -26,10 +28,7 @@ public class DebugDrawing implements WorldRenderEvents.DebugRender {
         RenderSystem.applyModelViewMatrix();
         Camera camera = context.camera();
         Vec3d pos = camera.getPos();
-        vectors.iterator().forEachRemaining((vec) -> {
-            addVectorVertices(vec, pos, buffer);
-            vec.setLifetime(vec.lifetime() - 1); // TODO: Make lifetime time-related instead of frame-related
-        } );
+        vectors.iterator().forEachRemaining((vec) -> addVectorVertices(vec, pos, buffer));
         RenderSystem.setShader(GameRenderer::getPositionColorProgram);
         BufferRenderer.drawWithGlobalProgram(buffer.end());
     }
@@ -58,4 +57,10 @@ public class DebugDrawing implements WorldRenderEvents.DebugRender {
         }
     }
 
+    @Override
+    public void onEndTick(MinecraftClient minecraftClient) {
+        for (DebugVector vector : vectors) {
+            vector.setLifetime(vector.lifetime() - 1);
+        }
+    }
 }
