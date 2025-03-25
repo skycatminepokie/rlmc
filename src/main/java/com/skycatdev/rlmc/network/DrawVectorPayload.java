@@ -2,7 +2,6 @@
 package com.skycatdev.rlmc.network;
 
 import com.skycatdev.rlmc.Rlmc;
-import com.skycatdev.rlmc.network.drawing.DebugVector;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.packet.CustomPayload;

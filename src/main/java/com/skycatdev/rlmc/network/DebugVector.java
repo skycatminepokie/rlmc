@@ -1,5 +1,5 @@
 /* Licensed MIT 2025 */
-package com.skycatdev.rlmc.network.drawing;
+package com.skycatdev.rlmc.network;
 
 import io.netty.buffer.ByteBuf;
 import java.util.Objects;

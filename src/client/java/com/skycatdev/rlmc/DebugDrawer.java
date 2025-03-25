@@ -2,7 +2,7 @@
 package com.skycatdev.rlmc;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.skycatdev.rlmc.network.drawing.DebugVector;
+import com.skycatdev.rlmc.network.DebugVector;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
