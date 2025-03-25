@@ -13,7 +13,7 @@ public class RlmcClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
 		ClientPlayNetworking.registerGlobalReceiver(DrawVectorPayload.PACKET_ID, (payload, context) -> {
-			DEBUG_DRAWING.addVector(new DebugDrawing.DebugVector(payload.origin(), payload.vector(), payload.mode(), 0xFFFFFFFF));
+			DEBUG_DRAWING.addVector(payload.vector());
 		});
 		WorldRenderEvents.BEFORE_DEBUG_RENDER.register(DEBUG_DRAWING);
 	}
