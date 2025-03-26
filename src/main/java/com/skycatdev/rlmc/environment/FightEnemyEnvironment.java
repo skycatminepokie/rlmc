@@ -105,7 +105,7 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvi
         int damageTaken = agent.getStatHandler().getStat(Stats.CUSTOM.getOrCreateStat(Stats.DAMAGE_TAKEN));
         agent.getStatHandler().setStat(agent, Stats.CUSTOM.getOrCreateStat(Stats.DAMAGE_DEALT), 0);
         agent.getStatHandler().setStat(agent, Stats.CUSTOM.getOrCreateStat(Stats.DAMAGE_TAKEN), 0);
-        return enemy != null && enemy.isDead() ? (1 - damageTaken) : (damageDealt - damageTaken) / 300d;
+        return enemy != null && enemy.isDead() ? (0.25 - damageTaken) : (damageDealt - damageTaken) / 300d;
     }
 
     @Override
