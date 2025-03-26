@@ -29,6 +29,7 @@ public class SpreadEntitiesHelper {
             Iterable<BlockPos> secondIterable = BlockPos.iterateRandomly(random, 1000, min.getX(), min.getY(), min.getZ(), max.getX(), max.getY(), max.getZ());
             for (BlockPos secondSpawn : secondIterable) {
                 if (secondSpawn.getX() >= min.getX() && secondSpawn.getY() >= min.getY() && secondSpawn.getZ() >= min.getZ()) {
+                    if (world.getBlockState(secondSpawn.down()).isAir()) continue;
                     return new Pair<>(blockCenter, secondSpawn);
                 }
             }
