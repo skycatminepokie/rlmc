@@ -20,7 +20,7 @@ public class SpreadEntitiesHelper {
                                                                         Vec3i minSpread,
                                                                         Vec3i maxSpread,
                                                                         Random random) {
-        Iterable<BlockPos> centerIterable = BlockPos.iterateOutwards(net.minecraft.util.math.BlockPos.ofFloored(center.getX(),0, center.getY()), firstMaxFromCenter.getX(), 0, firstMaxFromCenter.getZ());
+        Iterable<BlockPos> centerIterable = BlockPos.iterateOutwards(BlockPos.ofFloored(center.getX(),0, center.getY()), firstMaxFromCenter.getX(), 0, firstMaxFromCenter.getZ());
         for (BlockPos blockPos : centerIterable) {
             BlockPos blockCenter = world.getTopPosition(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, blockPos);
             if (world.getBlockState(blockCenter.down()).isAir()) continue;
@@ -29,6 +29,7 @@ public class SpreadEntitiesHelper {
             Iterable<BlockPos> secondIterable = BlockPos.iterateRandomly(random, 1000, min.getX(), min.getY(), min.getZ(), max.getX(), max.getY(), max.getZ());
             for (BlockPos secondSpawn : secondIterable) {
                 if (secondSpawn.getX() >= min.getX() && secondSpawn.getY() >= min.getY() && secondSpawn.getZ() >= min.getZ()) {
+                    if (world.getBlockState(secondSpawn.down()).isAir()) continue;
                     return new Pair<>(blockCenter, secondSpawn);
                 }
             }

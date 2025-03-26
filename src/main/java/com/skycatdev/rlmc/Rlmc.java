@@ -5,11 +5,13 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.skycatdev.rlmc.command.CommandManager;
 import com.skycatdev.rlmc.environment.Environment;
+import com.skycatdev.rlmc.network.DrawVectorPayload;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.EntityType;
@@ -136,6 +138,7 @@ public class Rlmc implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        PayloadTypeRegistry.playS2C().register(DrawVectorPayload.PACKET_ID, DrawVectorPayload.CODEC);
         CommandRegistrationCallback.EVENT.register(new CommandManager());
         GATEWAY_SERVER.addListener(new GatewayServerListener() {
             @Override
