@@ -82,9 +82,9 @@ class Entrypoint(object):
         elif environment == "fight_enemy":
 
             def fix_action(action):  # TODO: This is a hack
-                for i in range(1, 10):
+                for i in range(1, 8):
                     action[i] = 0
-                action[11] = 0
+                action[9] = 0
                 return action
 
             env = WrappedFightEnemyEnvironment(java_environment, get_gateway())
