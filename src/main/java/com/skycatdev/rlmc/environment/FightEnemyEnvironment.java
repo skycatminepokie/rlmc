@@ -5,11 +5,14 @@ import com.skycatdev.rlmc.NameGenerator;
 import com.skycatdev.rlmc.Rlmc;
 import com.skycatdev.rlmc.SpreadEntitiesHelper;
 import com.skycatdev.rlmc.command.EnvironmentSettings;
+import com.skycatdev.rlmc.network.DebugVector;
+import com.skycatdev.rlmc.network.DrawVectorPayload;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 import java.util.function.Function;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.mob.MobEntity;
@@ -173,13 +176,23 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvi
             double yaw = MathHelper.wrapDegrees(Math.toDegrees(yawRad));
             double pitch = MathHelper.wrapDegrees(Math.toDegrees(pitchRad));
             double dist = Math.clamp(posVec.length(), 0, maxEnemyDistance);
-            // TODO: Debug renderer to test this
+            Vec3d vecToEnemy = new Vec3d(yaw, pitch, dist);
+            // TODO: Setting to disable rendering
+            basic.self().getServerWorld().getPlayers((player) -> player.distanceTo(basic.self()) <= 100).forEach((player) -> {
+                if (ServerPlayNetworking.canSend(player, DrawVectorPayload.PACKET_ID)) {
+                    ServerPlayNetworking.send(player, new DrawVectorPayload(new DebugVector(basic.self().getEyePos().toVector3f(),
+                                    vecToEnemy.toVector3f(),
+                                    DebugVector.Mode.ROTATION,
+                                    0xFFFFFFFF,
+                                    2)));
+                }
+            });
             return new Observation(
                     basic.blocks(),
                     basic.entities(),
                     basic.self(),
                     basic.history(),
-                    new Vec3d(yaw, pitch, dist)
+                    vecToEnemy
             );
         }
 

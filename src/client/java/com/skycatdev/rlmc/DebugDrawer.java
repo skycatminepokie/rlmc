@@ -3,6 +3,7 @@ package com.skycatdev.rlmc;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.skycatdev.rlmc.network.DebugVector;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -18,19 +19,6 @@ public class DebugDrawer implements WorldRenderEvents.DebugRender, ClientTickEve
 
     public void addVector(DebugVector debugVector) {
         vectors.add(debugVector);
-    }
-
-    @Override
-    public void beforeDebugRender(WorldRenderContext context) {
-        // "Yeah, don't try to update that code to 1.21.5 / Not until fapi rendering has something built in" - Qendolin
-        Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
-        RenderSystem.applyModelViewMatrix();
-        Camera camera = context.camera();
-        Vec3d pos = camera.getPos();
-        vectors.iterator().forEachRemaining((vec) -> addVectorVertices(vec, pos, buffer));
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
-        BufferRenderer.drawWithGlobalProgram(buffer.end());
     }
 
     private void addVectorVertices(DebugVector vector, Vec3d cameraPos, VertexConsumer vertexConsumer) {
@@ -50,10 +38,27 @@ public class DebugDrawer implements WorldRenderEvents.DebugRender, ClientTickEve
                 float dist = vector.vector().z;
                 Vec3d vecFromZero = new Vec3d(-Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch));
                 vecFromZero = vecFromZero.normalize().multiply(dist);
-                Vector3f vec = vector.origin().add(vecFromZero.toVector3f());
+                Vector3f vec = new Vector3f();
+                vector.origin().add(vecFromZero.toVector3f(), vec);
                 vertexConsumer.vertex((float) (vec.x - cameraPos.x), (float) (vec.y - cameraPos.y), (float) (vec.z - cameraPos.z))
                         .color(vector.color());
             }
+        }
+    }
+
+    @Override
+    public void beforeDebugRender(WorldRenderContext context) {
+        List<DebugVector> toDraw = vectors.stream().toList(); // We collect to a list to guarantee that we always write a vector if we make a buffer
+        if (!toDraw.isEmpty()) {
+            // "Yeah, don't try to update that code to 1.21.5 / Not until fapi rendering has something built in" - Qendolin
+            Tessellator tessellator = Tessellator.getInstance();
+            BufferBuilder buffer = tessellator.begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
+            RenderSystem.applyModelViewMatrix();
+            Camera camera = context.camera();
+            Vec3d pos = camera.getPos();
+            toDraw.forEach(vec -> addVectorVertices(vec, pos, buffer));
+            RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+            BufferRenderer.drawWithGlobalProgram(buffer.end());
         }
     }
 
@@ -62,5 +67,6 @@ public class DebugDrawer implements WorldRenderEvents.DebugRender, ClientTickEve
         for (DebugVector vector : vectors) {
             vector.setLifetime(vector.lifetime() - 1);
         }
+        vectors.removeIf((vector) -> vector.lifetime() <= 0);
     }
 }
