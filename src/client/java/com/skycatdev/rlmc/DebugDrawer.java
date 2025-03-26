@@ -36,7 +36,7 @@ public class DebugDrawer implements WorldRenderEvents.DebugRender, ClientTickEve
                 double yaw = Math.toRadians(vector.vector().x);
                 double pitch = Math.toRadians(vector.vector().y);
                 float dist = vector.vector().z;
-                Vec3d vecFromZero = new Vec3d(-Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch));
+                Vec3d vecFromZero = new Vec3d(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch));
                 vecFromZero = vecFromZero.normalize().multiply(dist);
                 Vector3f vec = new Vector3f();
                 vector.origin().add(vecFromZero.toVector3f(), vec);
