@@ -42,6 +42,8 @@ public abstract class WorldEnvironment<A, O> extends Environment<A, O> {
         return worldHandle.asWorld();
     }
 
-    public abstract boolean isIn(ServerWorld world);
+    public boolean isIn(ServerWorld world) {
+        return getWorld().equals(world);
+    }
 
 }

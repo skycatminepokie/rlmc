@@ -4,7 +4,6 @@ package com.skycatdev.rlmc;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
-import net.minecraft.server.network.ServerPlayerEntity;
 
 public class NameGenerator {
     private static final HashSet<String> USED_NAMES = new HashSet<>();
@@ -19,17 +18,11 @@ public class NameGenerator {
                 "Drink", "Potato", "Table", "Carpet", "Monkey", "Chimp", "Fat", "Nobody");
     }
 
-    public synchronized static String newName(List<ServerPlayerEntity> playersOnline) {
+    public synchronized static String newName() {
         Rlmc.LOGGER.trace("Generating new player name");
-        List<String> onlineNames = playersOnline.stream()
-                .map(player -> player.getGameProfile().getName())
-                .toList();
         String name;
         do {
             name = getRandom(PREFIXES) + getRandom(SUFFIXES);
-            if (onlineNames.contains(name)) {
-                USED_NAMES.add(name);
-            }
         } while (USED_NAMES.contains(name));
         USED_NAMES.add(name);
         Rlmc.LOGGER.trace("New name: {}", name);

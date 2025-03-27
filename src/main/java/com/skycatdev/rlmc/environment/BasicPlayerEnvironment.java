@@ -171,7 +171,7 @@ public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> e
 
     @Override
     public boolean isIn(ServerWorld world) {
-        return world.equals(getWorld()) || (!running && waitingForTick()); // Second condition is a hack to get the first reset done
+        return super.isIn(world) || (!running && waitingForTick()); // Second condition is a hack to get the first reset done TODO: do I actually need it?
     }
 
     @Override
