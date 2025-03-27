@@ -15,17 +15,12 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.Difficulty;
 import net.minecraft.world.GameMode;
-import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
-import net.minecraft.world.dimension.DimensionTypes;
+import net.minecraft.world.gen.chunk.ChunkGenerator;
 import org.jetbrains.annotations.Nullable;
-import xyz.nucleoid.fantasy.Fantasy;
-import xyz.nucleoid.fantasy.RuntimeWorldConfig;
-import xyz.nucleoid.fantasy.RuntimeWorldHandle;
 
-public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> extends Environment<FutureActionPack, O> {
+public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> extends WorldEnvironment<FutureActionPack, O> {
     protected final int xRaycasts;
     protected final int yRaycasts;
     private final int getRaycastDistance = 10; // TODO: Make this a ctor param
@@ -34,14 +29,13 @@ public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> e
     protected Supplier<Integer> initialFoodLevel;
     protected FutureActionPack.History history;
     protected boolean justKilled;
-    @Nullable protected RuntimeWorldHandle worldHandle;
     /**
      * True if {@link Environment#innerReset} has been called at least once.
      */
     private boolean running;
 
     public BasicPlayerEnvironment(EnvironmentSettings settings, ServerPlayerEntity agent, Supplier<Float> initialHealth, Supplier<Integer> initialFoodLevel, int xRaycasts, int yRaycasts) {
-        super(settings);
+        super(settings, Objects.requireNonNull(agent.getServer()));
         this.agent = agent;
         this.initialHealth = initialHealth;
         this.initialFoodLevel = initialFoodLevel;
@@ -62,6 +56,7 @@ public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> e
         return createPlayerAgent(name, server, pos, 0.0, 0.0, world, GameMode.SURVIVAL, false);
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static @Nullable CompletableFuture<ServerPlayerEntity> createPlayerAgent(String name, MinecraftServer server, Vec3d pos, double yaw, double pitch, RegistryKey<World> world, GameMode gamemode, boolean flying) {
         if (EntityPlayerMPFake.createFake(name, server, pos, yaw, pitch, world, gamemode, flying)) {
             CompletableFuture<ServerPlayerEntity> future = new CompletableFuture<>();
@@ -119,21 +114,10 @@ public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> e
         }
     }
 
-    @SuppressWarnings("unused") // Used by wrapped_basic_player_environment.py
-    protected ServerWorld getWorld() {
-        if (worldHandle == null) {
-            Rlmc.LOGGER.trace("Creating world for basic player env \"{}\"", getUniqueEnvName());
-            worldHandle = Fantasy.get(Objects.requireNonNull(agent.getServer())).openTemporaryWorld(new RuntimeWorldConfig()
-                    .setDimensionType(DimensionTypes.OVERWORLD)
-                    .setDifficulty(Difficulty.HARD)
-                    .setGameRule(GameRules.DO_DAYLIGHT_CYCLE, false)
-                    .setGenerator(Objects.requireNonNull(agent.getServer()).getOverworld().getChunkManager().getChunkGenerator())
-                    .setSeed(new Random().nextLong()));
-            worldHandle.asWorld().setTimeOfDay(24000L);
-            Rlmc.LOGGER.trace("Created world for basic player env \"{}\"", getUniqueEnvName());
-        }
-        return worldHandle.asWorld();
-    };
+    @Override
+    protected ChunkGenerator getChunkGenerator() {
+        return Objects.requireNonNull(agent.getServer()).getOverworld().getChunkManager().getChunkGenerator();
+    }
 
     /**
      * Called when resetting at the beginning of the tick.

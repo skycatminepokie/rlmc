@@ -78,7 +78,7 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvi
     @Override
     public Future<Future<? extends Environment<FutureActionPack, Observation>>> makeAnother() {
         Rlmc.LOGGER.trace("Making another FightEnemyEnvironment...");
-        FutureTask<Future<? extends Environment<FutureActionPack, Observation>>> futureTask = new FutureTask<>(() -> Objects.requireNonNull(makeAndConnect(settings, NameGenerator.newPlayerName(getWorld().getServer().getPlayerManager().getPlayerList()), getWorld().getServer(), enemyType, structure)));
+        FutureTask<Future<? extends Environment<FutureActionPack, Observation>>> futureTask = new FutureTask<>(() -> Objects.requireNonNull(makeAndConnect(settings, NameGenerator.newName(getWorld().getServer().getPlayerManager().getPlayerList()), getWorld().getServer(), enemyType, structure)));
         Rlmc.runBeforeNextTick(futureTask);
         return futureTask;
     }

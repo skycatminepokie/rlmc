@@ -19,7 +19,7 @@ public class NameGenerator {
                 "Drink", "Potato", "Table", "Carpet", "Monkey", "Chimp", "Fat", "Nobody");
     }
 
-    public synchronized static String newPlayerName(List<ServerPlayerEntity> playersOnline) {
+    public synchronized static String newName(List<ServerPlayerEntity> playersOnline) {
         Rlmc.LOGGER.trace("Generating new player name");
         List<String> onlineNames = playersOnline.stream()
                 .map(player -> player.getGameProfile().getName())
@@ -32,7 +32,7 @@ public class NameGenerator {
             }
         } while (USED_NAMES.contains(name));
         USED_NAMES.add(name);
-        Rlmc.LOGGER.trace("New player name: {}", name);
+        Rlmc.LOGGER.trace("New name: {}", name);
         return name;
     }
 
