@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
-import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Pair;
 import org.jetbrains.annotations.Nullable;
 
@@ -88,8 +87,6 @@ public abstract class Environment<A, O> {
         }
     }
 
-    public abstract boolean isIn(ServerWorld world);
-
     public boolean isPaused() {
         synchronized (pausedLock) {
             return paused;
@@ -129,7 +126,7 @@ public abstract class Environment<A, O> {
      * @see Environment#innerReset(Integer, Map)
      */
     public void preTick() {
-        if (shouldTick()) { // Check if we are paused or closed or something
+        if (waitingForCommand()) { // Check if we are paused or closed or something
             synchronized (taskLock) {
                 if (task == null) {
                     Rlmc.LOGGER.warn("Task was null in pre-tick, please report this!");
@@ -185,7 +182,7 @@ public abstract class Environment<A, O> {
         }
     }
 
-    protected boolean shouldTick() {
+    protected boolean waitingForCommand() {
         return !isClosed() && !isPaused();
     }
 

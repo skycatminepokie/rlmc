@@ -10,7 +10,6 @@ import net.minecraft.world.Difficulty;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.dimension.DimensionTypes;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
-import org.checkerframework.checker.units.qual.A;
 import org.jetbrains.annotations.Nullable;
 import xyz.nucleoid.fantasy.Fantasy;
 import xyz.nucleoid.fantasy.RuntimeWorldConfig;
@@ -42,4 +41,7 @@ public abstract class WorldEnvironment<A, O> extends Environment<A, O> {
         }
         return worldHandle.asWorld();
     }
+
+    public abstract boolean isIn(ServerWorld world);
+
 }
