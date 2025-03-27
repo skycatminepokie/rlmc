@@ -72,7 +72,6 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvi
     @Override
     public void close() {
         super.close();
-        Objects.requireNonNull(worldHandle).delete();
     }
 
     @Override

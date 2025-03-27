@@ -16,7 +16,7 @@ import xyz.nucleoid.fantasy.RuntimeWorldConfig;
 import xyz.nucleoid.fantasy.RuntimeWorldHandle;
 
 public abstract class WorldEnvironment<A, O> extends Environment<A, O> {
-    @Nullable protected RuntimeWorldHandle worldHandle;
+    @Nullable private RuntimeWorldHandle worldHandle;
     protected MinecraftServer server;
 
     public WorldEnvironment(EnvironmentSettings environmentSettings, MinecraftServer server) {
@@ -29,7 +29,7 @@ public abstract class WorldEnvironment<A, O> extends Environment<A, O> {
     @SuppressWarnings("unused") // Used by wrapped_basic_player_environment.py
     protected ServerWorld getWorld() {
         if (worldHandle == null) {
-            Rlmc.LOGGER.trace("Creating world for basic player env \"{}\"", getUniqueEnvName());
+            Rlmc.LOGGER.trace("Creating world for world env \"{}\"", getUniqueEnvName());
             worldHandle = Fantasy.get(server).openTemporaryWorld(new RuntimeWorldConfig()
                     .setDimensionType(DimensionTypes.OVERWORLD)
                     .setDifficulty(Difficulty.HARD)
@@ -37,13 +37,29 @@ public abstract class WorldEnvironment<A, O> extends Environment<A, O> {
                     .setGenerator(getChunkGenerator())
                     .setSeed(new Random().nextLong()));
             worldHandle.asWorld().setTimeOfDay(24000L);
-            Rlmc.LOGGER.trace("Created world for basic player env \"{}\"", getUniqueEnvName());
+            Rlmc.LOGGER.trace("Created world for world env \"{}\"", getUniqueEnvName());
         }
         return worldHandle.asWorld();
+    }
+
+    protected ServerWorld newWorld() {
+        deleteCurrentWorld();
+        return getWorld();
+    }
+
+    protected void deleteCurrentWorld() {
+        if (worldHandle != null) {
+            worldHandle.delete();
+        }
     }
 
     public boolean isIn(ServerWorld world) {
         return getWorld().equals(world);
     }
 
+    @Override
+    public void close() {
+        super.close();
+        deleteCurrentWorld();
+    }
 }

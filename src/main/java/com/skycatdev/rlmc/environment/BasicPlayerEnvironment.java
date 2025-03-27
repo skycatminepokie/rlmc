@@ -106,14 +106,6 @@ public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> e
 
     protected abstract double getReward(BasicPlayerObservation observation);
 
-
-    protected void deleteCurrentWorld() {
-        if (worldHandle != null) {
-            worldHandle.delete();
-            worldHandle = null;
-        }
-    }
-
     @Override
     protected ChunkGenerator getChunkGenerator() {
         return Objects.requireNonNull(agent.getServer()).getOverworld().getChunkManager().getChunkGenerator();
