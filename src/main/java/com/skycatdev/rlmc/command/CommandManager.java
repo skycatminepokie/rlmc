@@ -12,6 +12,8 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.tree.CommandNode;
 import com.skycatdev.rlmc.Rlmc;
 import com.skycatdev.rlmc.environment.*;
+import com.skycatdev.rlmc.environment.player.FightEnemyEnvironment;
+import com.skycatdev.rlmc.environment.player.GoNorthEnvironment;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;

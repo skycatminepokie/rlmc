@@ -1,10 +1,12 @@
 /* Licensed MIT 2025 */
-package com.skycatdev.rlmc.environment;
+package com.skycatdev.rlmc.environment.player;
 
 import com.skycatdev.rlmc.NameGenerator;
 import com.skycatdev.rlmc.Rlmc;
 import com.skycatdev.rlmc.SpreadEntitiesHelper;
 import com.skycatdev.rlmc.command.EnvironmentSettings;
+import com.skycatdev.rlmc.environment.BlockHitInfo;
+import com.skycatdev.rlmc.environment.Environment;
 import com.skycatdev.rlmc.network.DebugVector;
 import com.skycatdev.rlmc.network.DrawVectorPayload;
 import java.util.*;

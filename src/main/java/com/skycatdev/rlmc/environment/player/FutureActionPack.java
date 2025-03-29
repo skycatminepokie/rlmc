@@ -1,5 +1,5 @@
 /* Licensed MIT 2025 */
-package com.skycatdev.rlmc.environment;
+package com.skycatdev.rlmc.environment.player;
 
 import carpet.helpers.EntityPlayerActionPack;
 import java.util.HashMap;

@@ -2,7 +2,7 @@
 package com.skycatdev.rlmc.mixin;
 
 import carpet.patches.EntityPlayerMPFake;
-import com.skycatdev.rlmc.environment.PlayerAgentCandidate;
+import com.skycatdev.rlmc.environment.player.PlayerAgentCandidate;
 import java.util.function.Consumer;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;

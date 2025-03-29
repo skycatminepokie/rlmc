@@ -1,6 +1,7 @@
 /* Licensed MIT 2025 */
-package com.skycatdev.rlmc.environment;
+package com.skycatdev.rlmc.environment.player;
 
+import com.skycatdev.rlmc.environment.AgentCandidate;
 import java.util.function.Consumer;
 
 /**

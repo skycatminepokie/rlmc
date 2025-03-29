@@ -14,10 +14,10 @@ import org.jetbrains.annotations.Nullable;
 
 public class RlGoal extends Goal {
     protected MobEntity agent;
-    @Nullable private Function<MobEntity, Vec3d> movementFunction;
-    @Nullable private Function<MobEntity, Either<Entity, Vec3d>> lookFunction;
+    @Nullable private Function<MobEntity, @Nullable Vec3d> movementFunction;
+    @Nullable private Function<MobEntity, @Nullable Either<Entity, Vec3d>> lookFunction;
     @Nullable private Function<MobEntity, Boolean> jumpFunction;
-    @Nullable private Function<MobEntity, LivingEntity> targetFunction;
+    @Nullable private Function<MobEntity, @Nullable LivingEntity> targetFunction;
     @Nullable private Consumer<MobEntity> tickCallback;
     /**
      * When initialized, this goal will always try to be running. All fields are guaranteed to be non-null.
@@ -62,12 +62,16 @@ public class RlGoal extends Goal {
                targetFunction != null &&
                tickCallback != null;
 
-        Vec3d moveTo = movementFunction.apply(agent);
-        agent.getMoveControl().moveTo(moveTo.getX(), moveTo.getY(), moveTo.getZ(), agent.speed);
+        @Nullable Vec3d moveTo = movementFunction.apply(agent);
+        if (moveTo != null) {
+            agent.getMoveControl().moveTo(moveTo.getX(), moveTo.getY(), moveTo.getZ(), agent.speed);
+        }
 
-        Either<Entity, Vec3d> lookAt = lookFunction.apply(agent);
-        lookAt.ifLeft(entity -> agent.getLookControl().lookAt(entity));
-        lookAt.ifRight(lookVec -> agent.getLookControl().lookAt(lookVec));
+        @Nullable Either<Entity, Vec3d> lookAt = lookFunction.apply(agent);
+        if (lookAt != null) {
+            lookAt.ifLeft(entity -> agent.getLookControl().lookAt(entity));
+            lookAt.ifRight(lookVec -> agent.getLookControl().lookAt(lookVec));
+        }
 
         if (jumpFunction.apply(agent)) {
             agent.getJumpControl().setActive();;

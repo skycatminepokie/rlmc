@@ -1,10 +1,11 @@
 /* Licensed MIT 2025 */
-package com.skycatdev.rlmc.environment;
+package com.skycatdev.rlmc.environment.player;
 
 import carpet.fakes.ServerPlayerInterface;
 import carpet.patches.EntityPlayerMPFake;
 import com.skycatdev.rlmc.Rlmc;
 import com.skycatdev.rlmc.command.EnvironmentSettings;
+import com.skycatdev.rlmc.environment.*;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.FutureTask;
