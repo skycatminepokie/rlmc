@@ -4,9 +4,10 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "EntityPlayerMPFakeMixin",
+    "LivingEntityMixin",
     "MinecraftServerMixin",
+    "MobEntityAccessor",
     "MobEntityMixin",
-    "PillagerEntityMixin",
     "ServerCommandSourceMixin"
   ],
   "injectors": {

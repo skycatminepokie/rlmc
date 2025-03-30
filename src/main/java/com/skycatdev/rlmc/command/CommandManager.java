@@ -12,6 +12,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.tree.CommandNode;
 import com.skycatdev.rlmc.Rlmc;
 import com.skycatdev.rlmc.environment.*;
+import com.skycatdev.rlmc.environment.pillager.PillagerEnvironment;
 import com.skycatdev.rlmc.environment.player.FightEnemyEnvironment;
 import com.skycatdev.rlmc.environment.player.GoNorthEnvironment;
 import java.util.Objects;
@@ -239,6 +240,18 @@ public class CommandManager implements CommandRegistrationCallback {
                     });
                 })
                 .build();
+        var pillager = literal("pillager")
+                .executes((context) -> {
+                    ServerCommandSource source = context.getSource();
+                    MinecraftServer server = source.getServer();
+                    @Nullable Future<PillagerEnvironment> environment1 = PillagerEnvironment.makeAndConnect(((EnvironmentSettingsBuilder) source).rlmc$buildEnvironmentSettings(), server);
+                    return trainEnvironment(((EnvironmentExecutionSettingsBuilder) source).rlmc$build(), environment1, (message) -> {
+                        if (message != null) {
+                            source.sendFeedback(() -> Text.literal(message), false);
+                        }
+                    });
+                })
+                .build();
 
 
         // spotless:off
@@ -251,6 +264,7 @@ public class CommandManager implements CommandRegistrationCallback {
                         fightEnemyAgent.addChild(fightEnemyStructure);
             settings.addChild(goNorth);
                 goNorth.addChild(goNorthAgent);
+            settings.addChild(pillager);
         //@formatter:on
         // spotless:on
 
