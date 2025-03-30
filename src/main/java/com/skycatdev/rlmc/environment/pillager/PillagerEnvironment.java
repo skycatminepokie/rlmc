@@ -107,7 +107,7 @@ public class PillagerEnvironment extends WorldEnvironment<PillagerEnvironment.Ac
         ((DamageTracked) golem).rlmc$startTrackingDamage();
 
 
-        return new ResetTuple<>(new Observation(goal.getState()), Map.of());
+        return new ResetTuple<>(new Observation(Util.rotationVector(pillager.getEyePos(), golem.getEyePos()), goal.getState()), Map.of());
     }
 
     @Override
@@ -121,7 +121,7 @@ public class PillagerEnvironment extends WorldEnvironment<PillagerEnvironment.Ac
             assert pillager != null;
             assert golem != null;
             float reward = ((DamageTracked) pillager).rlmc$getDamageTaken() - ((DamageTracked) golem).rlmc$getDamageTaken();
-            return new StepTuple<>(new Observation(goal.getState()), reward, pillager.isDead() || golem.isDead(), false, Map.of());
+            return new StepTuple<>(new Observation(Util.rotationVector(pillager.getEyePos(), golem.getEyePos()), goal.getState()), reward, pillager.isDead() || golem.isDead(), false, Map.of());
         });
         return new Pair<>(preStep, postStep);
     }
@@ -135,7 +135,7 @@ public class PillagerEnvironment extends WorldEnvironment<PillagerEnvironment.Ac
         return futureTask;
     }
 
-    public record Observation(PillagerGoal.CrossbowState crossbowState) {
+    public record Observation(Vec3d rotVecToGolem, PillagerGoal.CrossbowState crossbowState) {
 
     }
 

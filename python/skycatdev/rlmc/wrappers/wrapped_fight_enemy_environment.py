@@ -27,6 +27,6 @@ class WrappedFightEnemyEnvironment(WrappedBasicPlayerObservationEnvironment):
     def obs_to_python(self, java_obs: JavaObject) -> ObsType:
         basic_obs = super().obs_to_python(java_obs)
         assert isinstance(basic_obs, dict)
-        enemy = Vec3d(java_obs.getVecToEnemy())
+        enemy = Vec3d(java_obs.getRotVecToEnemy())
         basic_obs["enemy"] = enemy.to_array()
         return basic_obs

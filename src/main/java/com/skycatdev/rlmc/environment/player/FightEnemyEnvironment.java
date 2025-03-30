@@ -7,6 +7,7 @@ import com.skycatdev.rlmc.SpreadEntitiesHelper;
 import com.skycatdev.rlmc.command.EnvironmentSettings;
 import com.skycatdev.rlmc.environment.BlockHitInfo;
 import com.skycatdev.rlmc.environment.Environment;
+import com.skycatdev.rlmc.environment.Util;
 import com.skycatdev.rlmc.network.DebugVector;
 import com.skycatdev.rlmc.network.DrawVectorPayload;
 import java.util.*;
@@ -27,10 +28,7 @@ import net.minecraft.stat.Stats;
 import net.minecraft.structure.StructurePlacementData;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.EntityHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.util.math.*;
 import net.minecraft.util.math.random.Random;
 import org.jetbrains.annotations.Nullable;
 
@@ -162,27 +160,21 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvi
     }
 
     public static class Observation extends BasicPlayerObservation {
-        public final Vec3d vecToEnemy;
+        public final Vec3d rotVecToEnemy;
 
-        public Observation(List<BlockHitInfo> blocks, List<@Nullable EntityHitResult> entities, ServerPlayerEntity self, FutureActionPack.History history, Vec3d vecToEnemy) {
+        public Observation(List<BlockHitInfo> blocks, List<@Nullable EntityHitResult> entities, ServerPlayerEntity self, FutureActionPack.History history, Vec3d rotVecToEnemy) {
             super(blocks, entities, self, history);
-            this.vecToEnemy = vecToEnemy;
+            this.rotVecToEnemy = rotVecToEnemy;
         }
 
         public static Observation fromBasic(BasicPlayerObservation basic, MobEntity entity, int maxEnemyDistance) {
-            Vec3d posVec = entity.getEyePos().subtract(basic.self().getEyePos());
-            // Vector calculations: https://stackoverflow.com/questions/58469297/how-do-i-calculate-the-yaw-pitch-and-roll-of-a-point-in-3d/58469298#58469298
-            double yawRad = Math.atan2(posVec.getX(), posVec.getZ());
-            double pitchRad = Math.atan2(posVec.getY(), Math.sqrt(Math.pow(posVec.getX(), 2) + Math.pow(posVec.getZ(), 2)));
-            double yaw = MathHelper.wrapDegrees(Math.toDegrees(yawRad));
-            double pitch = MathHelper.wrapDegrees(Math.toDegrees(pitchRad));
-            double dist = Math.clamp(posVec.length(), 0, maxEnemyDistance);
-            Vec3d vecToEnemy = new Vec3d(yaw, pitch, dist);
+            Vec3d vecToEnemy = Util.rotationVector(basic.self().getEyePos(), entity.getEyePos());
+            Vec3d clampedVecToEnemy = vecToEnemy.withAxis(Direction.Axis.Z, Math.clamp(vecToEnemy.getZ(), 0, maxEnemyDistance));
             // TODO: Setting to disable rendering
             basic.self().getServerWorld().getPlayers((player) -> player.distanceTo(basic.self()) <= 100).forEach((player) -> {
                 if (ServerPlayNetworking.canSend(player, DrawVectorPayload.PACKET_ID)) {
                     ServerPlayNetworking.send(player, new DrawVectorPayload(new DebugVector(basic.self().getEyePos().toVector3f(),
-                                    vecToEnemy.toVector3f(),
+                                    clampedVecToEnemy.toVector3f(),
                                     DebugVector.Mode.ROTATION,
                                     0xFFFFFFFF,
                                     2)));
@@ -198,8 +190,8 @@ public class FightEnemyEnvironment extends BasicPlayerEnvironment<FightEnemyEnvi
         }
 
         @SuppressWarnings("unused") // Used by wrapped_fight_enemy_environment.py
-        public Vec3d getVecToEnemy() {
-            return vecToEnemy;
+        public Vec3d getRotVecToEnemy() {
+            return rotVecToEnemy;
         }
     }
 }
