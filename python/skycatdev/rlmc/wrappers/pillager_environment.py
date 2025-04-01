@@ -64,7 +64,7 @@ class PillagerEnv(WrappedJavaEnv):
     def obs_to_python(self, java_obs: JavaObject) -> ObsType:
         rot_vec: Vec3d = Vec3d(java_obs.rotVecToGolem())
         state: int = java_obs.crossbowState().getIndex()
-        return np.concatenate((rot_vec, state), dtype=np.float32)
+        return np.concatenate((rot_vec.to_array(), [state]), dtype=np.float32)
 
     def action_to_java(self, action: ActType) -> JavaObject:
         move_vec: JavaObject = Vec3d.create_java(
