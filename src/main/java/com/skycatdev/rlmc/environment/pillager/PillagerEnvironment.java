@@ -47,12 +47,14 @@ public class PillagerEnvironment extends WorldEnvironment<PillagerEnvironment.Ac
     public static Future<PillagerEnvironment> makeAndConnect(EnvironmentSettings environmentSettings, MinecraftServer server) {
         Rlmc.LOGGER.debug("Creating pillager env");
         PillagerEnvironment environment = new PillagerEnvironment(environmentSettings, server);
-        return new FutureTask<>(() -> {
+        FutureTask<PillagerEnvironment> future = new FutureTask<>(() -> {
             Rlmc.addEnvironment(environment);
             Rlmc.getPythonEntrypoint().connectEnvironment("pillager", environment);
-            Rlmc.LOGGER.debug("Connected fight enemy env \"{}\"", environment.getUniqueEnvName());
+            Rlmc.LOGGER.debug("Connected pillager env \"{}\"", environment.getUniqueEnvName());
             return environment;
         });
+        new Thread(future, "RLMC Make Pillager Env Thread").start();
+        return future;
     }
 
     @Override
@@ -113,8 +115,9 @@ public class PillagerEnvironment extends WorldEnvironment<PillagerEnvironment.Ac
     @Override
     protected Pair<@Nullable FutureTask<?>, FutureTask<StepTuple<Observation>>> innerStep(Action action) {
         @Nullable FutureTask<?> preStep = new FutureTask<>(() -> {
-            if (goal == null) throw new EnvironmentException();
-            return goal.setNext(action.movement(), action.look(), action.jump(), action.target(), action.attack());
+            if (goal == null) throw new EnvironmentException("Goal should be non-null by now. Was reset not called?");
+            if (pillager == null) throw new EnvironmentException("Pillager should exist by now. Was reset not called?");
+            return goal.setNext(action.movement() == null ? null : Util.rotVecToPosVec(action.movement()).add(pillager.getEyePos()), action.look(), action.jump(), action.target(), action.attack());
         });
         FutureTask<StepTuple<Observation>> postStep = new FutureTask<>(() -> {
             if (goal == null) throw new EnvironmentException();
@@ -135,13 +138,22 @@ public class PillagerEnvironment extends WorldEnvironment<PillagerEnvironment.Ac
         return futureTask;
     }
 
+    @SuppressWarnings("unused") // Used by pillager_environment.py
     public record Observation(Vec3d rotVecToGolem, PillagerGoal.CrossbowState crossbowState) {
 
     }
 
     public record Action(@Nullable Vec3d movement, @Nullable Either<Entity, Vec3d> look, boolean jump,
                          @Nullable LivingEntity target, PillagerGoal.CrossbowAttack attack) {
+        public static Action withEntityLook(@Nullable Vec3d movement, @Nullable Entity look, boolean jump,
+                                            @Nullable LivingEntity target, PillagerGoal.CrossbowAttack attack) {
+            return new Action(movement, look != null ? Either.left(look) : null, jump, target, attack);
+        }
 
+        public static Action withVec3dLook(@Nullable Vec3d movement, @Nullable Vec3d look, boolean jump,
+                                           @Nullable LivingEntity target, PillagerGoal.CrossbowAttack attack) {
+            return new Action(movement, look != null ? Either.right(look) : null, jump, target, attack);
+        }
     }
 
     public static class PillagerGoal extends Goal {
@@ -245,11 +257,47 @@ public class PillagerEnvironment extends WorldEnvironment<PillagerEnvironment.Ac
         }
 
         public enum CrossbowState {
-            NOT_CHARGED, CHARGING, CHARGED
+            NOT_CHARGED(0), CHARGING(1), CHARGED(2);
+            private final int index;
+
+            CrossbowState(int index) {
+                this.index = index;
+            }
+            public static CrossbowState fromIndex(int index) {
+                return switch (index) {
+                    case 0 -> NOT_CHARGED;
+                    case 1 -> CHARGING;
+                    case 2 -> CHARGED;
+                    default -> throw new IllegalArgumentException();
+                };
+            }
+
+            @SuppressWarnings("unused") // Used by pillager_environment.py
+            public int getIndex() {
+                return index;
+            }
         }
 
         public enum CrossbowAttack {
-            CHARGE, SHOOT, NOOP
+            CHARGE(0), SHOOT(1), NOOP(2);
+            private final int index;
+
+            CrossbowAttack(int index) {
+                this.index = index;
+            }
+
+            public static CrossbowAttack fromIndex(int index) {
+                return switch (index) {
+                    case 0 -> CHARGE;
+                    case 1 -> SHOOT;
+                    case 2 -> NOOP;
+                    default -> throw new IllegalArgumentException();
+                };
+            }
+
+            public int getIndex() {
+                return index;
+            }
         }
 
     }

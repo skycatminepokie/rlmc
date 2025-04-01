@@ -21,7 +21,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> extends WorldTickEnvironment<FutureActionPack, O> {
+public abstract class BasicPlayerEnvironment<O extends BasicPlayerObservation> extends WorldEnvironment<FutureActionPack, O> {
     protected final int xRaycasts;
     protected final int yRaycasts;
     private final int getRaycastDistance = 10; // TODO: Make this a ctor param

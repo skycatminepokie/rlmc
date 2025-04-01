@@ -25,6 +25,7 @@ from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.on_policy_algorithm import OnPolicyAlgorithm
 from stable_baselines3.common.vec_env import DummyVecEnv
 
+from skycatdev.rlmc.wrappers.pillager_environment import PillagerEnv
 from skycatdev.rlmc.wrappers.wrapped_basic_player_observation_environment import (
     WrappedBasicPlayerObservationEnvironment,
 )
@@ -90,6 +91,8 @@ class Entrypoint(object):
             env = WrappedFightEnemyEnvironment(java_environment, get_gateway())
             env = FilterObservation(env, filter_keys=["enemy"])
             env = TransformAction(env, fix_action, env.action_space)
+        elif environment == "pillager":
+            env = PillagerEnv(java_environment, get_gateway())
         else:
             assert (
                 environment == "go_north"
@@ -149,7 +152,7 @@ class Entrypoint(object):
                 )
             elif algorithm_str == "PPO":
                 algorithm = PPO(
-                    "MultiInputPolicy",
+                    "MlpPolicy",
                     self.envs[environment],
                     tensorboard_log=tensorboard_path,
                     policy_kwargs=policy_kwargs,

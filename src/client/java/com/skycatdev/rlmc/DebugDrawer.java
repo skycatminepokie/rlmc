@@ -2,6 +2,7 @@
 package com.skycatdev.rlmc;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.skycatdev.rlmc.environment.Util;
 import com.skycatdev.rlmc.network.DebugVector;
 import java.util.List;
 import java.util.Queue;
@@ -33,13 +34,8 @@ public class DebugDrawer implements WorldRenderEvents.DebugRender, ClientTickEve
                 vertexConsumer.vertex((float) (vector.origin().x - cameraPos.x), (float) (vector.origin().y - cameraPos.y), (float) (vector.origin().z - cameraPos.z))
                         .color(vector.color());
                 // (x,y,z) = (-sin(yaw)cos(pitch), sin(pitch), -cos(yaw)cos(pitch)) https://math.stackexchange.com/questions/2618527/converting-from-yaw-pitch-roll-to-vector
-                double yaw = Math.toRadians(vector.vector().x);
-                double pitch = Math.toRadians(vector.vector().y);
-                float dist = vector.vector().z;
-                Vec3d vecFromZero = new Vec3d(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch));
-                vecFromZero = vecFromZero.normalize().multiply(dist);
-                Vector3f vec = new Vector3f();
-                vector.origin().add(vecFromZero.toVector3f(), vec);
+                Vector3f vec = Util.rotVecToPosVec(vector.vector());
+                vec.add(vector.origin());
                 vertexConsumer.vertex((float) (vec.x - cameraPos.x), (float) (vec.y - cameraPos.y), (float) (vec.z - cameraPos.z))
                         .color(vector.color());
             }

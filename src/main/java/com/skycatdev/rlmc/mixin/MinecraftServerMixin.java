@@ -5,7 +5,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.skycatdev.rlmc.Rlmc;
 import com.skycatdev.rlmc.environment.Environment;
-import com.skycatdev.rlmc.environment.WorldTickEnvironment;
+import com.skycatdev.rlmc.environment.WorldEnvironment;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 import net.minecraft.server.MinecraftServer;
@@ -31,7 +31,7 @@ public abstract class MinecraftServerMixin {
     @WrapOperation(method = "tickWorlds", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;tick(Ljava/util/function/BooleanSupplier;)V"))
     protected void rlmc$tickWorld(ServerWorld instance, BooleanSupplier shouldKeepTicking, Operation<Void> original) {
         List<Environment<?, ?>> envs = Rlmc.getEnvironments().stream()
-                .filter(env -> env instanceof WorldTickEnvironment<?, ?> wte && wte.isIn(instance))
+                .filter(env -> env instanceof WorldEnvironment<?, ?> worldEnv && worldEnv.isIn(instance))
                 .toList();
         boolean readyToTick = envs.stream()
                 .allMatch(Environment::waitingForTick);

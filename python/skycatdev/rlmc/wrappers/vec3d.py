@@ -1,6 +1,6 @@
 import numpy as np
 from gymnasium.spaces import Box
-from py4j.java_gateway import JavaObject
+from py4j.java_gateway import JavaObject, JVMView
 
 
 class Vec3d:
@@ -42,8 +42,17 @@ class Vec3d:
     def z(self):
         return self._z
 
+    def to_java(self, java_view: JVMView) -> JavaObject:
+        return java_view.net.minecraft.util.math.Vec3d(self.x, self.y, self.z)
+
     def to_array(self) -> np.ndarray:
         return np.array([self.x, self.y, self.z])
+
+    @classmethod
+    def create_java(
+        cls, x: float, y: float, z: float, java_view: JVMView
+    ) -> JavaObject:
+        return java_view.net.minecraft.util.math.Vec3d(x, y, z)
 
 
 def space(max_x: float, max_y: float, max_z: float) -> Box:
