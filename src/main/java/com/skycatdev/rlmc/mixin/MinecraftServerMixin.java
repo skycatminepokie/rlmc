@@ -36,9 +36,14 @@ public abstract class MinecraftServerMixin {
         boolean readyToTick = envs.stream()
                 .allMatch(Environment::waitingForTick);
         if (readyToTick) {
+            if (!envs.isEmpty()) {
+                Rlmc.LOGGER.trace("Ticking envs in world {}.", instance.getRegistryKey());
+            }
             envs.forEach(Environment::preTick);
             original.call(instance, shouldKeepTicking);
             envs.forEach(Environment::postTick);
+        } else {
+            Rlmc.LOGGER.trace("Not all {} env(s) was(/were) not ready in world {}", envs.size(), instance.getRegistryKey());
         }
     }
 }
