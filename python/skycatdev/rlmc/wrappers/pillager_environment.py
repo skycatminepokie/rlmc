@@ -68,14 +68,14 @@ class PillagerEnv(WrappedJavaEnv):
 
     def action_to_java(self, action: ActType) -> JavaObject:
         move_vec: JavaObject = Vec3d.create_java(
-            action[0].value(), action[1].value(), action[2].value(), self.java_view
+            float(action[0]), float(action[1]), float(action[2]), self.java_view
         )
         return self.java_view.Action.withVec3dLook(
             move_vec,
             move_vec,
-            bool(round(action[3].value())),
+            bool(round(float(action[3]))),
             None,
-            self.java_view.CrossbowAttack.fromIndex(action[4].value()),
+            self.java_view.CrossbowAttack.fromIndex(float(action[4])),
         )
 
     def action_to_python(self, action: JavaObject) -> ActType:
