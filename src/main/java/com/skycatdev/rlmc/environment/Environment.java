@@ -195,6 +195,7 @@ public abstract class Environment<A, O> {
      */
     @SuppressWarnings("unused") // Used by java_environment_wrapper.py
     public StepTuple<O> step(A action) {
+        Rlmc.LOGGER.trace("Calling step on {}.", getUniqueEnvName());
         FutureTask<StepTuple<O>> stepPostTick;
         synchronized (taskLock) {
             if (task == null) {
@@ -206,6 +207,7 @@ public abstract class Environment<A, O> {
             }
         }
         try {
+            Rlmc.LOGGER.trace("Waiting for step on {}.", getUniqueEnvName());
             return stepPostTick.get();
         } catch (InterruptedException | ExecutionException e) {
             throw new EnvironmentException("There was a problem waiting for stepPostTick.", e);
