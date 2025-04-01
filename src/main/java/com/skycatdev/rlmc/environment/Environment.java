@@ -29,9 +29,9 @@ public abstract class Environment<A, O> {
     private final Object[] taskLock = new Object[0];
     protected EnvironmentSettings settings;
     /**
-     * What to do on the next post-tick. Do not access outside the server thread or during a tick.
+     * What to do on the next post-step. Do not access outside the server thread or during a tick.
      */
-    private @Nullable FutureTask<?> postTick;
+    private @Nullable FutureTask<?> postStep;
     /**
      * True when {@link Environment#close()} has been called at least once. Synchronize on {@link Environment#closedLock} first.
      */
@@ -113,9 +113,10 @@ public abstract class Environment<A, O> {
      * @see Environment#innerReset(Integer, Map)
      */
     public void postTick() {
-        if (postTick != null) {
-            postTick.run();
-            postTick = null;
+        if (postStep != null) {
+            Rlmc.LOGGER.trace("Running post-step for {}.", getUniqueEnvName());
+            postStep.run();
+            postStep = null;
         }
     }
 
@@ -126,7 +127,7 @@ public abstract class Environment<A, O> {
      * @see Environment#innerReset(Integer, Map)
      */
     public void preTick() {
-        if (waitingForCommand()) { // Check if we are paused or closed or something
+        if (!isClosed() && !isPaused()) {
             synchronized (taskLock) {
                 if (task == null) {
                     Rlmc.LOGGER.warn("Task was null in pre-tick, please report this!");
@@ -134,14 +135,15 @@ public abstract class Environment<A, O> {
                     var stepOpt = task.left();
                     if (stepOpt.isPresent()) { // If we're stepping
                         var step = stepOpt.get();
-                        postTick = step.getRight(); // Remember the post-step tasks
+                        postStep = step.getRight(); // Remember the post-step tasks
                         if (step.getLeft() != null) {
+                            Rlmc.LOGGER.trace("Running pre-step for {}.", getUniqueEnvName());
                             step.getLeft().run(); // Do the pre-step tasks
                         }
                     } else {
                         var resetOpt = task.right();
                         assert resetOpt.isPresent() : "Sanity check failed - left was gone but so was right?"; // Guess I'm insane
-                        postTick = resetOpt.get();
+                        postStep = resetOpt.get();
                     }
                     task = null;
                 }
@@ -180,10 +182,6 @@ public abstract class Environment<A, O> {
         } catch (InterruptedException | ExecutionException e) {
             throw new EnvironmentException(e);
         }
-    }
-
-    protected boolean waitingForCommand() {
-        return !isClosed() && !isPaused();
     }
 
     /**
