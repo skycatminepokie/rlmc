@@ -1,10 +1,8 @@
 import numpy as np
-from gymnasium.spaces import Box
 from gymnasium.core import ActType, ObsType
-from py4j.java_gateway import JavaObject, JavaGateway, JVMView, java_import
-from sympy.codegen.ast import float32
+from gymnasium.spaces import Box
+from py4j.java_gateway import JavaObject, JavaGateway, java_import
 
-from skycatdev.rlmc.wrappers import vec3d
 from skycatdev.rlmc.wrappers.java_environment_wrapper import WrappedJavaEnv
 from skycatdev.rlmc.wrappers.vec3d import Vec3d
 
@@ -72,7 +70,7 @@ class PillagerEnv(WrappedJavaEnv):
             bool(round(float(action[3]))),
             None,
             self.java_view.com.skycatdev.rlmc.environment.pillager.PillagerEnvironment.PillagerGoal.CrossbowAttack.fromIndex(
-                float(action[4])
+                int(action[4])
             ),
         )
 
