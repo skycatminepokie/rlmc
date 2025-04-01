@@ -16,10 +16,6 @@ class PillagerEnv(WrappedJavaEnv):
         )
         java_import(
             self.java_view,
-            "com.skycatdev.rlmc.environment.pillager.PillagerEnvironment.Action",
-        )
-        java_import(
-            self.java_view,
             "com.skycatdev.rlmc.environment.pillager.PillagerEnvironment.Observation",
         )
         java_import(
@@ -64,7 +60,7 @@ class PillagerEnv(WrappedJavaEnv):
         move_vec: JavaObject = Vec3d.create_java(
             float(action[0]), float(action[1]), float(action[2]), self.java_view
         )
-        return self.java_view.Action.withVec3dLook(
+        return self.java_view.com.skycatdev.rlmc.environment.pillager.PillagerEnvironment.Action.withVec3dLook(
             move_vec,
             move_vec,
             bool(round(float(action[3]))),
