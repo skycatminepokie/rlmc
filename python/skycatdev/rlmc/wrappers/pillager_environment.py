@@ -32,10 +32,6 @@ class PillagerEnv(WrappedJavaEnv):
             self.java_view,
             "com.skycatdev.rlmc.environment.pillager.PillagerEnvironment.PillagerGoal.CrossbowState",
         )
-        java_import(
-            self.java_view,
-            "com.skycatdev.rlmc.environment.pillager.PillagerEnvironment.PillagerGoal.CrossbowAttack",
-        )
 
         movement_low: np.ndarray = np.array([-180, -90, 0])
         movement_high: np.ndarray = np.array([180, 90, 10])
@@ -75,7 +71,9 @@ class PillagerEnv(WrappedJavaEnv):
             move_vec,
             bool(round(float(action[3]))),
             None,
-            self.java_view.CrossbowAttack.fromIndex(float(action[4])),
+            self.java_view.com.skycatdev.rlmc.environment.pillager.PillagerEnvironment.PillagerGoal.CrossbowAttack.fromIndex(
+                float(action[4])
+            ),
         )
 
     def action_to_python(self, action: JavaObject) -> ActType:
