@@ -49,8 +49,10 @@ public abstract class WorldEnvironment<A, O> extends Environment<A, O> {
 
     protected void deleteCurrentWorld() {
         if (worldHandle != null) {
+            Rlmc.LOGGER.debug("Deleting world for world env {}.", getUniqueEnvName());
             worldHandle.delete();
         }
+        worldHandle = null;
     }
 
     public boolean isIn(ServerWorld world) {

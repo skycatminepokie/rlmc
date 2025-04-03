@@ -43,7 +43,7 @@ public abstract class MinecraftServerMixin {
             original.call(instance, shouldKeepTicking);
             envs.forEach(Environment::postTick);
         } else {
-            Rlmc.LOGGER.trace("Not all {} env(s) was(/were) not ready in world {}", envs.size(), instance.getRegistryKey());
+            // Rlmc.LOGGER.trace("Not all {} env(s) was(/were) not ready in world {}", envs.size(), instance.getRegistryKey());
         }
     }
 }

@@ -114,7 +114,7 @@ public abstract class Environment<A, O> {
      */
     public void postTick() {
         if (postStep != null) {
-            Rlmc.LOGGER.trace("Running post-step for {}.", getUniqueEnvName());
+            Rlmc.LOGGER.trace("Running post-tick for {}.", getUniqueEnvName());
             postStep.run();
             postStep = null;
         }
@@ -134,6 +134,7 @@ public abstract class Environment<A, O> {
                 } else {
                     var stepOpt = task.left();
                     if (stepOpt.isPresent()) { // If we're stepping
+                        Rlmc.LOGGER.trace("Pre-tick: Decided it's step for {}.", getUniqueEnvName());
                         var step = stepOpt.get();
                         postStep = step.getRight(); // Remember the post-step tasks
                         if (step.getLeft() != null) {
@@ -143,6 +144,7 @@ public abstract class Environment<A, O> {
                     } else {
                         var resetOpt = task.right();
                         assert resetOpt.isPresent() : "Sanity check failed - left was gone but so was right?"; // Guess I'm insane
+                        Rlmc.LOGGER.trace("Pre-tick: Decided it's reset for {}.", getUniqueEnvName());
                         postStep = resetOpt.get();
                     }
                     task = null;
