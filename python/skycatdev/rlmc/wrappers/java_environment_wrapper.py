@@ -17,16 +17,13 @@ class WrappedJavaEnv(ABC, gym.Env):
     def step(
         self, action: ActType
     ) -> tuple[ObsType, SupportsFloat, bool, bool, dict[str, Any]]:
-        logging.debug("Calling step")
         return self.unwrap_step(self.java_env.step(self.action_to_java(action)))
 
     def reset(
         self, seed: int | None = None, options: dict[str, Any] | None = None
     ) -> tuple[ObsType, dict[str, Any]]:
-        logging.debug("Calling reset")
         super().reset(seed=seed)
         unwrapped = self.unwrap_reset(self.java_env.reset(seed, options))
-        logging.debug("Returning reset")
         return unwrapped
 
     def close(self):
